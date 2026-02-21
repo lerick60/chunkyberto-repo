@@ -316,6 +316,16 @@ interface Trend {
   advance?: string;
 }
 
+interface Draft {
+  id: string;
+  name: string;
+  date: string;
+  trends: Trend[];
+  selectedTrendId?: string;
+  personaId: string;
+  category: Category;
+}
+
 // --- Error Handling ---
 function getErrorDetails(err: any): DetailedError {
   let message = "Error desconocido";
@@ -704,6 +714,11 @@ const App: React.FC = () => {
   const [forensicToggles, setForensicToggles] = useState({ analysis: false, interview: false, advance: false });
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [ytChannelUrl, setYtChannelUrl] = useState(() => localStorage.getItem('chunky_yt_url') || "");
+  const [drafts, setDrafts] = useState<Draft[]>(() => {
+    const saved = localStorage.getItem('chunky_drafts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
 
   const activePersona = PERSONAS.find(p => p.id === selectedPersonaId) || PERSONAS[0];
   const [modelSettings, setModelSettings] = useState<ModelSettings>(() => {
@@ -759,6 +774,7 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('chunky_model_settings', JSON.stringify(modelSettings)); }, [modelSettings]);
   useEffect(() => { localStorage.setItem('chunky_language', language); }, [language]);
   useEffect(() => { localStorage.setItem('chunky_persona', selectedPersonaId); }, [selectedPersonaId]);
+  useEffect(() => { localStorage.setItem('chunky_drafts', JSON.stringify(drafts)); }, [drafts]);
 
   const ensureAudioContext = useCallback(async () => {
     if (!audioContextRef.current) { audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)(); }
@@ -775,6 +791,37 @@ const App: React.FC = () => {
     } catch (e) { setHasApiKey(true); } }, []);
   
   useEffect(() => { checkApiKeyStatus(); }, [checkApiKeyStatus]);
+
+  const handleSaveDraft = () => {
+    const newDraft: Draft = {
+      id: `draft-${Date.now()}`,
+      name: selectedTrend?.title || `Proyecto ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
+      date: new Date().toISOString(),
+      trends,
+      selectedTrendId: selectedTrend?.id,
+      personaId: selectedPersonaId,
+      category
+    };
+    setDrafts(prev => [newDraft, ...prev]);
+    alert("Borrador guardado con éxito.");
+  };
+
+  const handleLoadDraft = (draft: Draft) => {
+    setTrends(draft.trends);
+    setSelectedPersonaId(draft.personaId);
+    setCategory(draft.category);
+    if (draft.selectedTrendId) {
+      const found = draft.trends.find(t => t.id === draft.selectedTrendId);
+      if (found) setSelectedTrend(found);
+    } else {
+      setSelectedTrend(null);
+    }
+    setIsDraftsModalOpen(false);
+  };
+
+  const handleDeleteDraft = (id: string) => {
+    setDrafts(prev => prev.filter(d => d.id !== id));
+  };
 
   const handleSelectTrend = (trend: Trend) => { setSelectedTrend(trend); setCombinedVideoUrl(null); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -1302,6 +1349,14 @@ RULES:
               <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Mi Canal</span>
             </a>
           )}
+          <button 
+            onClick={() => setIsDraftsModalOpen(true)}
+            className="p-2.5 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-600/20 transition-all flex items-center gap-2"
+            title="Mis Borradores"
+          >
+            <Archive size={18} />
+            <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Borradores</span>
+          </button>
           <button onClick={handleSelectKey} className={`p-2.5 rounded-xl bg-slate-800 text-${activePersona.color} border border-slate-700 shadow-md`}><Key size={18} /></button>
           <button onClick={() => setIsSettingsOpen(true)} className="p-2.5 rounded-xl bg-slate-800 text-slate-400 border border-slate-700"><Settings size={18} /></button>
         </div>
@@ -1372,6 +1427,7 @@ RULES:
                       <h3 className={`text-3xl font-black uppercase italic text-${activePersona.color} mb-8 leading-none tracking-tighter`}>{selectedTrend.title}</h3>
                       <div className="bg-slate-950/80 p-8 rounded-[2.5rem] mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar border border-slate-700/50 shadow-inner"><p className="text-base text-slate-100 font-bold leading-relaxed whitespace-pre-wrap italic">"{selectedTrend.chunkybertoVersion || "Borrador original: " + selectedTrend.originalSummary}"</p></div>
                       <button onClick={() => handlePlayTTS(selectedTrend.chunkybertoVersion || selectedTrend.originalSummary)} className={`w-full py-6 rounded-[2rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Volume2 size={24} /> ESCUCHAR COMPLETO</button>
+                      <button onClick={handleSaveDraft} className={`w-full py-6 mt-4 rounded-[2rem] bg-indigo-600/20 text-indigo-400 border-2 border-indigo-500/30 hover:border-indigo-500/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Archive size={24} /> GUARDAR BORRADOR</button>
                       <div className="mt-8 border-t border-slate-700/50 pt-8"><ForensicToolkit /></div>
                    </div>
                 </div>
@@ -1516,6 +1572,59 @@ RULES:
         )}
       </main>
       <footer className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 py-4 px-6 flex justify-between items-center z-40"><div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">V47.2.1 | TTS Validated | YouTube Sync | Publisher Pro | Editable Narration (ENT) | Asset Strip (SAS)</div><div className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div><span className="text-[8px] font-black uppercase text-slate-400">IA ACTIVA</span></div></footer>
+
+      {isDraftsModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" onClick={() => setIsDraftsModalOpen(false)} />
+          <div className="relative w-full max-w-2xl bg-slate-900 border-2 border-slate-800 rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-8 border-b border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-500 p-2 rounded-xl text-slate-950"><Archive size={20} /></div>
+                <h3 className="text-xl font-black uppercase italic tracking-tighter">Mis <span className="text-indigo-400">Borradores</span></h3>
+              </div>
+              <button onClick={() => setIsDraftsModalOpen(false)} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 transition-all"><X size={24} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
+              {drafts.length === 0 ? (
+                <div className="text-center py-20 space-y-4">
+                  <Archive size={48} className="mx-auto text-slate-700" />
+                  <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">No tienes borradores guardados.</p>
+                </div>
+              ) : (
+                drafts.map(draft => (
+                  <div key={draft.id} className="bg-slate-950 border-2 border-slate-800 p-6 rounded-2xl flex items-center justify-between gap-4 hover:border-indigo-500/50 transition-all group">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-black text-sm text-white uppercase truncate mb-1">{draft.name}</h4>
+                      <div className="flex items-center gap-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                        <span>{new Date(draft.date).toLocaleString()}</span>
+                        <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                        <span>{PERSONAS.find(p => p.id === draft.personaId)?.name}</span>
+                        <span className="w-1 h-1 bg-slate-700 rounded-full" />
+                        <span>{draft.trends.length} Historias</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => handleLoadDraft(draft)}
+                        className="px-4 py-2 bg-indigo-500 text-slate-950 rounded-lg font-black uppercase text-[10px] tracking-widest hover:bg-indigo-400 transition-all active:scale-95"
+                      >
+                        Cargar
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteDraft(draft.id)}
+                        className="p-2 text-slate-500 hover:text-rose-500 transition-all"
+                        title="Eliminar"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
