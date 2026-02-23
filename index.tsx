@@ -852,7 +852,8 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 1. Inicia cada bloque con el delimitador $$$.
 2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 15 de los títulos y mini-resúmenes.
 3. ITEMS 2 al 16 son las historias individuales.
-4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]`;
+4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
+5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.`;
 
     return `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}. 
 ${personaInstruction} 
@@ -913,7 +914,9 @@ MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary.
-3. TARGET LANGUAGE: ${languageText}.`,
+3. LIMIT: Maximum 4300 characters total.
+4. STRUCTURE: Paragraphs must be maximum 270 characters each.
+5. TARGET LANGUAGE: ${languageText}.`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       const finalContent = response.text || "";
@@ -983,18 +986,21 @@ RULES:
   IDENTIDAD PERSONA: ${activePersona.identityContext}
   HISTORIA: "${trend.chunkybertoVersion}"
   OBJETIVO: Identificar temas centrales, simbolismo según el POV del personaje y coherencia narrativa.
+  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
   IDIOMA: ${lang}`;
         } else if (type === 'interview') {
           prompt = `Simula una ENTREVISTA crítica o diálogo en Modo Podcast donde se entrevista a ${activePersona.name} sobre los eventos de esta historia.
   IDENTIDAD PERSONA: ${activePersona.identityContext}
   HISTORIA: "${trend.chunkybertoVersion}"
   OBJETIVO: Diálogo dinámico, revelando motivaciones profundas del personaje.
+  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
   IDIOMA: ${lang}`;
         } else if (type === 'advance') {
           prompt = `Escribe un AVANCE DE HISTORIA (secuela inmediata) para esta narrativa.
   IDENTIDAD PERSONA: ${activePersona.identityContext}
   HISTORIA ACTUAL: "${trend.chunkybertoVersion}"
   OBJETIVO: Continuar la trama manteniendo el mismo tono y POV.
+  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
   IDIOMA: ${lang}`;
         }
         const res = await apiRetry(() => ai.models.generateContent({
@@ -1025,7 +1031,7 @@ RULES:
       const languageText = getLanguageName(language);
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
-        contents: `USER BRIEF: ${userIdea}\nPERSONA: ${activePersona.name}\nIDENTITY: ${activePersona.identityContext}\nGenerate a complete narrative in ${languageText}.`,
+        contents: `USER BRIEF: ${userIdea}\nPERSONA: ${activePersona.name}\nIDENTITY: ${activePersona.identityContext}\nGenerate a complete narrative in ${languageText}.\nLIMITS: Max 4300 characters total. Max 270 characters per paragraph.`,
         config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       const fullText = response.text || "";
