@@ -459,6 +459,37 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
             </div>
           </div>
         )}
+
+        {/* Forensic Results in Card */}
+        <div className="mt-4 space-y-4">
+          {trend.analysis && (
+            <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[8px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1"><BrainCircuit size={10}/> Análisis</span>
+                <CopyButton text={trend.analysis} />
+              </div>
+              <p className="text-[11px] text-slate-300 italic line-clamp-3">{trend.analysis}</p>
+            </div>
+          )}
+          {trend.interview && (
+            <div className="bg-indigo-900/20 border border-indigo-500/30 p-4 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1"><MicVocal size={10}/> Entrevista</span>
+                <CopyButton text={trend.interview} />
+              </div>
+              <p className="text-[11px] text-slate-300 italic line-clamp-3">{trend.interview}</p>
+            </div>
+          )}
+          {trend.advance && (
+            <div className="bg-fuchsia-900/20 border border-fuchsia-500/30 p-4 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-widest flex items-center gap-1"><FastForward size={10}/> Avance</span>
+                <CopyButton text={trend.advance} />
+              </div>
+              <p className="text-[11px] text-slate-300 italic line-clamp-3">{trend.advance}</p>
+            </div>
+          )}
+        </div>
       </div>
       <div className="mt-auto space-y-3">
         {!trend.chunkybertoVersion ? <button type="button" onClick={(e) => { e.preventDefault(); onRewrite(trend); }} disabled={isRewriting} className={`w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${trend.isMasterSummary ? 'bg-indigo-500 hover:bg-indigo-400 text-white' : `bg-${persona.color} hover:opacity-80 text-slate-950`} active:scale-95 disabled:opacity-50 shadow-xl`}>{isRewriting ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{isRewriting ? 'Procesando...' : (trend.isMasterSummary ? 'NARRAR COMPENDIO' : 'NARRAR HISTORIA')}</button> : <button type="button" onClick={(e) => { e.preventDefault(); onSelect(trend); }} className="w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-emerald-500 hover:bg-emerald-400 active:scale-95 active:bg-emerald-600 text-slate-950 shadow-xl">{hasStoryboard ? <Video size={18} /> : <Layout size={18} />} {hasStoryboard ? 'ENTRAR AL ESTUDIO' : 'PRE-PRODUCCIÓN'}</button>}
@@ -971,55 +1002,60 @@ RULES:
   const handleAdvancedForensic = async (type: 'analysis' | 'interview' | 'advance', trendOverride?: Trend) => {
     let trend = trendOverride || selectedTrend;
     if (!trend) return;
+    const storyToAnalyze = trend.chunkybertoVersion || trend.originalSummary;
+    if (!storyToAnalyze) {
+      setAppError({ message: "No hay historia para analizar.", isQuota: false });
+      return;
+    }
+    
     setForensicToggles(prev => ({ ...prev, [type]: !prev[type] }));
-    if (trend.chunkybertoVersion) {
-      if (type === 'analysis') setIsAnalyzing(true);
-      if (type === 'interview') setIsInterviewing(true);
-      if (type === 'advance') setIsAdvancing(true);
-      setAppError(null);
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const lang = getLanguageName(language);
-        let prompt = "";
-        if (type === 'analysis') {
-          prompt = `Realiza un ANÁLISIS LITERARIO Y FORENSE detallado de la siguiente historia narrada por ${activePersona.name}. 
-  IDENTIDAD PERSONA: ${activePersona.identityContext}
-  HISTORIA: "${trend.chunkybertoVersion}"
-  OBJETIVO: Identificar temas centrales, simbolismo según el POV del personaje y coherencia narrativa.
-  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
-  IDIOMA: ${lang}`;
-        } else if (type === 'interview') {
-          prompt = `Simula una ENTREVISTA crítica o diálogo en Modo Podcast donde se entrevista a ${activePersona.name} sobre los eventos de esta historia.
-  IDENTIDAD PERSONA: ${activePersona.identityContext}
-  HISTORIA: "${trend.chunkybertoVersion}"
-  OBJETIVO: Diálogo dinámico, revelando motivaciones profundas del personaje.
-  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
-  IDIOMA: ${lang}`;
-        } else if (type === 'advance') {
-          prompt = `Escribe un AVANCE DE HISTORIA (secuela inmediata) para esta narrativa.
-  IDENTIDAD PERSONA: ${activePersona.identityContext}
-  HISTORIA ACTUAL: "${trend.chunkybertoVersion}"
-  OBJETIVO: Continuar la trama manteniendo el mismo tono y POV.
-  LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
-  IDIOMA: ${lang}`;
-        }
-        const res = await apiRetry(() => ai.models.generateContent({
-          model: modelSettings.text,
-          contents: prompt,
-          config: { systemInstruction: `Eres ${activePersona.name}. Responde con tu voz única de acuerdo a tu archivo de identidad.` }
-        })) as any;
-        const result = res.text || "";
-        setTrends(prev => prev.map(t => t.id === trend!.id ? { ...t, [type]: result } : t));
-        if (selectedTrend && selectedTrend.id === trend.id) {
-          setSelectedTrend(prev => prev ? { ...prev, [type]: result } : null);
-        }
-      } catch (err: any) {
-        setAppError(getErrorDetails(err));
-      } finally {
-        if (type === 'analysis') setIsAnalyzing(false);
-        if (type === 'interview') setIsInterviewing(false);
-        if (type === 'advance') setIsAdvancing(false);
+    
+    if (type === 'analysis') setIsAnalyzing(true);
+    if (type === 'interview') setIsInterviewing(true);
+    if (type === 'advance') setIsAdvancing(true);
+    setAppError(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const lang = getLanguageName(language);
+      let prompt = "";
+      if (type === 'analysis') {
+        prompt = `Realiza un ANÁLISIS LITERARIO Y FORENSE detallado de la siguiente historia narrada por ${activePersona.name}. 
+IDENTIDAD PERSONA: ${activePersona.identityContext}
+HISTORIA: "${storyToAnalyze}"
+OBJETIVO: Identificar temas centrales, simbolismo según el POV del personaje y coherencia narrativa.
+LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+IDIOMA: ${lang}`;
+      } else if (type === 'interview') {
+        prompt = `Simula una ENTREVISTA crítica o diálogo en Modo Podcast donde se entrevista a ${activePersona.name} sobre los eventos de esta historia.
+IDENTIDAD PERSONA: ${activePersona.identityContext}
+HISTORIA: "${storyToAnalyze}"
+OBJETIVO: Diálogo dinámico, revelando motivaciones profundas del personaje.
+LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+IDIOMA: ${lang}`;
+      } else if (type === 'advance') {
+        prompt = `Escribe un AVANCE DE HISTORIA (secuela inmediata) para esta narrativa.
+IDENTIDAD PERSONA: ${activePersona.identityContext}
+HISTORIA ACTUAL: "${storyToAnalyze}"
+OBJETIVO: Continuar la trama manteniendo el mismo tono y POV.
+LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+IDIOMA: ${lang}`;
       }
+      const res = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: prompt,
+        config: { systemInstruction: `Eres ${activePersona.name}. Responde con tu voz única de acuerdo a tu archivo de identidad.` }
+      })) as any;
+      const result = res.text || "";
+      setTrends(prev => prev.map(t => t.id === trend!.id ? { ...t, [type]: result } : t));
+      if (selectedTrend && selectedTrend.id === trend.id) {
+        setSelectedTrend(prev => prev ? { ...prev, [type]: result } : null);
+      }
+    } catch (err: any) {
+      setAppError(getErrorDetails(err));
+    } finally {
+      if (type === 'analysis') setIsAnalyzing(false);
+      if (type === 'interview') setIsInterviewing(false);
+      if (type === 'advance') setIsAdvancing(false);
     }
   };
 
@@ -1559,7 +1595,46 @@ RULES:
               <div className="flex flex-col gap-6 items-center text-center"><h2 className="text-4xl xs:text-5xl font-black italic text-white leading-none tracking-tighter uppercase">Studio de <span className={`text-${activePersona.color}`}>{activePersona.name}.</span></h2></div>
               <div className="flex flex-col sm:flex-row items-center gap-4"><div className="flex-1 relative w-full"><select value={category} onChange={(e) => { setCategory(e.target.value as Category); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full px-8 py-5 bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{categoryOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label.toUpperCase()}</option>)}</select></div></div>
               <div className="space-y-6">
-                {masterRecapTrend && (<div className="animate-in fade-in slide-in-from-top-4 duration-700"><ForensicToolkit targetTrend={masterRecapTrend} /><div className="text-center mt-2 mb-4"><span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Actuando sobre: MASTER RECAP SESSION</span></div></div>)}
+                {masterRecapTrend && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+                    <ForensicToolkit targetTrend={masterRecapTrend} />
+                    
+                    {/* Forensic Results for Master Recap */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      {masterRecapTrend.analysis && (
+                        <div className="bg-purple-900/20 border border-purple-500/30 p-6 rounded-2xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-2"><BrainCircuit size={14}/> Análisis Maestro</span>
+                            <CopyButton text={masterRecapTrend.analysis} />
+                          </div>
+                          <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.analysis}</p>
+                        </div>
+                      )}
+                      {masterRecapTrend.interview && (
+                        <div className="bg-indigo-900/20 border border-indigo-500/30 p-6 rounded-2xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2"><MicVocal size={14}/> Entrevista Maestra</span>
+                            <CopyButton text={masterRecapTrend.interview} />
+                          </div>
+                          <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.interview}</p>
+                        </div>
+                      )}
+                      {masterRecapTrend.advance && (
+                        <div className="bg-fuchsia-900/20 border border-fuchsia-500/30 p-6 rounded-2xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-black text-fuchsia-400 uppercase tracking-widest flex items-center gap-2"><FastForward size={14}/> Avance Maestro</span>
+                            <CopyButton text={masterRecapTrend.advance} />
+                          </div>
+                          <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.advance}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-center mt-4 mb-4">
+                      <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest">Actuando sobre: MASTER RECAP SESSION</span>
+                    </div>
+                  </div>
+                )}
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
               </div>
             </div>
