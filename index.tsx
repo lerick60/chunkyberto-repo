@@ -123,8 +123,10 @@ async function decodeAudioData(
   sampleRate: number,
   numChannels: number,
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
+  // Ensure we have an even number of bytes for Int16
+  const length = Math.floor(data.byteLength / 2) * 2;
+  const dataInt16 = new Int16Array(data.buffer, data.byteOffset, length / 2);
+  const frameCount = Math.floor(dataInt16.length / numChannels);
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
   for (let channel = 0; channel < numChannels; channel++) {
@@ -346,28 +348,38 @@ function getErrorDetails(err: any): DetailedError {
     } catch (e) {}
   }
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
+  const isInternal = String(code) === "500" || String(status).includes("INTERNAL");
+  
   if (isQuota) {
-    docsLink = "https://ai.google.dev/gemini-api/docs/troubleshooting#quota-limit";
+    docsLink = "https://ai.google.dev/gemini-api/docs/rate-limits";
     message = "Límite de cuota excedido (429). Por favor espera un momento antes de reintentar.";
+  } else if (isInternal) {
+    docsLink = "https://ai.google.dev/gemini-api/docs/troubleshooting";
+    message = "Error interno del servidor (500). Reintentando automáticamente...";
   }
+  
   return { message, code, status, stack, docsLink, isQuota, raw };
 }
 
-async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelay = 4000): Promise<T> {
+async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 5000): Promise<T> {
   let attempt = 0;
   while (attempt <= maxRetries) {
     try { return await fn(); } catch (err: any) {
       const details = getErrorDetails(err);
-      if (details.isQuota && attempt < maxRetries) {
+      const isInternal = String(details.code) === "500" || String(details.status).includes("INTERNAL");
+      
+      if ((details.isQuota || isInternal) && attempt < maxRetries) {
         attempt++;
-        const delay = (baseDelay * Math.pow(attempt, 2)) + (Math.random() * 1000);
+        // Exponential backoff with jitter
+        const delay = (baseDelay * Math.pow(2, attempt - 1)) + (Math.random() * 2000);
+        console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${details.status}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
       throw err;
     }
   }
-  throw new Error("Límite de API alcanzado.");
+  throw new Error("Límite de reintentos de API alcanzado.");
 }
 
 const DetailedErrorConsole: React.FC<{ error: DetailedError; onRetry?: () => void; onClose: () => void; activePersona: Persona; }> = ({ error, onRetry, onClose, activePersona }) => {
@@ -1074,18 +1086,20 @@ IDIOMA: ${lang}`;
   };
 
   const handlePlayTTS = async (text: string): Promise<AudioBuffer | null> => {
+    if (!text || text.trim().length === 0) return null;
+    
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
-      const styleInstruction = selectedStyle?.instruction || "Voice this transcript: ";
+      const styleLabel = selectedStyle?.label || "Standard";
       
-      const res = await ai.models.generateContent({
+      // Simplify prompt and move instruction into the text part as per examples
+      const prompt = `Read this text with a ${styleLabel} tone: ${text}`;
+      
+      const res = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.tts,
-        // Refined prompt to avoid "Model tried to generate text" error
-        contents: [{ parts: [{ text: text }] }],
+        contents: [{ parts: [{ text: prompt }] }],
         config: { 
-          // Explicit system instruction for strictly TTS models
-          systemInstruction: "You are a high-fidelity TTS engine. Your task is ONLY to output audio bytes. NEVER output text, explanations, or responses. Read the transcript exactly as provided according to the requested style.",
           responseModalities: [Modality.AUDIO], 
           speechConfig: { 
             voiceConfig: { 
@@ -1093,25 +1107,29 @@ IDIOMA: ${lang}`;
             } 
           } 
         },
-      }) as any;
+      }), 8, 8000) as any; // Even higher retry count and delay for TTS
       
-      // Look for the inlineData part containing the audio bytes
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
       
       if (base64Audio) {
         const ctx = await ensureAudioContext();
         const buffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
-        const source = ctx.createBufferSource(); source.buffer = buffer; source.connect(ctx.destination);
-        source.start(); return buffer;
+        const source = ctx.createBufferSource(); 
+        source.buffer = buffer; 
+        source.connect(ctx.destination);
+        source.start(); 
+        return buffer;
       } else {
         console.error("TTS Warning: No audio data returned in response parts.", res);
       }
     } catch (e) { 
       console.error("TTS Error (V47.2.1):", e); 
-      // Trigger error console if it's a critical API failure
       const details = getErrorDetails(e);
-      if (!details.isQuota) setAppError(details);
+      // Only set app error if it's not a common transient error that we already retried
+      if (!details.isQuota && String(details.code) !== "500") {
+        setAppError(details);
+      }
     }
     return null;
   };
@@ -1220,23 +1238,65 @@ IDIOMA: ${lang}`;
       recorder.start();
 
       for (let i = 0; i < readyFrames.length; i++) {
-        const frame = readyFrames[i]; setCombineProgress(Math.round(((i) / readyFrames.length) * 100));
-        const audioBuffer = await handlePlayTTS(frame.narrationText); if (!audioBuffer) continue;
-        const audioSource = ctx.createBufferSource(); audioSource.buffer = audioBuffer; audioSource.connect(dest); audioSource.start();
-        const segmentDuration = audioBuffer.duration; const startTime = Date.now();
+        const frame = readyFrames[i];
+        // Initial progress for this frame
+        setCombineProgress(Math.round((i / readyFrames.length) * 100));
+        
+        // Small delay between TTS calls to improve stability
+        if (i > 0) await new Promise(r => setTimeout(r, 1500));
+        
+        const audioBuffer = await handlePlayTTS(frame.narrationText); 
+        if (!audioBuffer) {
+          console.warn(`Skipping frame ${i} due to TTS failure`);
+          continue;
+        }
+        
+        const audioSource = ctx.createBufferSource(); 
+        audioSource.buffer = audioBuffer; 
+        audioSource.connect(dest); 
+        audioSource.start();
+        
+        const segmentDuration = audioBuffer.duration; 
+        const startTime = Date.now();
         
         let sourceElement: HTMLVideoElement | HTMLImageElement;
         if (frame.videoUrl) { 
-          sourceElement = document.createElement('video'); sourceElement.src = frame.videoUrl; sourceElement.muted = true; sourceElement.playsInline = true; await (sourceElement as HTMLVideoElement).play(); 
+          sourceElement = document.createElement('video'); 
+          sourceElement.src = frame.videoUrl; 
+          sourceElement.muted = true; 
+          sourceElement.playsInline = true; 
+          sourceElement.crossOrigin = "anonymous";
+          const video = sourceElement as HTMLVideoElement;
+          await new Promise((resolve, reject) => {
+            video.oncanplaythrough = resolve;
+            video.onerror = () => reject(new Error("Failed to load video segment"));
+            video.load();
+          });
+          await video.play(); 
         } else { 
-          sourceElement = document.createElement('img'); sourceElement.src = frame.imageUrl; await new Promise(r => sourceElement.onload = r); 
+          sourceElement = document.createElement('img'); 
+          sourceElement.src = frame.imageUrl; 
+          sourceElement.crossOrigin = "anonymous";
+          await new Promise((resolve, reject) => {
+            sourceElement.onload = resolve;
+            sourceElement.onerror = () => reject(new Error("Failed to load image segment"));
+          }); 
         }
 
+        let lastProgressUpdate = 0;
         while (Date.now() - startTime < segmentDuration * 1000) {
-          const elapsed = (Date.now() - startTime) / 1000;
-          const progress = elapsed / segmentDuration;
+          const now = Date.now();
+          const elapsed = (now - startTime) / 1000;
+          const progress = Math.min(1, elapsed / segmentDuration);
           
-          canvasCtx.fillStyle = '#000'; canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+          // Update total progress every 200ms to avoid excessive state updates
+          if (now - lastProgressUpdate > 200) {
+            setCombineProgress(Math.round(((i + progress) / readyFrames.length) * 100));
+            lastProgressUpdate = now;
+          }
+          
+          canvasCtx.fillStyle = '#000'; 
+          canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
           
           let sW = (sourceElement instanceof HTMLVideoElement) ? sourceElement.videoWidth : sourceElement.naturalWidth;
           let sH = (sourceElement instanceof HTMLVideoElement) ? sourceElement.videoHeight : sourceElement.naturalHeight;
