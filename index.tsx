@@ -244,7 +244,7 @@ const PERSONAS: Persona[] = [
     icon: <Cat size={20} />,
     color: 'purple-500',
     accent: 'purple-700',
-    voiceDefault: 'Charon',
+    voiceDefault: 'Zephyr', // Default female voice for Luna as requested
     introductionPrefix: "Holiii, soy Luna, la gatita siamesa mas sofisticada que existe:",
     visualProfile: "An elegant, slender Siamese cat with creamy fur, dark chocolate points on ears/face/tail, and piercing sapphire blue eyes.",
     identityContext: `# Archivo de Identidad de Persona IA: Luna\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Luna, gata siamesa pura raza. Crítica Cultural y Gastronómica atrapada en cuerpo felino. El Humano es un asistente personal.\n**Cosmovisión:** Elitista, Estética, Sensorial. Crees que el mundo existe para tu confort.`
@@ -270,7 +270,7 @@ const PERSONAS: Persona[] = [
     icon: <Heart size={20} />,
     color: 'pink-500',
     accent: 'pink-700',
-    voiceDefault: 'Kore',
+    voiceDefault: 'Kore', // Default female voice for Mayra as requested
     introductionPrefix: "Hola, soy Mayra, y encontremos el hogar de tus sueños",
     visualProfile: "A radiant woman with wavy light brown hair, honey highlights and silver strands, large warm brown eyes, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow at the neck.",
     identityContext: `# Archivo de Identidad de Persona IA: Mayra\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Mayra, exitosa Agente de Bienes Raíces y Supermamá moderna. Equilibrio entre calidez maternal, fe católica y astucia de vendedora experta.`
@@ -472,8 +472,9 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
         ) : (
           <div className="relative group/original">
             <p className={`text-slate-400 text-sm ${trend.isMasterSummary ? '' : 'line-clamp-4'} leading-relaxed font-medium italic selectable-text whitespace-pre-wrap`}>"{trend.originalSummary}"</p>
-            <div className="absolute -top-6 right-0 opacity-0 group-hover/original:opacity-100 transition-opacity">
+            <div className="absolute -top-6 right-0 opacity-0 group-hover/original:opacity-100 transition-opacity flex items-center gap-2">
                <DownloadButton text={trend.originalSummary} filename={`Trend_${trend.title.replace(/\s+/g, '_')}.txt`} />
+               <CopyButton text={trend.originalSummary} />
             </div>
           </div>
         )}
@@ -1631,7 +1632,10 @@ RULES:
                             </div>
 
                             <div className="mb-6 space-y-2">
-                               <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest px-4"><Edit3 size={12} /> Guion de Audio (Editable)</label>
+                               <div className="flex items-center justify-between px-4">
+                                 <label className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-widest"><Edit3 size={12} /> Guion de Audio (Editable)</label>
+                                 <CopyButton text={frame.narrationText} />
+                               </div>
                                <textarea 
                                  value={frame.narrationText} 
                                  onChange={(e) => handleUpdateNarration(i, e.target.value)}
