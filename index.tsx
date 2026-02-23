@@ -1076,13 +1076,43 @@ IDIOMA: ${lang}`;
       const languageText = getLanguageName(language);
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
-        contents: `USER BRIEF: ${userIdea}\nPERSONA: ${activePersona.name}\nIDENTITY: ${activePersona.identityContext}\nGenerate a complete narrative in ${languageText}.\nLIMITS: Max 4300 characters total. Max 270 characters per paragraph.`,
+        contents: `USER BRIEF: ${userIdea}
+
+STRICT NARRATION REQUEST:
+PERSONA TO ADOPT: ${activePersona.name}. 
+FULL IDENTITY SOURCE: ${activePersona.identityContext} 
+
+Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
+
+RULES:
+1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
+2. ADHERE STRICTLY to your POV and specific vocabulary.
+3. LIMIT: Maximum 4300 characters total.
+4. STRUCTURE: Paragraphs must be maximum 270 characters each.
+5. TARGET LANGUAGE: ${languageText}.`,
         config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
+      
       const fullText = response.text || "";
-      const newTrend: Trend = { id: `hybrid-${Date.now()}`, title: userIdea.substring(0, 50), originalSummary: userIdea, source: "Laboratorio Creativo", url: "", chunkybertoVersion: fullText };
-      setTrends(prev => [newTrend, ...prev]); setLatestHybridTrend(newTrend);
-    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsGeneratingIdea(false); }
+      if (!fullText || fullText.length < 50) {
+        throw new Error("La IA no pudo generar una narrativa válida. Por favor, intenta con una idea más detallada o un tema diferente.");
+      }
+      
+      const newTrend: Trend = { 
+        id: `hybrid-${Date.now()}`, 
+        title: userIdea.substring(0, 50), 
+        originalSummary: userIdea, 
+        source: "Laboratorio Creativo", 
+        url: "", 
+        chunkybertoVersion: fullText 
+      };
+      setTrends(prev => [newTrend, ...prev]); 
+      setLatestHybridTrend(newTrend);
+    } catch (err: any) { 
+      setAppError(getErrorDetails(err)); 
+    } finally { 
+      setIsGeneratingIdea(false); 
+    }
   };
 
   const handlePlayTTS = async (text: string): Promise<AudioBuffer | null> => {
