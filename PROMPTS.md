@@ -53,6 +53,7 @@ Este documento detalla las plantillas refinadas utilizadas por el motor para gar
 > "Simula una entrevista en modo Podcast donde {persona_name} responde sobre los eventos narrados, saliendo de la narración para entrar en el diálogo."
 ### Avance de Historia
 > "Escribe la secuela inmediata. ¿Qué pasa 5 minutos después del final de esta historia?"
+> **NOTA DE INTEGRACIÓN (V45.1.0):** El avance generado se integra visualmente justo después del título y antes del inicio de la narración principal para proporcionar contexto de continuidad.
 
 ---
 

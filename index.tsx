@@ -449,6 +449,12 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
                 <CopyButton text={trend.chunkybertoVersion} />
               </div>
             </div>
+            {trend.advance && (
+              <div className="mb-6 p-5 bg-fuchsia-500/10 border-l-4 border-fuchsia-500 rounded-r-2xl animate-in fade-in slide-in-from-left-4 duration-500">
+                <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2">Avance Narrativo / Secuela</span>
+                <p className="text-sm text-fuchsia-100 italic leading-relaxed">"{trend.advance}"</p>
+              </div>
+            )}
             <p className="italic text-slate-100 text-base font-bold leading-relaxed selectable-text whitespace-pre-wrap">"{trend.chunkybertoVersion}"</p>
           </div>
         ) : (
@@ -478,15 +484,6 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
                 <CopyButton text={trend.interview} />
               </div>
               <p className="text-[11px] text-slate-300 italic line-clamp-3">{trend.interview}</p>
-            </div>
-          )}
-          {trend.advance && (
-            <div className="bg-fuchsia-900/20 border border-fuchsia-500/30 p-4 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[8px] font-black text-fuchsia-400 uppercase tracking-widest flex items-center gap-1"><FastForward size={10}/> Avance</span>
-                <CopyButton text={trend.advance} />
-              </div>
-              <p className="text-[11px] text-slate-300 italic line-clamp-3">{trend.advance}</p>
             </div>
           )}
         </div>
@@ -1467,7 +1464,15 @@ IDIOMA: ${lang}`;
                    <div className="bg-slate-800/80 backdrop-blur-md p-10 rounded-[4rem] border-2 border-slate-700 shadow-2xl sticky top-32">
                       <div className="flex items-center gap-3 mb-8"><ScrollText size={24} className={`text-${activePersona.color}`} /><span className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">Guion Literario</span></div>
                       <h3 className={`text-3xl font-black uppercase italic text-${activePersona.color} mb-8 leading-none tracking-tighter`}>{selectedTrend.title}</h3>
-                      <div className="bg-slate-950/80 p-8 rounded-[2.5rem] mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar border border-slate-700/50 shadow-inner"><p className="text-base text-slate-100 font-bold leading-relaxed whitespace-pre-wrap italic">"{selectedTrend.chunkybertoVersion || "Borrador original: " + selectedTrend.originalSummary}"</p></div>
+                      <div className="bg-slate-950/80 p-8 rounded-[2.5rem] mb-8 max-h-[60vh] overflow-y-auto custom-scrollbar border border-slate-700/50 shadow-inner">
+                          {selectedTrend.advance && (
+                            <div className="mb-8 p-6 bg-fuchsia-500/10 border-l-4 border-fuchsia-500 rounded-r-2xl animate-in fade-in slide-in-from-left-4 duration-500">
+                              <span className="text-[10px] font-black text-fuchsia-400 uppercase tracking-widest block mb-2">Avance Narrativo / Secuela</span>
+                              <p className="text-sm text-fuchsia-100 italic leading-relaxed">"{selectedTrend.advance}"</p>
+                            </div>
+                          )}
+                          <p className="text-base text-slate-100 font-bold leading-relaxed whitespace-pre-wrap italic">"{selectedTrend.chunkybertoVersion || "Borrador original: " + selectedTrend.originalSummary}"</p>
+                       </div>
                       <button onClick={() => handlePlayTTS(selectedTrend.chunkybertoVersion || selectedTrend.originalSummary)} className={`w-full py-6 rounded-[2rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Volume2 size={24} /> ESCUCHAR COMPLETO</button>
                       <button onClick={handleSaveDraft} className={`w-full py-6 mt-4 rounded-[2rem] bg-indigo-600/20 text-indigo-400 border-2 border-indigo-500/30 hover:border-indigo-500/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Archive size={24} /> GUARDAR BORRADOR</button>
                       <div className="mt-8 border-t border-slate-700/50 pt-8"><ForensicToolkit /></div>
@@ -1475,11 +1480,10 @@ IDIOMA: ${lang}`;
                 </div>
 
                 <div className="lg:col-span-8 space-y-12">
-                   {(selectedTrend.analysis || selectedTrend.interview || selectedTrend.advance) && (
+                   {(selectedTrend.analysis || selectedTrend.interview) && (
                      <div className="space-y-8 animate-in fade-in slide-in-from-top-6 duration-500">
                         {selectedTrend.analysis && (<div className="bg-purple-900/10 border-2 border-purple-500/20 p-8 rounded-[3rem] relative group shadow-2xl"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-purple-400 font-black text-[10px] uppercase tracking-[0.3em]"><BrainCircuit size={16} /> Resultado Análisis Literario</div><div className="flex items-center gap-2"><CopyButton text={selectedTrend.analysis} /><button onClick={() => { setSelectedTrend(prev => prev ? {...prev, analysis: undefined} : null); }} className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400"><X size={14}/></button></div></div><p className="text-sm text-slate-300 leading-relaxed italic whitespace-pre-wrap">{selectedTrend.analysis}</p></div>)}
                         {selectedTrend.interview && (<div className="bg-indigo-900/10 border-2 border-indigo-500/20 p-8 rounded-[3rem] relative group shadow-2xl"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-indigo-400 font-black text-[10px] uppercase tracking-[0.3em]"><RadioTower size={16} /> Transcripción Entrevista Persona</div><div className="flex items-center gap-2"><CopyButton text={selectedTrend.interview} /><button onClick={() => { setSelectedTrend(prev => prev ? {...prev, interview: undefined} : null); }} className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400"><X size={14}/></button></div></div><p className="text-sm text-slate-300 leading-relaxed italic whitespace-pre-wrap">{selectedTrend.interview}</p></div>)}
-                        {selectedTrend.advance && (<div className="bg-fuchsia-900/10 border-2 border-fuchsia-500/20 p-8 rounded-[3rem] relative group shadow-2xl"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-fuchsia-400 font-black text-[10px] uppercase tracking-[0.3em]"><Stars size={16} /> Secuela / Avance Narrativo</div><div className="flex items-center gap-2"><CopyButton text={selectedTrend.advance} /><button onClick={() => { setSelectedTrend(prev => prev ? {...prev, advance: undefined} : null); }} className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400"><X size={14}/></button></div></div><p className="text-sm text-slate-300 leading-relaxed italic whitespace-pre-wrap">{selectedTrend.advance}</p></div>)}
                      </div>
                    )}
 
@@ -1600,7 +1604,7 @@ IDIOMA: ${lang}`;
                     <ForensicToolkit targetTrend={masterRecapTrend} />
                     
                     {/* Forensic Results for Master Recap */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       {masterRecapTrend.analysis && (
                         <div className="bg-purple-900/20 border border-purple-500/30 p-6 rounded-2xl">
                           <div className="flex items-center justify-between mb-3">
@@ -1617,15 +1621,6 @@ IDIOMA: ${lang}`;
                             <CopyButton text={masterRecapTrend.interview} />
                           </div>
                           <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.interview}</p>
-                        </div>
-                      )}
-                      {masterRecapTrend.advance && (
-                        <div className="bg-fuchsia-900/20 border border-fuchsia-500/30 p-6 rounded-2xl">
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-[9px] font-black text-fuchsia-400 uppercase tracking-widest flex items-center gap-2"><FastForward size={14}/> Avance Maestro</span>
-                            <CopyButton text={masterRecapTrend.advance} />
-                          </div>
-                          <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.advance}</p>
                         </div>
                       )}
                     </div>
