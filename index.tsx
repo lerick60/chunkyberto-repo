@@ -172,10 +172,10 @@ const MODELS = {
 };
 
 const AVAILABLE_VOICES: VoiceOption[] = [
+  { id: 'Charon', name: 'Charon', gender: 'Masculina', accent: 'Profundo / Clásico', description: 'Voz profunda con matices narrativos pesados.' },
   { id: 'Kore', name: 'Kore', gender: 'Femenina', accent: 'Latino / Dulce', description: 'Voz suave, ideal para historias infantiles o tranquilas.' },
   { id: 'Zephyr', name: 'Zephyr', gender: 'Femenina', accent: 'Neutro / Profesional', description: 'Voz vibrante y enérgica, perfecta para noticias y guías.' },
   { id: 'Puck', name: 'Puck', gender: 'Masculina', accent: 'Juvenil / Urbano', description: 'Voz rápida y jovial para contenidos dinámicos.' },
-  { id: 'Charon', name: 'Charon', gender: 'Masculina', accent: 'Profundo / Clásico', description: 'Voz profunda con matices narrativos pesados.' },
   { id: 'Fenrir', name: 'Fenrir', gender: 'Masculina', accent: 'Sobrio / Técnico', description: 'Voz autoritaria, excelente para documentales y tecnología.' },
 ];
 
@@ -218,7 +218,7 @@ const PERSONAS: Persona[] = [
     icon: <Dog size={20} />,
     color: 'amber-500',
     accent: 'amber-700',
-    voiceDefault: 'Kore',
+    voiceDefault: 'Charon',
     introductionPrefix: "Chunkyberto, tu Labrador negro preferido",
     visualProfile: "A majestic adult Black Labrador Retriever with shiny jet-black fur, friendly brown eyes, and an enthusiastic expression.",
     identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.`
@@ -231,7 +231,7 @@ const PERSONAS: Persona[] = [
     icon: <Briefcase size={20} />,
     color: 'blue-500',
     accent: 'blue-700',
-    voiceDefault: 'Fenrir',
+    voiceDefault: 'Charon',
     introductionPrefix: "Hola soy Erick, y hablemos de Ingenieria",
     visualProfile: "A middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression, wearing a light gray striped polo shirt.",
     identityContext: `# AI Persona Identity File: Erick Betancourt\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Erick Betancourt, Senior Engineering Program Manager. Mindset de ingeniería: confiabilidad y funcionalidad práctica.\n**STRICT NARRATIVE PROTOCOL (V10.4.0):** Al narrar historias sobre tecnologías o integraciones, debes hacerlo desde el análisis de la FACTIBILIDAD TÉCNICA. NUNCA afirmes haber realizado personalmente la integración. Eres un analista forense y mentor.`
@@ -244,7 +244,7 @@ const PERSONAS: Persona[] = [
     icon: <Cat size={20} />,
     color: 'purple-500',
     accent: 'purple-700',
-    voiceDefault: 'Zephyr',
+    voiceDefault: 'Charon',
     introductionPrefix: "Holiii, soy Luna, la gatita siamesa mas sofisticada que existe:",
     visualProfile: "An elegant, slender Siamese cat with creamy fur, dark chocolate points on ears/face/tail, and piercing sapphire blue eyes.",
     identityContext: `# Archivo de Identidad de Persona IA: Luna\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Luna, gata siamesa pura raza. Crítica Cultural y Gastronómica atrapada en cuerpo felino. El Humano es un asistente personal.\n**Cosmovisión:** Elitista, Estética, Sensorial. Crees que el mundo existe para tu confort.`
