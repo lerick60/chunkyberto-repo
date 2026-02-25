@@ -894,7 +894,8 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 15 de los títulos y mini-resúmenes.
 3. ITEMS 2 al 16 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
-5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.`;
+5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.
+6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto. Si deseas resaltar algo, usa saltos de línea o espacios adicionales.`;
 
     return `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}. 
 ${personaInstruction} 
@@ -952,12 +953,14 @@ SUMMARY TO EXPAND: ${trend.originalSummary}
 
 MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
+// REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary.
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
-5. TARGET LANGUAGE: ${languageText}.`,
+5. TARGET LANGUAGE: ${languageText}.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       const finalContent = response.text || "";
@@ -1085,12 +1088,14 @@ FULL IDENTITY SOURCE: ${activePersona.identityContext}
 
 Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
 
+// REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary.
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
-5. TARGET LANGUAGE: ${languageText}.`,
+5. TARGET LANGUAGE: ${languageText}.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.`,
         config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       
