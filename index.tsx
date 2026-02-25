@@ -106,6 +106,24 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 
+// DIRECTRICES DE ARQUITECTURA DE CUENTO (ArquitecturaCuento.md)
+// Estas directrices se aplican obligatoriamente a las personas 'chunkyberto' y 'luna'.
+const STORY_GUIDELINES = `
+DIRECTRICES DE ARQUITECTURA DE CUENTO (APLICAR ESTRICTAMENTE):
+1. EXTENSIÓN: Microrrelato (5-500 palabras) o Cuento Corto (500-2000 palabras).
+2. TÍTULO: Debe ser un ancla, no un resumen; debe complementar o cambiar el sentido de la historia.
+3. ESTRUCTURA: 
+   - Inicio 'In Media Res' (comenzar en medio de la acción).
+   - Conflicto Único (sin subtramas).
+   - Desenlace de 'Knock-out' (giro inesperado o epifanía).
+4. ESTILO:
+   - Teoría del Iceberg: Narrar solo lo observable, omitir explicaciones (subtexto).
+   - Economía Actancial: Máximo 1-2 personajes, descripciones mínimas.
+   - Lenguaje Directo: Verbos fuertes, sin adjetivos superfluos, sin adverbios en '-mente'.
+   - Mostrar, no explicar: Evidenciar emociones a través de gestos y acciones.
+5. PARADIGMAS (Elegir uno según la historia): Clásico, Moderno, Posmoderno (Hibridación) o Kishotenketsu.
+`;
+
 // --- Helper Functions ---
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
@@ -895,7 +913,8 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 3. ITEMS 2 al 16 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
 5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.
-6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto. Si deseas resaltar algo, usa saltos de línea o espacios adicionales.`;
+6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto. Si deseas resaltar algo, usa saltos de línea o espacios adicionales.
+${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
     return `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}. 
 ${personaInstruction} 
@@ -960,7 +979,8 @@ RULES:
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.`,
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.
+${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       const finalContent = response.text || "";
@@ -1095,7 +1115,8 @@ RULES:
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.`,
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.
+${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
       
