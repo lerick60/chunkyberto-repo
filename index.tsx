@@ -930,7 +930,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       let extraForensic = "";
       if (forensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS.";
       if (forensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES.";
-      if (forensicToggles.advance) extraForensic += "\n- NARRATE AS IMMEDIATE SEQUELS (ADVANCE).";
+      if (forensicToggles.advance) extraForensic += "\n- NARRATE AS IMMEDIATE SEQUELS (ADVANCE). Precede the sequel section with the subtitle 'Avance'.";
 
       const response = await apiRetry(() => ai.models.generateContent({ 
         model: modelSettings.text, 
@@ -959,7 +959,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       let forensicModifiers = "";
       if (forensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT.";
       if (forensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE).";
-      if (forensicToggles.advance) forensicModifiers += "\n- NARRATE AS THE IMMEDIATE SEQUEL OR ADVANCE TO THE SUMMARY EVENTS.";
+      if (forensicToggles.advance) forensicModifiers += "\n- NARRATE AS THE IMMEDIATE SEQUEL OR ADVANCE TO THE SUMMARY EVENTS. Precede the sequel section with the subtitle 'Avance'.";
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -1098,6 +1098,12 @@ IDIOMA: ${lang}`;
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const languageText = getLanguageName(language);
+      
+      let forensicModifiers = "";
+      if (forensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT.";
+      if (forensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE).";
+      if (forensicToggles.advance) forensicModifiers += "\n- NARRATE AS THE IMMEDIATE SEQUEL OR ADVANCE TO THE USER BRIEF. Precede the sequel section with the subtitle 'Avance'.";
+
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
         contents: `USER BRIEF: ${userIdea}
@@ -1107,6 +1113,8 @@ PERSONA TO ADOPT: ${activePersona.name}.
 FULL IDENTITY SOURCE: ${activePersona.identityContext} 
 
 Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
+
+MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
 // REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
@@ -1464,16 +1472,25 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     { id: 'ai_galactic', label: 'Misterios Galácticos', icon: <Dna size={14} />, exclusive: 'erickberto' },
   ].filter(opt => !opt.exclusive || selectedPersonaId === opt.exclusive);
 
-  const ForensicToolkit: React.FC<{ targetTrend?: Trend }> = ({ targetTrend }) => {
+  const ForensicToolkit: React.FC<{ targetTrend?: Trend; isGlobal?: boolean }> = ({ targetTrend, isGlobal }) => {
     const trend = targetTrend || selectedTrend;
-    if (!trend) return null;
+    if (!trend && !isGlobal) return null;
+    
+    const handleToggle = (type: 'analysis' | 'interview' | 'advance') => {
+      if (isGlobal) {
+        setForensicToggles(prev => ({ ...prev, [type]: !prev[type] }));
+      } else if (trend) {
+        handleAdvancedForensic(type, trend);
+      }
+    };
+
     return (
-      <div className="bg-purple-900/10 border-2 border-purple-500/20 p-6 rounded-[2.5rem] shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)] animate-in slide-in-from-top-4 duration-500 my-4">
-        <div className="flex items-center gap-2 mb-6 px-2"><Wand2 size={16} className="text-purple-400" /><span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-300">Forensic Modifiers (Toggle)</span></div>
-        <div className="grid grid-cols-1 gap-3">
-           <button onClick={() => handleAdvancedForensic('analysis', trend)} disabled={isAnalyzing || (rewritingId === trend.id)} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.analysis ? 'bg-purple-500 text-slate-950 shadow-purple-500/40' : 'bg-purple-900/40 text-purple-300 hover:bg-purple-800/50'}`}><div className="flex items-center gap-2"><BrainCircuit size={16} /> Análisis Literario</div>{isAnalyzing || (rewritingId === trend.id) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.analysis ? <Check size={14} /> : <ChevronRight size={14} />}</button>
-           <button onClick={() => handleAdvancedForensic('interview', trend)} disabled={isInterviewing || (rewritingId === trend.id)} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.interview ? 'bg-indigo-500 text-slate-950 shadow-indigo-500/40' : 'bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50'}`}><div className="flex items-center gap-2"><MicVocal size={16} /> Modo Entrevista</div>{isInterviewing || (rewritingId === trend.id) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.interview ? <Check size={14} /> : <ChevronRight size={14} />}</button>
-           <button onClick={() => handleAdvancedForensic('advance', trend)} disabled={isAdvancing || (rewritingId === trend.id)} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.advance ? 'bg-fuchsia-500 text-slate-950 shadow-fuchsia-500/40' : 'bg-fuchsia-900/40 text-fuchsia-300 hover:bg-fuchsia-800/50'}`}><div className="flex items-center gap-2"><FastForward size={16} /> Avance de Historia</div>{isAdvancing || (rewritingId === trend.id) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.advance ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+      <div className={`${isGlobal ? 'bg-slate-900/50 border-slate-800' : 'bg-purple-900/10 border-purple-500/20'} border-2 p-6 rounded-[2.5rem] shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)] animate-in slide-in-from-top-4 duration-500 my-4`}>
+        <div className="flex items-center gap-2 mb-6 px-2"><Wand2 size={16} className="text-purple-400" /><span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-300">Forensic Modifiers {isGlobal ? '(Global)' : '(Toggle)'}</span></div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+           <button onClick={() => handleToggle('analysis')} disabled={!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.analysis ? 'bg-purple-500 text-slate-950 shadow-purple-500/40' : 'bg-purple-900/40 text-purple-300 hover:bg-purple-800/50'}`}><div className="flex items-center gap-2"><BrainCircuit size={16} /> Análisis Literario</div>{!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.analysis ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+           <button onClick={() => handleToggle('interview')} disabled={!isGlobal && (isInterviewing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.interview ? 'bg-indigo-500 text-slate-950 shadow-indigo-500/40' : 'bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50'}`}><div className="flex items-center gap-2"><MicVocal size={16} /> Modo Entrevista</div>{!isGlobal && (isInterviewing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.interview ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+           <button onClick={() => handleToggle('advance')} disabled={!isGlobal && (isAdvancing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.advance ? 'bg-fuchsia-500 text-slate-950 shadow-fuchsia-500/40' : 'bg-fuchsia-900/40 text-fuchsia-300 hover:bg-fuchsia-800/50'}`}><div className="flex items-center gap-2"><FastForward size={16} /> Avance de Historia</div>{!isGlobal && (isAdvancing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.advance ? <Check size={14} /> : <ChevronRight size={14} />}</button>
         </div>
       </div>
     );
@@ -1750,6 +1767,9 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                     </div>
                   </div>
                 )}
+                
+                <ForensicToolkit isGlobal />
+                
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
               </div>
             </div>
@@ -1758,6 +1778,9 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
               <div className={`bg-slate-900 border-4 border-${activePersona.color}/30 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group`}><div className={`absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700 text-${activePersona.color}`}><FlaskRound size={120} /></div>
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-2"><div className={`flex items-center gap-3 text-${activePersona.color} font-black uppercase text-[10px] tracking-[0.4em]`}><FlaskRound size={18} /> LABORATORIO DE IDEAS V47.2.1</div><h3 className="text-3xl font-black uppercase italic leading-none">COMPOSITOR <span className={`text-${activePersona.color}`}>CREATIVO HÍBRIDO</span></h3></div>
+                  
+                  <ForensicToolkit isGlobal />
+                  
                   <textarea value={userIdea} onChange={(e) => setUserIdea(e.target.value)} placeholder='Escribe tu idea o un link...' className={`w-full min-h-[180px] p-6 bg-slate-950 border-2 border-slate-800 rounded-[1.5rem] font-bold text-slate-100 focus:border-${activePersona.color} outline-none transition-all custom-scrollbar text-sm shadow-inner`} />
                   {latestHybridTrend && (<div className="bg-slate-950/80 border-2 border-emerald-500/30 p-8 rounded-[2rem] animate-in zoom-in-95 duration-500"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-widest"><Check size={16} /> Narrativa Generada</div><CopyButton text={latestHybridTrend.chunkybertoVersion || ""} /></div><p className="text-slate-100 font-bold text-sm italic mb-8 line-clamp-4">"{latestHybridTrend.chunkybertoVersion}"</p><button onClick={() => handleSelectTrend(latestHybridTrend)} className={`w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all active:scale-95`}><Video size={18} /> IR AL ESTUDIO CINEMATOGRÁFICO</button></div>)}
                   <button onClick={handleGenerateFromIdea} disabled={isGeneratingIdea || !userIdea.trim()} className={`w-full py-6 bg-${activePersona.color} text-slate-950 rounded-2xl font-black uppercase text-base italic tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-30`}>{isGeneratingIdea ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} />}{isGeneratingIdea ? "CONSTRUYENDO NARRATIVA..." : "EJECUTAR BRIEF CREATIVO"}</button>
