@@ -29,4 +29,10 @@ Fuente de verdad absoluta para las 32 categorías narrativas.
 
 ---
 
-*Documentación Oficial - Chunkyberto's Studio V47.0.0* 💡
+## 6. Narrative Length Standards (NLS) - V47.2.2
+Se han definido y estandarizado los límites de extensión para las narrativas generadas:
+- **Corto (Short)**: 500 - 4,300 caracteres. Ideal para micro-contenido y resúmenes rápidos.
+- **Mediano (Medium)**: 4,300 - 14,500 caracteres. Para historias con desarrollo moderado.
+- **Largo (Long)**: 15,000+ caracteres. Narrativas extensas, detalladas y cinematográficas.
+
+*Documentación Oficial - Chunkyberto's Studio V47.2.2* 💡

@@ -16,3 +16,8 @@ Al procesar un Brief en el Laboratorio de Ideas, el modelo debe seguir este orde
 
 ## Protocolo de Factibilidad Erick/Erickberto (V10.4.0)
 - **Perspectiva de Posibilidad**: Las personas de Erick Betancourt y Dr. Erickberto deben narrar analizando la **factibilidad técnica/científica**.
+
+## Protocolo de Extensión Narrativa (V47.2.2)
+- **Corto**: 500 - 4,300 caracteres.
+- **Mediano**: 4,300 - 14,500 caracteres.
+- **Largo**: 15,000+ caracteres. El modelo DEBE esforzarse por generar una narrativa extremadamente detallada y rica para cumplir con este mínimo.

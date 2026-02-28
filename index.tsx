@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { GoogleGenAI, Modality } from "@google/genai";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import JSZip from 'jszip';
 import { 
   Dog, 
@@ -169,6 +171,7 @@ type Category =
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
+type NarrativeLength = 'short' | 'medium' | 'long';
 type TtsStyle = 'standard' | 'playful' | 'documentary';
 type MotionEffect = 'none' | 'zoom_in' | 'pan_right' | 'pan_left';
 type TransitionEffect = 'cut' | 'fade_black' | 'cross_dissolve';
@@ -485,11 +488,19 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
                 <p className="text-sm text-fuchsia-100 italic leading-relaxed">"{trend.advance}"</p>
               </div>
             )}
-            <p className="italic text-slate-100 text-base font-bold leading-relaxed selectable-text whitespace-pre-wrap">"{trend.chunkybertoVersion}"</p>
+            <div className="markdown-body italic text-slate-100 text-base font-bold leading-relaxed selectable-text whitespace-pre-wrap">
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {trend.chunkybertoVersion}
+              </Markdown>
+            </div>
           </div>
         ) : (
           <div className="relative group/original">
-            <p className={`text-slate-400 text-sm ${trend.isMasterSummary ? '' : 'line-clamp-4'} leading-relaxed font-medium italic selectable-text whitespace-pre-wrap`}>"{trend.originalSummary}"</p>
+            <div className={`markdown-body text-slate-400 text-sm ${trend.isMasterSummary ? '' : 'line-clamp-4'} leading-relaxed font-medium italic selectable-text whitespace-pre-wrap`}>
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {trend.originalSummary}
+              </Markdown>
+            </div>
             <div className="absolute -top-6 right-0 opacity-0 group-hover/original:opacity-100 transition-opacity flex items-center gap-2">
                <DownloadButton text={trend.originalSummary} filename={`Trend_${trend.title.replace(/\s+/g, '_')}.txt`} />
                <CopyButton text={trend.originalSummary} />
@@ -770,7 +781,10 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isInterviewing, setIsInterviewing] = useState(false);
   const [isAdvancing, setIsAdvancing] = useState(false);
-  const [forensicToggles, setForensicToggles] = useState({ analysis: false, interview: false, advance: false });
+  // Control de extensión para el Compositor Creativo Híbrido:
+  // 'short' = 4300 chars, 'medium' = 8000 chars, 'long' = 15000+ chars.
+  const [narrativeLength, setNarrativeLength] = useState<NarrativeLength>('short');
+  const [globalForensicToggles, setGlobalForensicToggles] = useState({ analysis: false, interview: false, advance: false });
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [ytChannelUrl, setYtChannelUrl] = useState(() => localStorage.getItem('chunky_yt_url') || "");
   const [drafts, setDrafts] = useState<Draft[]>(() => {
@@ -928,9 +942,28 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       let extraForensic = "";
-      if (forensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS.";
-      if (forensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES.";
-      if (forensicToggles.advance) extraForensic += "\n- NARRATE AS IMMEDIATE SEQUELS (ADVANCE). Precede the sequel section with the subtitle 'Avance'.";
+      if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.advance) {
+        // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
+        extraForensic += `
+- MANDATORY HIERARCHY (ADVANCE MODE):
+  1. Introductory text (Persona style).
+  2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
+  3. Body of the story advance.
+  4. The story title in bold (e.g., "**Título**").
+  5. Body of the remaining narration.
+- CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
+- RESPONSE TEMPLATE:
+[Introductory Prefix]
+
+**Avance de la Historia**
+[Contenido del avance aquí...]
+
+**[Título]**
+[Contenido de la narración restante aquí...]
+`;
+      }
 
       const response = await apiRetry(() => ai.models.generateContent({ 
         model: modelSettings.text, 
@@ -949,7 +982,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       });
       setTrends(newTrends.slice(0, 16)); hasInitialFetchedRef.current = true;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
-  }, [generateDefaultPrompt, modelSettings.text, category, forensicToggles]); 
+  }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles]); 
 
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
@@ -957,9 +990,28 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
-      if (forensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT.";
-      if (forensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE).";
-      if (forensicToggles.advance) forensicModifiers += "\n- NARRATE AS THE IMMEDIATE SEQUEL OR ADVANCE TO THE SUMMARY EVENTS. Precede the sequel section with the subtitle 'Avance'.";
+      if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.advance) {
+        // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
+        forensicModifiers += `
+- MANDATORY HIERARCHY (ADVANCE MODE):
+  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
+  2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
+  3. Body of the story advance.
+  4. The story title in bold: "**${trend.title}**".
+  5. Body of the remaining narration.
+- CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
+- RESPONSE TEMPLATE:
+${activePersona.introductionPrefix}
+
+**Avance de la Historia**
+[Contenido del avance aquí...]
+
+**${trend.title}**
+[Contenido de la narración restante aquí...]
+`;
+      }
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -975,11 +1027,11 @@ MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 // REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
-2. ADHERE STRICTLY to your POV and specific vocabulary.
+2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title and the phrase "**Avance de la Historia**". Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
@@ -1041,8 +1093,6 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       return;
     }
     
-    setForensicToggles(prev => ({ ...prev, [type]: !prev[type] }));
-    
     if (type === 'analysis') setIsAnalyzing(true);
     if (type === 'interview') setIsInterviewing(true);
     if (type === 'advance') setIsAdvancing(true);
@@ -1100,9 +1150,35 @@ IDIOMA: ${lang}`;
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
-      if (forensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT.";
-      if (forensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE).";
-      if (forensicToggles.advance) forensicModifiers += "\n- NARRATE AS THE IMMEDIATE SEQUEL OR ADVANCE TO THE USER BRIEF. Precede the sequel section with the subtitle 'Avance'.";
+      if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.advance) {
+        // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
+        forensicModifiers += `
+- MANDATORY HIERARCHY (ADVANCE MODE):
+  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
+  2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
+  3. Body of the story advance.
+  4. The story title in bold (e.g., "**Título**").
+  5. Body of the remaining narration.
+- CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
+- RESPONSE TEMPLATE:
+${activePersona.introductionPrefix}
+
+**Avance de la Historia**
+[Contenido del avance aquí...]
+
+**[Título]**
+[Contenido de la narración restante aquí...]
+`;
+      }
+
+      const charLimit = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 30000;
+      const lengthInstruction = narrativeLength === 'short' 
+        ? "Corto: 500-4300 caracteres." 
+        : narrativeLength === 'medium' 
+        ? "Mediano: 4300-14500 caracteres." 
+        : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud.";
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -1113,17 +1189,19 @@ PERSONA TO ADOPT: ${activePersona.name}.
 FULL IDENTITY SOURCE: ${activePersona.identityContext} 
 
 Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
+EXTENSION TARGET: ${lengthInstruction}
+CRITICAL: If the target is "Largo", you MUST provide a very long and detailed narrative (at least 15,000 characters). Expand on every detail, scene, and dialogue.
 
 MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
 // REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
-2. ADHERE STRICTLY to your POV and specific vocabulary.
-3. LIMIT: Maximum 4300 characters total.
+2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
+3. LIMIT: Maximum ${charLimit} characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding. Use line breaks or extra spacing to highlight important sentences.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title and the phrase "**Avance de la Historia**". Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
@@ -1478,19 +1556,25 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     
     const handleToggle = (type: 'analysis' | 'interview' | 'advance') => {
       if (isGlobal) {
-        setForensicToggles(prev => ({ ...prev, [type]: !prev[type] }));
+        setGlobalForensicToggles(prev => ({ ...prev, [type]: !prev[type] }));
       } else if (trend) {
         handleAdvancedForensic(type, trend);
       }
     };
 
+    const isToggled = (type: 'analysis' | 'interview' | 'advance') => {
+      if (isGlobal) return globalForensicToggles[type];
+      if (trend) return !!trend[type];
+      return false;
+    };
+
     return (
       <div className={`${isGlobal ? 'bg-slate-900/50 border-slate-800' : 'bg-purple-900/10 border-purple-500/20'} border-2 p-6 rounded-[2.5rem] shadow-[0_0_30px_-10px_rgba(168,85,247,0.3)] animate-in slide-in-from-top-4 duration-500 my-4`}>
-        <div className="flex items-center gap-2 mb-6 px-2"><Wand2 size={16} className="text-purple-400" /><span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-300">Forensic Modifiers {isGlobal ? '(Global)' : '(Toggle)'}</span></div>
+        <div className="flex items-center gap-2 mb-6 px-2"><Wand2 size={16} className="text-purple-400" /><span className="text-[9px] font-black uppercase tracking-[0.4em] text-purple-300">Forensic Modifiers {isGlobal ? '(Global)' : '(Action)'}</span></div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-           <button onClick={() => handleToggle('analysis')} disabled={!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.analysis ? 'bg-purple-500 text-slate-950 shadow-purple-500/40' : 'bg-purple-900/40 text-purple-300 hover:bg-purple-800/50'}`}><div className="flex items-center gap-2"><BrainCircuit size={16} /> Análisis Literario</div>{!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.analysis ? <Check size={14} /> : <ChevronRight size={14} />}</button>
-           <button onClick={() => handleToggle('interview')} disabled={!isGlobal && (isInterviewing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.interview ? 'bg-indigo-500 text-slate-950 shadow-indigo-500/40' : 'bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50'}`}><div className="flex items-center gap-2"><MicVocal size={16} /> Modo Entrevista</div>{!isGlobal && (isInterviewing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.interview ? <Check size={14} /> : <ChevronRight size={14} />}</button>
-           <button onClick={() => handleToggle('advance')} disabled={!isGlobal && (isAdvancing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${forensicToggles.advance ? 'bg-fuchsia-500 text-slate-950 shadow-fuchsia-500/40' : 'bg-fuchsia-900/40 text-fuchsia-300 hover:bg-fuchsia-800/50'}`}><div className="flex items-center gap-2"><FastForward size={16} /> Avance de Historia</div>{!isGlobal && (isAdvancing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : forensicToggles.advance ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+           <button onClick={() => handleToggle('analysis')} disabled={!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${isToggled('analysis') ? 'bg-purple-500 text-slate-950 shadow-purple-500/40' : 'bg-purple-900/40 text-purple-300 hover:bg-purple-800/50'}`}><div className="flex items-center gap-2"><BrainCircuit size={16} /> Análisis Literario</div>{!isGlobal && (isAnalyzing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : isToggled('analysis') ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+           <button onClick={() => handleToggle('interview')} disabled={!isGlobal && (isInterviewing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${isToggled('interview') ? 'bg-indigo-500 text-slate-950 shadow-indigo-500/40' : 'bg-indigo-900/40 text-indigo-300 hover:bg-indigo-800/50'}`}><div className="flex items-center gap-2"><MicVocal size={16} /> Modo Entrevista</div>{!isGlobal && (isInterviewing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : isToggled('interview') ? <Check size={14} /> : <ChevronRight size={14} />}</button>
+           <button onClick={() => handleToggle('advance')} disabled={!isGlobal && (isAdvancing || (trend && rewritingId === trend.id))} className={`group flex items-center justify-between p-4 rounded-xl font-black uppercase text-[9px] tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-lg ${isToggled('advance') ? 'bg-fuchsia-500 text-slate-950 shadow-fuchsia-500/40' : 'bg-fuchsia-900/40 text-fuchsia-300 hover:bg-fuchsia-800/50'}`}><div className="flex items-center gap-2"><FastForward size={16} /> Avance de Historia</div>{!isGlobal && (isAdvancing || (trend && rewritingId === trend.id)) ? <Loader2 size={14} className="animate-spin" /> : isToggled('advance') ? <Check size={14} /> : <ChevronRight size={14} />}</button>
         </div>
       </div>
     );
@@ -1780,6 +1864,25 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                   <div className="space-y-2"><div className={`flex items-center gap-3 text-${activePersona.color} font-black uppercase text-[10px] tracking-[0.4em]`}><FlaskRound size={18} /> LABORATORIO DE IDEAS V47.2.1</div><h3 className="text-3xl font-black uppercase italic leading-none">COMPOSITOR <span className={`text-${activePersona.color}`}>CREATIVO HÍBRIDO</span></h3></div>
                   
                   <ForensicToolkit isGlobal />
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Extensión de la Narrativa</label>
+                    <div className="flex gap-2">
+                      {(['short', 'medium', 'long'] as NarrativeLength[]).map((len) => (
+                        <button
+                          key={len}
+                          onClick={() => setNarrativeLength(len)}
+                          className={`flex-1 py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${
+                            narrativeLength === len
+                              ? `bg-${activePersona.color} border-${activePersona.color} text-slate-950 shadow-lg`
+                              : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'
+                          }`}
+                        >
+                          {len === 'short' ? 'Corto (500-4.3k)' : len === 'medium' ? 'Mediano (4.3k-14.5k)' : 'Largo (15k+)'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   
                   <textarea value={userIdea} onChange={(e) => setUserIdea(e.target.value)} placeholder='Escribe tu idea o un link...' className={`w-full min-h-[180px] p-6 bg-slate-950 border-2 border-slate-800 rounded-[1.5rem] font-bold text-slate-100 focus:border-${activePersona.color} outline-none transition-all custom-scrollbar text-sm shadow-inner`} />
                   {latestHybridTrend && (<div className="bg-slate-950/80 border-2 border-emerald-500/30 p-8 rounded-[2rem] animate-in zoom-in-95 duration-500"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-widest"><Check size={16} /> Narrativa Generada</div><CopyButton text={latestHybridTrend.chunkybertoVersion || ""} /></div><p className="text-slate-100 font-bold text-sm italic mb-8 line-clamp-4">"{latestHybridTrend.chunkybertoVersion}"</p><button onClick={() => handleSelectTrend(latestHybridTrend)} className={`w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all active:scale-95`}><Video size={18} /> IR AL ESTUDIO CINEMATOGRÁFICO</button></div>)}
