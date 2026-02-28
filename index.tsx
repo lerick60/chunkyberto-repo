@@ -112,7 +112,7 @@ import {
 // Estas directrices se aplican obligatoriamente a las personas 'chunkyberto' y 'luna'.
 const STORY_GUIDELINES = `
 DIRECTRICES DE ARQUITECTURA DE CUENTO (APLICAR ESTRICTAMENTE):
-1. EXTENSIÓN: Microrrelato (5-500 palabras) o Cuento Corto (500-2000 palabras).
+1. EXTENSIÓN: Adaptarse a la longitud solicitada (Microrrelato, Cuento Corto o Cuento Extenso).
 2. TÍTULO: Debe ser un ancla, no un resumen; debe complementar o cambiar el sentido de la historia.
 3. ESTRUCTURA: 
    - Inicio 'In Media Res' (comenzar en medio de la acción).
@@ -815,13 +815,17 @@ const App: React.FC = () => {
 
   // --- Handlers ---
   const handleSelectKey = async () => {
-    // @ts-ignore
-    if (window.aistudio?.openSelectKey) {
+    try {
       // @ts-ignore
-      await window.aistudio.openSelectKey(); 
-      setHasApiKey(true); 
-      setAppError(null); 
-      hasInitialFetchedRef.current = false;
+      if (window.aistudio?.openSelectKey) {
+        // @ts-ignore
+        await window.aistudio.openSelectKey(); 
+        setHasApiKey(true); 
+        setAppError(null); 
+        hasInitialFetchedRef.current = false;
+      }
+    } catch (err) {
+      console.error("Error selecting API key:", err);
     }
   };
 
@@ -1173,12 +1177,12 @@ ${activePersona.introductionPrefix}
 `;
       }
 
-      const charLimit = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 30000;
+      const charLimit = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 20000;
       const lengthInstruction = narrativeLength === 'short' 
         ? "Corto: 500-4300 caracteres." 
         : narrativeLength === 'medium' 
         ? "Mediano: 4300-14500 caracteres." 
-        : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud.";
+        : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud, pero sin exceder los 20,000 caracteres.";
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -1203,7 +1207,11 @@ RULES:
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title and the phrase "**Avance de la Historia**". Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
-        config: { tools: [{ googleSearch: {} }], systemInstruction: `You are ${activePersona.name}.` }
+        config: { 
+          tools: [{ googleSearch: {} }], 
+          systemInstruction: `You are ${activePersona.name}.`,
+          maxOutputTokens: 16384
+        }
       })) as any;
       
       const fullText = response.text || "";
