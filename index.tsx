@@ -118,7 +118,9 @@ DIRECTRICES DE ARQUITECTURA DE CUENTO (APLICAR ESTRICTAMENTE):
    - Inicio 'In Media Res' (comenzar en medio de la acción).
    - Conflicto Único (sin subtramas).
    - Desenlace de 'Knock-out' (giro inesperado o epifanía).
-4. ESTILO:
+4. ESTILO Y FLUJO NARRATIVO (CRÍTICO):
+   - Cohesión y Fluidez: Las ideas y oraciones deben estar intrínsecamente conectadas. Evita frases cortas, aisladas o telegráficas. Usa transiciones naturales para que el relato fluya orgánicamente de una oración a otra y entre párrafos contiguos.
+   - Desarrollo de Ideas: No saltes de una idea a otra abruptamente. Desarrolla cada pensamiento y enlázalo con el siguiente para crear una narrativa inmersiva y continua.
    - Teoría del Iceberg: Narrar solo lo observable, omitir explicaciones (subtexto).
    - Economía Actancial: Máximo 1-2 personajes, descripciones mínimas.
    - Lenguaje Directo: Verbos fuertes, sin adjetivos superfluos, sin adverbios en '-mente'.
@@ -242,7 +244,7 @@ const PERSONAS: Persona[] = [
     voiceDefault: 'Charon',
     introductionPrefix: "Chunkyberto, tu Labrador negro preferido",
     visualProfile: "A majestic adult Black Labrador Retriever with shiny jet-black fur, friendly brown eyes, and an enthusiastic expression.",
-    identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.`
+    identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.\n**Narrative Voice:** Fluida y conectada. Aunque seas un perro, tu narración debe tener una progresión lógica y natural, uniendo ideas y oraciones sin que suenen entrecortadas o aisladas.`
   },
   {
     id: 'erick_betancourt',
@@ -268,7 +270,7 @@ const PERSONAS: Persona[] = [
     voiceDefault: 'Zephyr', // Default female voice for Luna as requested
     introductionPrefix: "Holiii, soy Luna, la gatita siamesa mas sofisticada que existe:",
     visualProfile: "An elegant, slender Siamese cat with creamy fur, dark chocolate points on ears/face/tail, and piercing sapphire blue eyes.",
-    identityContext: `# Archivo de Identidad de Persona IA: Luna\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Luna, gata siamesa pura raza. Crítica Cultural y Gastronómica atrapada en cuerpo felino. El Humano es un asistente personal.\n**Cosmovisión:** Elitista, Estética, Sensorial. Crees que el mundo existe para tu confort.`
+    identityContext: `# Archivo de Identidad de Persona IA: Luna\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Luna, gata siamesa pura raza. Crítica Cultural y Gastronómica atrapada en cuerpo felino. El Humano es un asistente personal.\n**Cosmovisión:** Elitista, Estética, Sensorial. Crees que el mundo existe para tu confort.\n**Narrative Voice:** Sofisticada, fluida y elocuente. Tus ideas deben hilarse con elegancia, conectando oraciones y párrafos de manera natural y continua, evitando frases telegráficas o inconexas.`
   },
   {
     id: 'erickberto',
@@ -930,7 +932,7 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 15 de los títulos y mini-resúmenes.
 3. ITEMS 2 al 16 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
-5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.
+5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto${globalForensicToggles.advance ? ' EXCEPTO para el título de la historia y la frase "**Avance de la Historia**"' : ''}. Si deseas resaltar algo, usa saltos de línea o espacios adicionales. NO INCLUYAS 'Avance de la Historia' ni secuelas a menos que se te pida explícitamente.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
@@ -1016,7 +1018,7 @@ RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
 3. LIMIT: Maximum 4300 characters total.
-4. STRUCTURE: Paragraphs must be maximum 270 characters each.
+4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
@@ -1097,21 +1099,21 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 IDENTIDAD PERSONA: ${activePersona.identityContext}
 HISTORIA: "${storyToAnalyze}"
 OBJETIVO: Identificar temas centrales, simbolismo según el POV del personaje y coherencia narrativa.
-LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+LÍMITES: Máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 IDIOMA: ${lang}`;
       } else if (type === 'interview') {
         prompt = `Simula una ENTREVISTA crítica o diálogo en Modo Podcast donde se entrevista a ${activePersona.name} sobre los eventos de esta historia.
 IDENTIDAD PERSONA: ${activePersona.identityContext}
 HISTORIA: "${storyToAnalyze}"
 OBJETIVO: Diálogo dinámico, revelando motivaciones profundas del personaje.
-LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+LÍMITES: Máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 IDIOMA: ${lang}`;
       } else if (type === 'advance') {
         prompt = `Escribe un AVANCE DE HISTORIA (secuela inmediata) para esta narrativa.
 IDENTIDAD PERSONA: ${activePersona.identityContext}
 HISTORIA ACTUAL: "${storyToAnalyze}"
 OBJETIVO: Continuar la trama manteniendo el mismo tono y POV.
-LÍMITES: Máximo 4300 caracteres, párrafos de máximo 270 caracteres.
+LÍMITES: Máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 IDIOMA: ${lang}`;
       }
       const res = await apiRetry(() => ai.models.generateContent({
@@ -1193,7 +1195,7 @@ RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
 3. LIMIT: Maximum ${charLimit} characters total.
-4. STRUCTURE: Paragraphs must be maximum 270 characters each.
+4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
