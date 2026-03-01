@@ -21,3 +21,8 @@ Al procesar un Brief en el Laboratorio de Ideas, el modelo debe seguir este orde
 - **Corto**: 500 - 4,300 caracteres.
 - **Mediano**: 4,300 - 14,500 caracteres.
 - **Largo**: 15,000+ caracteres. El modelo DEBE esforzarse por generar una narrativa extremadamente detallada y rica para cumplir con este mínimo.
+
+## Protocolo de Avance de Historia (V47.3.0)
+- **Activación**: Solo se incluye si el toggle `advance` está activo.
+- **Jerarquía Estricta**: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración.
+- **Exclusión**: Si el toggle está desactivado, el modelo tiene PROHIBIDO mencionar o incluir la sección de avance.

@@ -931,14 +931,14 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 3. ITEMS 2 al 16 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
 5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres y párrafos de máximo 270 caracteres.
-6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto. Si deseas resaltar algo, usa saltos de línea o espacios adicionales.
+6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto${globalForensicToggles.advance ? ' EXCEPTO para el título de la historia y la frase "**Avance de la Historia**"' : ''}. Si deseas resaltar algo, usa saltos de línea o espacios adicionales. NO INCLUYAS 'Avance de la Historia' ni secuelas a menos que se te pida explícitamente.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
     return `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}. 
 ${personaInstruction} 
 ${commonFormat} 
 LENGUAJE OBJETIVO: ${languageText}.`;
-  }, [category, language, activePersona]);
+  }, [category, language, activePersona, globalForensicToggles]); 
 
   const fetchTrends = useCallback(async () => {
     if (isFetchingTrendsRef.current) return;
@@ -948,30 +948,10 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
-      if (globalForensicToggles.advance) {
-        // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
-        extraForensic += `
-- MANDATORY HIERARCHY (ADVANCE MODE):
-  1. Introductory text (Persona style).
-  2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
-  3. Body of the story advance.
-  4. The story title in bold (e.g., "**Título**").
-  5. Body of the remaining narration.
-- CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
-- RESPONSE TEMPLATE:
-[Introductory Prefix]
-
-**Avance de la Historia**
-[Contenido del avance aquí...]
-
-**[Título]**
-[Contenido de la narración restante aquí...]
-`;
-      }
-
+      
       const response = await apiRetry(() => ai.models.generateContent({ 
         model: modelSettings.text, 
-        contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
+        contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
         config: { tools: [{ googleSearch: {} }] } 
       })) as any;
       const fullText = (response.text || "");
@@ -1002,9 +982,10 @@ LENGUAJE OBJETIVO: ${languageText}.`;
 - MANDATORY HIERARCHY (ADVANCE MODE):
   1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
-  3. Body of the story advance.
+  3. Body of the story advance (Teaser/Preview).
   4. The story title in bold: "**${trend.title}**".
-  5. Body of the remaining narration.
+  5. Body of the remaining narration (Main Story).
+- CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
 ${activePersona.introductionPrefix}
@@ -1015,6 +996,8 @@ ${activePersona.introductionPrefix}
 **${trend.title}**
 [Contenido de la narración restante aquí...]
 `;
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.";
       }
 
       const response = await apiRetry(() => ai.models.generateContent({
@@ -1035,7 +1018,7 @@ RULES:
 3. LIMIT: Maximum 4300 characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title and the phrase "**Avance de la Historia**". Use line breaks or extra spacing to highlight other important sentences.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
@@ -1088,6 +1071,10 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     }
   };
 
+  // --- Forensic Handlers ---
+  // NOTE: 'Avance de la Historia' (Story Advance) logic is strictly controlled via globalForensicToggles.advance.
+  // It is explicitly forbidden in prompts when the toggle is OFF to prevent hallucinations.
+  // When ON, a mandatory hierarchy is enforced to ensure it appears at the beginning (after intro) and not at the end.
   const handleAdvancedForensic = async (type: 'analysis' | 'interview' | 'advance', trendOverride?: Trend) => {
     let trend = trendOverride || selectedTrend;
     if (!trend) return;
@@ -1162,9 +1149,10 @@ IDIOMA: ${lang}`;
 - MANDATORY HIERARCHY (ADVANCE MODE):
   1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
-  3. Body of the story advance.
+  3. Body of the story advance (Teaser/Preview).
   4. The story title in bold (e.g., "**Título**").
-  5. Body of the remaining narration.
+  5. Body of the remaining narration (Main Story).
+- CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
 ${activePersona.introductionPrefix}
@@ -1175,6 +1163,8 @@ ${activePersona.introductionPrefix}
 **[Título]**
 [Contenido de la narración restante aquí...]
 `;
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.";
       }
 
       const charLimit = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 20000;
@@ -1205,7 +1195,7 @@ RULES:
 3. LIMIT: Maximum ${charLimit} characters total.
 4. STRUCTURE: Paragraphs must be maximum 270 characters each.
 5. TARGET LANGUAGE: ${languageText}.
-6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title and the phrase "**Avance de la Historia**". Use line breaks or extra spacing to highlight other important sentences.
+6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { 
           tools: [{ googleSearch: {} }], 
