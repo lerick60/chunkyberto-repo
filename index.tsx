@@ -105,7 +105,8 @@ import {
   Lock,
   EyeOff,
   UploadCloud,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Telescope
 } from 'lucide-react';
 
 // DIRECTRICES DE ARQUITECTURA DE CUENTO (ArquitecturaCuento.md)
@@ -169,7 +170,8 @@ type Category =
   | 'horror_lit' | 'sci_fi' 
   | 'ai_mystery_horror' | 'ai_sci_fi' | 'ai_fables' | 'ai_galactic' | 'ai_labrador_mischief' | 'ai_romantic_drama'
   | 'ai_beauty_tips' | 'ai_nutrition' | 'ai_real_estate_sales' | 'ai_home_remedies' | 'ai_catholic_events' | 'news_real_estate'
-  | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus';
+  | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
+  | 'exoplanetas' | 'ai_exoplanets_creation';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -257,7 +259,7 @@ const PERSONAS: Persona[] = [
     voiceDefault: 'Charon',
     introductionPrefix: "Hola soy Erick, y hablemos de Ingenieria",
     visualProfile: "A middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression, wearing a light gray striped polo shirt.",
-    identityContext: `# AI Persona Identity File: Erick Betancourt\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Erick Betancourt, Senior Engineering Program Manager. Mindset de ingeniería: confiabilidad y funcionalidad práctica.\n**STRICT NARRATIVE PROTOCOL (V10.4.0):** Al narrar historias sobre tecnologías o integraciones, debes hacerlo desde el análisis de la FACTIBILIDAD TÉCNICA. NUNCA afirmes haber realizado personalmente la integración. Eres un analista forense y mentor.`
+    identityContext: `# AI Persona Identity File: Erick Betancourt\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Erick Betancourt, Senior Engineering Program Manager. Mindset de ingeniería: confiabilidad y funcionalidad práctica.\n**STRICT NARRATIVE PROTOCOL (V10.4.0):** Al narrar historias sobre tecnologías o integraciones, debes hacerlo desde el análisis de la FACTIBILIDAD TÉCNICA. NUNCA afirmes haber realizado personalmente la integración. Eres un analista forense y mentor. Para la categoría "Exoplanetas", enfócate en noticias recientes, planes de viaje, y estimaciones de flora/fauna basadas en el tipo de estrella. Para la categoría "Creación IA - Exoplanetas", genera historias expansivas (hasta 15000 caracteres) sobre viajes estelares y predicciones climáticas/biológicas en exoplanetas.`
   },
   {
     id: 'luna',
@@ -936,7 +938,14 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto${globalForensicToggles.advance ? ' EXCEPTO para el título de la historia y la frase "**Avance de la Historia**"' : ''}. Si deseas resaltar algo, usa saltos de línea o espacios adicionales. NO INCLUYAS 'Avance de la Historia' ni secuelas a menos que se te pida explícitamente.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
-    return `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}. 
+    let categoryPrompt = `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}.`;
+    if (category === 'exoplanetas') {
+      categoryPrompt = `Busca todas las noticias recientes relacionadas con exoplanetas, historias sobre planes de viaje a exoplanetas y estimados sobre fauna y flora de exoplanetas basados en su tipo de estrella. Genera 15 historias/noticias sobre esto.`;
+    } else if (category === 'ai_exoplanets_creation') {
+      categoryPrompt = `Crea 15 breves sinopsis sobre historias generadas por IA con temas de: Viajes a exoplanetas, Predicciones de Flora y Fauna en Exoplanetas, así como predicciones sobre climas de estos exoplanetas.`;
+    }
+
+    return `${categoryPrompt}
 ${personaInstruction} 
 ${commonFormat} 
 LENGUAJE OBJETIVO: ${languageText}.`;
@@ -1002,6 +1011,11 @@ ${activePersona.introductionPrefix}
         forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.";
       }
 
+      let maxLength = 4300;
+      if (category === 'ai_exoplanets_creation') {
+        maxLength = 15000;
+      }
+
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
         contents: `STRICT NARRATION REQUEST:
@@ -1017,7 +1031,7 @@ MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 RULES:
 1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
-3. LIMIT: Maximum 4300 characters total.
+3. LIMIT: Maximum ${maxLength} characters total.
 4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
@@ -1548,7 +1562,9 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     { id: 'ai_embedded_mcu', label: 'MCU Systems Advanced', icon: <Settings2 size={14} />, exclusive: 'erick_betancourt' },
     { id: 'ai_space_documentary', label: 'Documental Espacial', icon: <Globe size={14} />, exclusive: 'erickberto' },
     { id: 'ai_galactic', label: 'Misterios Galácticos', icon: <Dna size={14} />, exclusive: 'erickberto' },
-  ].filter(opt => !opt.exclusive || selectedPersonaId === opt.exclusive);
+    { id: 'exoplanetas', label: 'Exoplanetas', icon: <Telescope size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
+    { id: 'ai_exoplanets_creation', label: 'Creación IA - Exoplanetas', icon: <Sparkles size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
+  ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const ForensicToolkit: React.FC<{ targetTrend?: Trend; isGlobal?: boolean }> = ({ targetTrend, isGlobal }) => {
     const trend = targetTrend || selectedTrend;

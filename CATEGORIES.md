@@ -52,9 +52,13 @@ Este archivo es la fuente de verdad para las categorías del Studio. NUNCA elimi
 | `ai_embedded_linux` | Embedded Linux | `Terminal` | Kernels, drivers y sistemas embebidos. |
 | `ai_embedded_wireless` | Wireless Embedded | `Radio` | IoT, Bluetooth, Wi-Fi 6 y LoRa. |
 | `ai_embedded_mcu` | MCU Systems Advanced | `Settings2` | Arquitectura de sistemas industriales. |
+| `exoplanetas` | Exoplanetas | `Telescope` | Noticias y descubrimientos de exoplanetas, fauna/flora y viajes. |
+| `ai_exoplanets_creation` | Creación IA - Exoplanetas | `Sparkles` | Historias IA sobre viajes estelares y vida en exoplanetas (hasta 15000 chars). |
 
-### Dr. Erickberto (Astrofísico NASA)
+### Dr. Erickberto (Astrofísico y Científico Planetario)
 | ID | Etiqueta | Icono | Descripción |
 | :--- | :--- | :--- | :--- |
 | `ai_space_documentary` | Documental Espacial | `Globe` | Narrativas profundas sobre el universo. |
 | `ai_galactic` | Misterios Galácticos | `Dna` | Exobiología y fenómenos estelares. |
+| `exoplanetas` | Exoplanetas | `Telescope` | Noticias y descubrimientos de exoplanetas, fauna/flora y viajes. |
+| `ai_exoplanets_creation` | Creación IA - Exoplanetas | `Sparkles` | Historias IA sobre viajes estelares y vida en exoplanetas (hasta 15000 chars). |

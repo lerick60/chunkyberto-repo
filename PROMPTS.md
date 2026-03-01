@@ -27,8 +27,8 @@ Este documento detalla las plantillas refinadas utilizadas por el motor para gar
 > REGLAS ABSOLUTAS:
 > 1. La PRIMERA LÍNEA debe ser exactamente: '{introduction_prefix}'.
 > 2. Filtra la historia a través de tu POV (ej: Erick = Viabilidad Técnica, Chunky = Comida/Lealtad, Luna = Crítica de Clase).
-> 3. LÍMITE: Máximo 4300 caracteres en total.
-> 4. ESTRUCTURA: Párrafos de máximo 270 caracteres.
+> 3. LÍMITE: Máximo 4300 caracteres en total (o 15000 para ai_exoplanets_creation).
+> 4. ESTRUCTURA: Usa saltos de párrafo naturales. Evita oraciones demasiado cortas y entrecortadas. Asegura transiciones suaves entre ideas para mantener un flujo narrativo cohesivo.
 > 5. LENGUAJE: {language_name}."
 
 ---
