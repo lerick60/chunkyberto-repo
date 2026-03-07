@@ -829,9 +829,12 @@ const App: React.FC = () => {
         setHasApiKey(true); 
         setAppError(null); 
         hasInitialFetchedRef.current = false;
+      } else {
+        alert("La configuración de la llave API solo está disponible cuando la aplicación se ejecuta dentro de la plataforma AI Studio. Si estás abriendo la URL directamente, por favor usa el enlace compartido oficial.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error selecting API key:", err);
+      alert("Error al abrir el selector de llave API: " + (err.message || err));
     }
   };
 
