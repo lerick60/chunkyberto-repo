@@ -792,9 +792,7 @@ const SettingsModal: React.FC<{
   );
 };
 
-const getApiKey = () => {
-  return process.env.API_KEY || process.env.GEMINI_API_KEY;
-};
+
 
 const App: React.FC = () => {
   // --- States ---
@@ -996,7 +994,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1023,7 +1021,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1094,7 +1092,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setGeneratingThumbnail(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const visualAnchor = activePersona.id === 'luna' 
         ? 'Include an elegant Siamese cat with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1146,7 +1144,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (type === 'advance') setIsAdvancing(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const lang = getLanguageName(language);
       let prompt = "";
       if (type === 'analysis') {
@@ -1194,7 +1192,7 @@ IDIOMA: ${lang}`;
     if (!userIdea.trim()) return;
     setIsGeneratingIdea(true); setAppError(null); setLatestHybridTrend(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
@@ -1287,7 +1285,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!text || text.trim().length === 0) return null;
     
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
@@ -1337,7 +1335,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setProducingImages(true); setAppError(null);
     setSelectedTrend(prev => (prev ? { ...prev, storyboard: [] } : null));
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const visualAnchorContext = activePersona.id === 'luna' 
         ? 'IMPORTANT: Whenever "Luna" or a cat is mentioned, the visual prompt MUST include an elegant SIAMESE CAT with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1382,7 +1380,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
@@ -1403,7 +1401,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true, false);
     try {
-      const ai = new GoogleGenAI({ apiKey: getApiKey() });
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
       let operation = await ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } });
       while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await ai.operations.getVideosOperation({ operation }); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
@@ -1411,7 +1409,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         const vidRes = await fetch(downloadLink, {
           method: 'GET',
           headers: {
-            'x-goog-api-key': getApiKey()
+            'x-goog-api-key': process.env.API_KEY || process.env.GEMINI_API_KEY
           }
         });
         if (!vidRes.ok) throw new Error(`Video download failed: ${vidRes.statusText}`);
@@ -1751,7 +1749,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                   </div>
                 )}
              </div>
-             {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)} onRetry={fetchTrends} />}
+             {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)}  />}
              
              <div className="mb-12">
                <div className={`p-8 rounded-[4rem] bg-slate-900/50 border-4 border-slate-800 backdrop-blur-sm flex flex-col md:flex-row items-center gap-10`}>
@@ -1906,7 +1904,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block ml-1">Identidad Activa</label>
                 <div className="relative group"><div className={`absolute inset-y-0 left-4 flex items-center pointer-events-none text-${activePersona.color} z-10`}>{activePersona.icon}</div><select value={selectedPersonaId} onChange={(e) => { setSelectedPersonaId(e.target.value); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full pl-12 pr-10 py-6 bg-slate-900 border-2 border-slate-800 rounded-[2rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{PERSONAS.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()} - {p.role.toUpperCase()}</option>)}</select><div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-slate-500"><ChevronDown size={18} /></div></div>
               </div>
-              {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)} onRetry={fetchTrends} />}
+              {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)}  />}
               <div className="flex flex-col gap-6 items-center text-center"><h2 className="text-4xl xs:text-5xl font-black italic text-white leading-none tracking-tighter uppercase">Studio de <span className={`text-${activePersona.color}`}>{activePersona.name}.</span></h2></div>
               <div className="flex flex-col sm:flex-row items-center gap-4"><div className="flex-1 relative w-full"><select value={category} onChange={(e) => { setCategory(e.target.value as Category); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full px-8 py-5 bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{categoryOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label.toUpperCase()}</option>)}</select></div></div>
               <div className="space-y-6">

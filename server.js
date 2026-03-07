@@ -10,10 +10,6 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.get("/api/config", (req, res) => {
-    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || "" });
-  });
-
   const serveStatic = () => {
     app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
     app.use((req, res) => {
