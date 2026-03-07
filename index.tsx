@@ -110,6 +110,38 @@ import {
   LayoutGrid
 } from 'lucide-react';
 
+// Tailwind v4 safelist for dynamic persona colors
+const SAFELIST_COLORS = [
+  "bg-amber-500", "text-amber-500", "border-amber-500", "selection:bg-amber-500/30", "from-amber-500", "focus:border-amber-500", "hover:border-amber-500/30", "hover:border-amber-500/50", "border-amber-500/30", "bg-amber-500/20", "text-amber-500/20", "text-amber-700", "bg-amber-700", "border-amber-700",
+  "bg-blue-500", "text-blue-500", "border-blue-500", "selection:bg-blue-500/30", "from-blue-500", "focus:border-blue-500", "hover:border-blue-500/30", "hover:border-blue-500/50", "border-blue-500/30", "bg-blue-500/20", "text-blue-500/20", "text-blue-700", "bg-blue-700", "border-blue-700",
+  "bg-purple-500", "text-purple-500", "border-purple-500", "selection:bg-purple-500/30", "from-purple-500", "focus:border-purple-500", "hover:border-purple-500/30", "hover:border-purple-500/50", "border-purple-500/30", "bg-purple-500/20", "text-purple-500/20", "text-purple-700", "bg-purple-700", "border-purple-700",
+  "bg-indigo-500", "text-indigo-500", "border-indigo-500", "selection:bg-indigo-500/30", "from-indigo-500", "focus:border-indigo-500", "hover:border-indigo-500/30", "hover:border-indigo-500/50", "border-indigo-500/30", "bg-indigo-500/20", "text-indigo-500/20", "text-indigo-700", "bg-indigo-700", "border-indigo-700",
+  "bg-pink-500", "text-pink-500", "border-pink-500", "selection:bg-pink-500/30", "from-pink-500", "focus:border-pink-500", "hover:border-pink-500/30", "hover:border-pink-500/50", "border-pink-500/30", "bg-pink-500/20", "text-pink-500/20", "text-pink-700", "bg-pink-700", "border-pink-700",
+  "bg-emerald-500", "text-emerald-500", "border-emerald-500", "selection:bg-emerald-500/30", "from-emerald-500", "focus:border-emerald-500", "hover:border-emerald-500/30", "hover:border-emerald-500/50", "border-emerald-500/30", "bg-emerald-500/20", "text-emerald-500/20", "text-emerald-700", "bg-emerald-700", "border-emerald-700",
+  "bg-rose-500", "text-rose-500", "border-rose-500", "selection:bg-rose-500/30", "from-rose-500", "focus:border-rose-500", "hover:border-rose-500/30", "hover:border-rose-500/50", "border-rose-500/30", "bg-rose-500/20", "text-rose-500/20", "text-rose-700", "bg-rose-700", "border-rose-700",
+  "bg-fuchsia-500", "text-fuchsia-500", "border-fuchsia-500", "selection:bg-fuchsia-500/30", "from-fuchsia-500", "focus:border-fuchsia-500", "hover:border-fuchsia-500/30", "hover:border-fuchsia-500/50", "border-fuchsia-500/30", "bg-fuchsia-500/20", "text-fuchsia-500/20", "text-fuchsia-700", "bg-fuchsia-700", "border-fuchsia-700",
+  "bg-amber-400", "bg-blue-400", "bg-purple-400", "bg-indigo-400", "bg-pink-400", "bg-emerald-400", "bg-rose-400", "bg-fuchsia-400",
+  "text-amber-400", "text-blue-400", "text-purple-400", "text-indigo-400", "text-pink-400", "text-emerald-400", "text-rose-400", "text-fuchsia-400",
+  "border-amber-400", "border-blue-400", "border-purple-400", "border-indigo-400", "border-pink-400", "border-emerald-400", "border-rose-400", "border-fuchsia-400",
+  "border-amber-500/20", "border-blue-500/20", "border-purple-500/20", "border-indigo-500/20", "border-pink-500/20", "border-emerald-500/20", "border-rose-500/20", "border-fuchsia-500/20",
+  "bg-amber-600/10", "bg-blue-600/10", "bg-purple-600/10", "bg-indigo-600/10", "bg-pink-600/10", "bg-emerald-600/10", "bg-rose-600/10", "bg-fuchsia-600/10",
+  "bg-amber-600/20", "bg-blue-600/20", "bg-purple-600/20", "bg-indigo-600/20", "bg-pink-600/20", "bg-emerald-600/20", "bg-rose-600/20", "bg-fuchsia-600/20",
+  "bg-amber-900/40", "bg-blue-900/40", "bg-purple-900/40", "bg-indigo-900/40", "bg-pink-900/40", "bg-emerald-900/40", "bg-rose-900/40", "bg-fuchsia-900/40",
+  "text-amber-300", "text-blue-300", "text-purple-300", "text-indigo-300", "text-pink-300", "text-emerald-300", "text-rose-300", "text-fuchsia-300",
+  "hover:bg-amber-800/50", "hover:bg-blue-800/50", "hover:bg-purple-800/50", "hover:bg-indigo-800/50", "hover:bg-pink-800/50", "hover:bg-emerald-800/50", "hover:bg-rose-800/50", "hover:bg-fuchsia-800/50",
+  "shadow-amber-500/40", "shadow-blue-500/40", "shadow-purple-500/40", "shadow-indigo-500/40", "shadow-pink-500/40", "shadow-emerald-500/40", "shadow-rose-500/40", "shadow-fuchsia-500/40",
+  "border-amber-400/30", "border-blue-400/30", "border-purple-400/30", "border-indigo-400/30", "border-pink-400/30", "border-emerald-400/30", "border-rose-400/30", "border-fuchsia-400/30",
+  "bg-amber-900/10", "bg-blue-900/10", "bg-purple-900/10", "bg-indigo-900/10", "bg-pink-900/10", "bg-emerald-900/10", "bg-rose-900/10", "bg-fuchsia-900/10",
+  "bg-amber-900/30", "bg-blue-900/30", "bg-purple-900/30", "bg-indigo-900/30", "bg-pink-900/30", "bg-emerald-900/30", "bg-rose-900/30", "bg-fuchsia-900/30",
+  "border-amber-500/30", "border-blue-500/30", "border-purple-500/30", "border-indigo-500/30", "border-pink-500/30", "border-emerald-500/30", "border-rose-500/30", "border-fuchsia-500/30",
+  "bg-amber-600", "bg-blue-600", "bg-purple-600", "bg-indigo-600", "bg-pink-600", "bg-emerald-600", "bg-rose-600", "bg-fuchsia-600",
+  "text-amber-100", "text-blue-100", "text-purple-100", "text-indigo-100", "text-pink-100", "text-emerald-100", "text-rose-100", "text-fuchsia-100",
+  "hover:bg-amber-500", "hover:bg-blue-500", "hover:bg-purple-500", "hover:bg-indigo-500", "hover:bg-pink-500", "hover:bg-emerald-500", "hover:bg-rose-500", "hover:bg-fuchsia-500",
+  "ring-amber-600/20", "ring-blue-600/20", "ring-purple-600/20", "ring-indigo-600/20", "ring-pink-600/20", "ring-emerald-600/20", "ring-rose-600/20", "ring-fuchsia-600/20",
+  "hover:border-amber-500/50", "hover:border-blue-500/50", "hover:border-purple-500/50", "hover:border-indigo-500/50", "hover:border-pink-500/50", "hover:border-emerald-500/50", "hover:border-rose-500/50", "hover:border-fuchsia-500/50",
+  "bg-amber-900/20", "bg-blue-900/20", "bg-purple-900/20", "bg-indigo-900/20", "bg-pink-900/20", "bg-emerald-900/20", "bg-rose-900/20", "bg-fuchsia-900/20"
+];
+
 // DIRECTRICES DE ARQUITECTURA DE CUENTO (ArquitecturaCuento.md)
 // Estas directrices se aplican obligatoriamente a las personas 'chunkyberto' y 'luna'.
 const STORY_GUIDELINES = `
@@ -960,7 +992,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -987,7 +1019,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1058,7 +1090,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setGeneratingThumbnail(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const visualAnchor = activePersona.id === 'luna' 
         ? 'Include an elegant Siamese cat with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1110,7 +1142,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (type === 'advance') setIsAdvancing(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const lang = getLanguageName(language);
       let prompt = "";
       if (type === 'analysis') {
@@ -1158,7 +1190,7 @@ IDIOMA: ${lang}`;
     if (!userIdea.trim()) return;
     setIsGeneratingIdea(true); setAppError(null); setLatestHybridTrend(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
@@ -1251,7 +1283,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!text || text.trim().length === 0) return null;
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
@@ -1301,7 +1333,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setProducingImages(true); setAppError(null);
     setSelectedTrend(prev => (prev ? { ...prev, storyboard: [] } : null));
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const visualAnchorContext = activePersona.id === 'luna' 
         ? 'IMPORTANT: Whenever "Luna" or a cat is mentioned, the visual prompt MUST include an elegant SIAMESE CAT with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1346,7 +1378,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
@@ -1367,12 +1399,12 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true, false);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
       let operation = await ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } });
       while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await ai.operations.getVideosOperation({ operation }); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
       if (downloadLink) {
-        const vidRes = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+        const vidRes = await fetch(`${downloadLink}&key=${(process.env.API_KEY || process.env.GEMINI_API_KEY)}`);
         const vidBlob = await vidRes.blob();
         const vUrl = URL.createObjectURL(vidBlob);
         const finalize = (prev: Trend | null) => { if (!prev || !prev.storyboard) return prev; const current = [...prev.storyboard]; current[index] = { ...current[index], videoUrl: vUrl, videoBlob: vidBlob, isGeneratingVideo: false, hasError: false }; return { ...prev, storyboard: current }; };
@@ -1602,6 +1634,29 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
   };
 
   const masterRecapTrend = trends.find(t => t.isMasterSummary);
+
+  if (hasApiKey === false) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-slate-900 border-2 border-slate-800 p-12 rounded-[3rem] shadow-2xl max-w-md w-full animate-in zoom-in-95 duration-500">
+          <div className="w-24 h-24 bg-indigo-500/20 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <Key size={48} />
+          </div>
+          <h1 className="text-3xl font-black uppercase italic tracking-tighter text-white mb-4">API Key Requerida</h1>
+          <p className="text-slate-400 text-sm font-medium mb-10 leading-relaxed">
+            Para utilizar los modelos de generación de video Veo y otras funciones avanzadas, necesitas configurar tu propia API Key de Gemini.
+          </p>
+          <button 
+            onClick={ensureApiKeySelection}
+            className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3"
+          >
+            <Key size={20} />
+            Configurar API Key
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen pb-40 text-slate-100 bg-[#0f172a] selection:bg-${activePersona.color}/30`}>
