@@ -12,7 +12,7 @@ async function startServer() {
 
   const serveStatic = () => {
     app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
-    app.get("*", (req, res) => {
+    app.use((req, res) => {
       try {
         let html = fs.readFileSync(path.resolve(__dirname, "dist", "index.html"), "utf-8");
         const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || "";
