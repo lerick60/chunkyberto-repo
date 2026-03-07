@@ -33,10 +33,10 @@ Este documento detalla las plantillas refinadas utilizadas por el motor para gar
 
 ---
 
-## 3. Producción de Storyboard (15 Escenas)
-**Objetivo:** Generar 15 cuadros cinematográficos con consistencia visual (VAP).
+## 3. Producción de Storyboard (Configurable: 10 a 30 Escenas)
+**Objetivo:** Generar la cantidad seleccionada de cuadros cinematográficos (10, 15, 20, 25, 30) con consistencia visual (VAP).
 **Template:**
-> "Genera 15 escenas cinematográficas para: '{story_text}'.
+> "Genera {imageCount} escenas cinematográficas para: '{story_text}'.
 > VISUAL ANCHOR PROTOCOL (VAP): 
 > - Si aparece {persona_name}, usar descriptor: {visual_profile}.
 > 

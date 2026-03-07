@@ -7,7 +7,7 @@ Al procesar un Brief en el Laboratorio de Ideas, el modelo debe seguir este orde
 3. **Filtro de Persona y POV**: La noticia DEBE ser narrada desde la perspectiva del personaje seleccionado.
 
 ## Protocolo de Producción Cinematográfico (V12.0.0)
-- **15 Escenas**: Obligatorio generar 15 cuadros cinematográficos en el storyboard.
+- **Cantidad de Escenas**: Configurable mediante el selector en el Estudio de Producción Global (10, 15, 20, 25, o 30 imágenes). El sistema generará el número exacto de cuadros cinematográficos solicitados.
 - **Estilo y Formato**: Respetar el estilo visual y la relación de aspecto elegidos por el usuario.
 
 ## Protocolo de Precisión de Narrativa (ENT) - V47.0.0
