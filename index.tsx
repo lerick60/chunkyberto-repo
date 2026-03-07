@@ -792,6 +792,10 @@ const SettingsModal: React.FC<{
   );
 };
 
+const getApiKey = () => {
+  return process.env.API_KEY || process.env.GEMINI_API_KEY;
+};
+
 const App: React.FC = () => {
   // --- States ---
   const [trends, setTrends] = useState<Trend[]>([]);
@@ -992,7 +996,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1019,7 +1023,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1090,7 +1094,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setGeneratingThumbnail(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const visualAnchor = activePersona.id === 'luna' 
         ? 'Include an elegant Siamese cat with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1142,7 +1146,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (type === 'advance') setIsAdvancing(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const lang = getLanguageName(language);
       let prompt = "";
       if (type === 'analysis') {
@@ -1190,7 +1194,7 @@ IDIOMA: ${lang}`;
     if (!userIdea.trim()) return;
     setIsGeneratingIdea(true); setAppError(null); setLatestHybridTrend(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
@@ -1283,7 +1287,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!text || text.trim().length === 0) return null;
     
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
@@ -1333,7 +1337,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setProducingImages(true); setAppError(null);
     setSelectedTrend(prev => (prev ? { ...prev, storyboard: [] } : null));
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const visualAnchorContext = activePersona.id === 'luna' 
         ? 'IMPORTANT: Whenever "Luna" or a cat is mentioned, the visual prompt MUST include an elegant SIAMESE CAT with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1378,7 +1382,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
@@ -1399,12 +1403,18 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true, false);
     try {
-      const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY || process.env.GEMINI_API_KEY) });
+      const ai = new GoogleGenAI({ apiKey: getApiKey() });
       let operation = await ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } });
       while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await ai.operations.getVideosOperation({ operation }); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
       if (downloadLink) {
-        const vidRes = await fetch(`${downloadLink}&key=${(process.env.API_KEY || process.env.GEMINI_API_KEY)}`);
+        const vidRes = await fetch(downloadLink, {
+          method: 'GET',
+          headers: {
+            'x-goog-api-key': getApiKey()
+          }
+        });
+        if (!vidRes.ok) throw new Error(`Video download failed: ${vidRes.statusText}`);
         const vidBlob = await vidRes.blob();
         const vUrl = URL.createObjectURL(vidBlob);
         const finalize = (prev: Trend | null) => { if (!prev || !prev.storyboard) return prev; const current = [...prev.storyboard]; current[index] = { ...current[index], videoUrl: vUrl, videoBlob: vidBlob, isGeneratingVideo: false, hasError: false }; return { ...prev, storyboard: current }; };

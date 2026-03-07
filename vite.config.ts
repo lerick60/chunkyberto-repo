@@ -7,19 +7,6 @@ import tailwindcss from '@tailwindcss/vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const htmlPlugin = (env: Record<string, string>, mode: string) => {
-  return {
-    name: 'html-transform',
-    transformIndexHtml(html: string) {
-      const apiKey = env.API_KEY || env.GEMINI_API_KEY || '';
-      return html.replace(
-        '<head>',
-        `<head>\n    <script>window.process = window.process || { env: {} }; window.process.env.API_KEY = window.process.env.API_KEY || "${apiKey}"; window.process.env.GEMINI_API_KEY = window.process.env.GEMINI_API_KEY || "${apiKey}";</script>`
-      );
-    }
-  };
-};
-
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
     return {
@@ -32,7 +19,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       
-      plugins: [react(), tailwindcss(), htmlPlugin(env, mode)],
+      plugins: [react(), tailwindcss()],
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),

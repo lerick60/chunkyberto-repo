@@ -10,18 +10,15 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  app.get("/api/config", (req, res) => {
+    res.json({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || "" });
+  });
+
   const serveStatic = () => {
     app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
     app.use((req, res) => {
       try {
         let html = fs.readFileSync(path.resolve(__dirname, "dist", "index.html"), "utf-8");
-        const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || "";
-        
-        html = html.replace(
-          '<head>',
-          `<head>\n    <script>window.process = { env: { API_KEY: "${apiKey}", GEMINI_API_KEY: "${apiKey}" } };</script>`
-        );
-        
         res.send(html);
       } catch (e) {
         res.status(500).send("Error loading index.html. Did you run 'npm run build'?");
