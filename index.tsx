@@ -1428,39 +1428,16 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setIsCombiningVideos(true); setCombineProgress(0); setAppError(null);
     try {
       const ctx = await ensureAudioContext();
-      const dest = ctx.createMediaStreamDestination();
-      const canvas = document.createElement('canvas');
-      const isPortrait = videoDim === '9:16'; canvas.width = isPortrait ? 720 : 1280; canvas.height = isPortrait ? 1280 : 720;
-      const canvasCtx = canvas.getContext('2d'); if (!canvasCtx) throw new Error("Canvas context failed");
-      const canvasStream = canvas.captureStream(30);
-      const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-      const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
-      const chunks: Blob[] = []; recorder.ondataavailable = (e) => chunks.push(e.data);
-      const recorderPromise = new Promise<string>((resolve) => { recorder.onstop = () => { const blob = new Blob(chunks, { type: 'video/webm' }); resolve(URL.createObjectURL(blob)); }; });
-      recorder.start();
-
+      
+      // Pre-fetch all TTS audio buffers and media to avoid delays during recording
+      const audioBuffers: (AudioBuffer | null)[] = [];
+      const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
+      
       for (let i = 0; i < readyFrames.length; i++) {
+        setCombineProgress(Math.round((i / readyFrames.length) * 50)); // First 50% is fetching audio and media
         const frame = readyFrames[i];
-        // Initial progress for this frame
-        setCombineProgress(Math.round((i / readyFrames.length) * 100));
         
-        // Small delay between TTS calls to improve stability
-        if (i > 0) await new Promise(r => setTimeout(r, 1500));
-        
-        const audioBuffer = await handlePlayTTS(frame.narrationText); 
-        if (!audioBuffer) {
-          console.warn(`Skipping frame ${i} due to TTS failure`);
-          continue;
-        }
-        
-        const audioSource = ctx.createBufferSource(); 
-        audioSource.buffer = audioBuffer; 
-        audioSource.connect(dest); 
-        audioSource.start();
-        
-        const segmentDuration = audioBuffer.duration; 
-        const startTime = Date.now();
-        
+        // Pre-load media
         let sourceElement: HTMLVideoElement | HTMLImageElement;
         if (frame.videoUrl) { 
           sourceElement = document.createElement('video'); 
@@ -1474,7 +1451,6 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             video.onerror = () => reject(new Error("Failed to load video segment"));
             video.load();
           });
-          await video.play(); 
         } else { 
           sourceElement = document.createElement('img'); 
           sourceElement.src = frame.imageUrl; 
@@ -1483,6 +1459,46 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             sourceElement.onload = resolve;
             sourceElement.onerror = () => reject(new Error("Failed to load image segment"));
           }); 
+        }
+        mediaElements.push(sourceElement);
+
+        if (i > 0) await new Promise(r => setTimeout(r, 1000)); // Rate limiting
+        const buffer = await handlePlayTTS(frame.narrationText);
+        audioBuffers.push(buffer);
+      }
+
+      const dest = ctx.createMediaStreamDestination();
+      const canvas = document.createElement('canvas');
+      const isPortrait = videoDim === '9:16'; canvas.width = isPortrait ? 720 : 1280; canvas.height = isPortrait ? 1280 : 720;
+      const canvasCtx = canvas.getContext('2d'); if (!canvasCtx) throw new Error("Canvas context failed");
+      const canvasStream = canvas.captureStream(30);
+      const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+      const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+      const chunks: Blob[] = []; recorder.ondataavailable = (e) => chunks.push(e.data);
+      const recorderPromise = new Promise<string>((resolve) => { recorder.onstop = () => { const blob = new Blob(chunks, { type: 'video/webm' }); resolve(URL.createObjectURL(blob)); }; });
+      recorder.start();
+
+      for (let i = 0; i < readyFrames.length; i++) {
+        const frame = readyFrames[i];
+        const audioBuffer = audioBuffers[i];
+        const sourceElement = mediaElements[i];
+        
+        if (!audioBuffer) {
+          console.warn(`Skipping frame ${i} due to TTS failure`);
+          continue;
+        }
+        
+        const audioSource = ctx.createBufferSource(); 
+        audioSource.buffer = audioBuffer; 
+        audioSource.connect(dest); 
+        audioSource.start();
+        
+        const segmentDuration = audioBuffer.duration; 
+        const startTime = Date.now();
+        
+        if (sourceElement instanceof HTMLVideoElement) {
+          sourceElement.currentTime = 0;
+          await sourceElement.play();
         }
 
         let lastProgressUpdate = 0;
