@@ -15,6 +15,16 @@ async function startServer() {
     app.use((req, res) => {
       try {
         let html = fs.readFileSync(path.resolve(__dirname, "dist", "index.html"), "utf-8");
+        
+        // Inject runtime environment variables for the client
+        const envScript = `<script>
+          window.process = window.process || { env: {} };
+          window.process.env.GEMINI_API_KEY = ${JSON.stringify(process.env.GEMINI_API_KEY || '')};
+          window.process.env.API_KEY = ${JSON.stringify(process.env.API_KEY || '')};
+        </script>`;
+        
+        html = html.replace('</head>', `${envScript}</head>`);
+        
         res.send(html);
       } catch (e) {
         res.status(500).send("Error loading index.html. Did you run 'npm run build'?");
