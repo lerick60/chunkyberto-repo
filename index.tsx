@@ -807,7 +807,7 @@ const App: React.FC = () => {
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>(() => localStorage.getItem('chunky_persona') || PERSONAS[0].id);
   const [producingImages, setProducingImages] = useState(false);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
-  const [videoDim, setVideoDim] = useState<VideoDimension>('9:16');
+  const [videoDim, setVideoDim] = useState<VideoDimension>('16:9');
   const [visualStyle, setVisualStyle] = useState<ImageStyle>('Cinematic');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCombiningVideos, setIsCombiningVideos] = useState(false);
@@ -823,7 +823,7 @@ const App: React.FC = () => {
   // Control de extensión para el Compositor Creativo Híbrido:
   // 'short' = 4300 chars, 'medium' = 8000 chars, 'long' = 15000+ chars.
   const [narrativeLength, setNarrativeLength] = useState<NarrativeLength>('short');
-  const [imageCount, setImageCount] = useState<number>(15);
+  const [imageCount, setImageCount] = useState<number>(10);
   const [globalForensicToggles, setGlobalForensicToggles] = useState({ analysis: false, interview: false, advance: false });
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [ytChannelUrl, setYtChannelUrl] = useState(() => localStorage.getItem('chunky_yt_url') || "");
