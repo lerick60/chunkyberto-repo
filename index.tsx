@@ -583,7 +583,7 @@ const YouTubeUploadModal: React.FC<{
   ytChannelUrl: string;
 }> = ({ isOpen, onClose, trend, videoUrl, activePersona, ytChannelUrl }) => {
   const [ytTitle, setYtTitle] = useState(trend.title);
-  const [ytDescription, setYtDescription] = useState(`🎥 Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
+  const [ytDescription, setYtDescription] = useState(`�� Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
   const [privacy, setPrivacy] = useState<YouTubePrivacy>('public');
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'preparing' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -591,7 +591,7 @@ const YouTubeUploadModal: React.FC<{
   useEffect(() => {
     if (isOpen) {
       setYtTitle(trend.title);
-      setYtDescription(`🎥 Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
+      setYtDescription(`�� Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
       setUploadStatus('idle');
       setUploadProgress(0);
     }
@@ -994,7 +994,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1021,7 +1021,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1092,7 +1092,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setGeneratingThumbnail(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const visualAnchor = activePersona.id === 'luna' 
         ? 'Include an elegant Siamese cat with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1144,7 +1144,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (type === 'advance') setIsAdvancing(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const lang = getLanguageName(language);
       let prompt = "";
       if (type === 'analysis') {
@@ -1192,7 +1192,7 @@ IDIOMA: ${lang}`;
     if (!userIdea.trim()) return;
     setIsGeneratingIdea(true); setAppError(null); setLatestHybridTrend(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
@@ -1285,7 +1285,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!text || text.trim().length === 0) return null;
     
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
@@ -1335,7 +1335,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setProducingImages(true); setAppError(null);
     setSelectedTrend(prev => (prev ? { ...prev, storyboard: [] } : null));
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const visualAnchorContext = activePersona.id === 'luna' 
         ? 'IMPORTANT: Whenever "Luna" or a cat is mentioned, the visual prompt MUST include an elegant SIAMESE CAT with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1380,7 +1380,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
@@ -1401,7 +1401,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     };
     updateStoryboardState(true, false);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: (process.env.GEMINI_API_KEY || process.env.API_KEY as string) });
       let operation = await ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } });
       while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await ai.operations.getVideosOperation({ operation }); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
@@ -1409,7 +1409,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         const vidRes = await fetch(downloadLink, {
           method: 'GET',
           headers: {
-            'x-goog-api-key': process.env.API_KEY || process.env.GEMINI_API_KEY
+            'x-goog-api-key': (process.env.GEMINI_API_KEY || process.env.API_KEY || '')
           }
         });
         if (!vidRes.ok) throw new Error(`Video download failed: ${vidRes.statusText}`);

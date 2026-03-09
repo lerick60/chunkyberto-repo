@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
-    return { define: { 'process.env.API_KEY': 'process.env.API_KEY', 'process.env.GEMINI_API_KEY': 'process.env.GEMINI_API_KEY' },
+    return {
       
       server: {
         port: 3000,
