@@ -568,7 +568,26 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
         </div>
       </div>
       <div className="mt-auto space-y-3">
-        {!trend.chunkybertoVersion ? <button type="button" onClick={(e) => { e.preventDefault(); onRewrite(trend); }} disabled={isRewriting} className={`w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${trend.isMasterSummary ? 'bg-indigo-500 hover:bg-indigo-400 text-white' : `bg-${persona.color} hover:opacity-80 text-slate-950`} active:scale-95 disabled:opacity-50 shadow-xl`}>{isRewriting ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}{isRewriting ? 'Procesando...' : (trend.isMasterSummary ? 'NARRAR COMPENDIO' : 'NARRAR HISTORIA')}</button> : <button type="button" onClick={(e) => { e.preventDefault(); onSelect(trend); }} className="w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-emerald-500 hover:bg-emerald-400 active:scale-95 active:bg-emerald-600 text-slate-950 shadow-xl">{hasStoryboard ? <Video size={18} /> : <Layout size={18} />} {hasStoryboard ? 'ENTRAR AL ESTUDIO' : 'PRE-PRODUCCIÓN'}</button>}
+        {!trend.chunkybertoVersion ? (
+          <button 
+            type="button" 
+            onClick={(e) => { e.preventDefault(); onRewrite(trend); }} 
+            disabled={isRewriting} 
+            className={`w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${trend.isMasterSummary ? 'bg-indigo-500 hover:bg-indigo-400 text-white' : `bg-${persona.color} hover:opacity-80 text-slate-950`} active:scale-95 disabled:opacity-50 shadow-xl`}
+          >
+            {isRewriting ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+            {isRewriting ? 'Procesando...' : (trend.isMasterSummary ? 'NARRAR COMPENDIO' : 'NARRAR HISTORIA')}
+          </button>
+        ) : (
+          <button 
+            type="button" 
+            onClick={(e) => { e.preventDefault(); onSelect(trend); }} 
+            className="w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-emerald-500 hover:bg-emerald-400 active:scale-95 active:bg-emerald-600 text-slate-950 shadow-xl"
+          >
+            {hasStoryboard ? <Video size={18} /> : <Layout size={18} />} 
+            {hasStoryboard ? 'ENTRAR AL ESTUDIO' : 'PRE-PRODUCCIÓN'}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -583,32 +602,102 @@ const YouTubeUploadModal: React.FC<{
   ytChannelUrl: string;
 }> = ({ isOpen, onClose, trend, videoUrl, activePersona, ytChannelUrl }) => {
   const [ytTitle, setYtTitle] = useState(trend.title);
-  const [ytDescription, setYtDescription] = useState(`�� Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
+  const [ytDescription, setYtDescription] = useState("");
+  const [ytTags, setYtTags] = useState("");
   const [privacy, setPrivacy] = useState<YouTubePrivacy>('public');
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'preparing' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'preparing' | 'generating' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('/api/youtube/status');
+        const data = await res.json();
+        setIsConnected(data.connected);
+      } catch (e) {
+        console.error("Error checking YT status:", e);
+      }
+    };
     if (isOpen) {
+      checkStatus();
       setYtTitle(trend.title);
-      setYtDescription(`�� Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
       setUploadStatus('idle');
       setUploadProgress(0);
+      setErrorMessage("");
+      handleGenerateMetadata();
     }
   }, [isOpen, trend, activePersona]);
 
-  const handleSimulatedUpload = async () => {
-    setUploadStatus('preparing');
-    await new Promise(r => setTimeout(r, 1500));
-    setUploadStatus('uploading');
-    
-    // Simulate progress
-    for (let i = 0; i <= 100; i += 10) {
-      setUploadProgress(i);
-      await new Promise(r => setTimeout(r, 400));
+  const handleGenerateMetadata = async () => {
+    setUploadStatus('generating');
+    try {
+      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const prompt = `Actúa como un experto en SEO de YouTube. Basado en esta historia: "${trend.chunkybertoVersion}", genera:
+      1. Un título de video viral y clickbait (máximo 100 caracteres).
+      2. Una descripción detallada y atractiva que incluya un resumen de la historia y llamados a la acción.
+      3. Exactamente 10 etiquetas (tags) relevantes separadas por comas.
+      
+      Responde estrictamente en formato JSON con las llaves: "title", "description", "tags".`;
+
+      const res = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ parts: [{ text: prompt }] }],
+        config: { responseMimeType: "application/json" }
+      });
+
+      const data = JSON.parse(res.text || "{}");
+      setYtTitle(data.title || trend.title);
+      setYtDescription(data.description || `Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}`);
+      setYtTags(data.tags || "AI, Cinematic, Storytelling, StudioMulti");
+      setUploadStatus('idle');
+    } catch (e) {
+      console.error("Error generating metadata:", e);
+      setYtDescription(`Relato por ${activePersona.name}\n\n${trend.chunkybertoVersion}\n\n#AI #Cinematic #Storytelling #StudioMulti`);
+      setUploadStatus('idle');
     }
-    
-    setUploadStatus('success');
+  };
+
+  const handleRealUpload = async () => {
+    if (!isConnected) {
+      setErrorMessage("Debes conectar tu cuenta de YouTube en Ajustes primero.");
+      setUploadStatus('error');
+      return;
+    }
+
+    setUploadStatus('preparing');
+    try {
+      const videoRes = await fetch(videoUrl);
+      const videoBlob = await videoRes.blob();
+
+      const formData = new FormData();
+      formData.append("video", videoBlob, "video.webm");
+      formData.append("title", ytTitle);
+      formData.append("description", ytDescription);
+      formData.append("tags", ytTags);
+      formData.append("privacy", privacy);
+
+      setUploadStatus('uploading');
+      setUploadProgress(10);
+
+      const res = await fetch("/api/youtube/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al subir el video");
+      }
+
+      setUploadProgress(100);
+      setUploadStatus('success');
+    } catch (e: any) {
+      console.error("Upload Error:", e);
+      setErrorMessage(e.message || "Error desconocido al subir el video");
+      setUploadStatus('error');
+    }
   };
 
   if (!isOpen) return null;
@@ -626,7 +715,7 @@ const YouTubeUploadModal: React.FC<{
         </div>
 
         <div className="p-10 space-y-8">
-          {uploadStatus === 'idle' ? (
+          {uploadStatus === 'idle' || uploadStatus === 'generating' ? (
             <>
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -644,7 +733,18 @@ const YouTubeUploadModal: React.FC<{
                   <textarea 
                     value={ytDescription} 
                     onChange={(e) => setYtDescription(e.target.value)}
-                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-medium text-slate-300 focus:border-red-500 outline-none transition-all min-h-[150px] custom-scrollbar"
+                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-medium text-slate-300 focus:border-red-500 outline-none transition-all min-h-[120px] custom-scrollbar"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">Etiquetas (Tags)</label>
+                  <input 
+                    type="text" 
+                    value={ytTags} 
+                    onChange={(e) => setYtTags(e.target.value)}
+                    placeholder="tag1, tag2, tag3..."
+                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all"
                   />
                 </div>
 
@@ -669,12 +769,43 @@ const YouTubeUploadModal: React.FC<{
               </div>
 
               <button 
-                onClick={handleSimulatedUpload}
-                className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all"
+                onClick={handleRealUpload}
+                disabled={uploadStatus === 'generating'}
+                className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black uppercase text-sm tracking-[0.2em] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-50"
               >
-                <UploadCloud size={20} /> PUBLICAR AHORA
+                {uploadStatus === 'generating' ? <Loader2 className="animate-spin" size={20} /> : <UploadCloud size={20} />} 
+                {uploadStatus === 'generating' ? 'GENERANDO METADATOS...' : 'PUBLICAR AHORA'}
               </button>
+              {!isConnected && (
+                <p className="text-center text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
+                  ⚠️ YouTube API no conectada. Ve a Ajustes.
+                </p>
+              )}
             </>
+          ) : uploadStatus === 'error' ? (
+            <div className="text-center py-10 space-y-6 animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-24 h-24 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-2xl">
+                <X size={48} strokeWidth={3} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white">Error al Publicar</h3>
+                <p className="text-slate-400 text-sm font-medium">{errorMessage}</p>
+              </div>
+              <div className="flex flex-col gap-3 pt-6">
+                <button 
+                  onClick={() => setUploadStatus('idle')}
+                  className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-500 transition-all"
+                >
+                  REINTENTAR
+                </button>
+                <button 
+                  onClick={onClose}
+                  className="px-10 py-4 bg-slate-800 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-slate-700 transition-all"
+                >
+                  CERRAR
+                </button>
+              </div>
+            </div>
           ) : uploadStatus === 'success' ? (
             <div className="text-center py-10 space-y-6 animate-in fade-in zoom-in-95 duration-500">
               <div className="w-24 h-24 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-2xl">
@@ -740,7 +871,9 @@ const SettingsModal: React.FC<{
   ytChannelUrl: string;
   onYtChannelUrlChange: (url: string) => void;
   activePersona: Persona;
-}> = ({ isOpen, onClose, ytChannelUrl, onYtChannelUrlChange, activePersona }) => {
+  isYtConnected: boolean;
+  onConnectYt: () => void;
+}> = ({ isOpen, onClose, ytChannelUrl, onYtChannelUrlChange, activePersona, isYtConnected, onConnectYt }) => {
   if (!isOpen) return null;
 
   return (
@@ -757,24 +890,47 @@ const SettingsModal: React.FC<{
 
         <div className="p-10 space-y-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-red-500 font-black text-[10px] uppercase tracking-widest mb-2">
-              <Youtube size={16} /> YouTube Channel Sync
-            </div>
-            <p className="text-slate-400 text-xs font-medium italic">Enlaza tu canal para acceder rápidamente a tus videos publicados.</p>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500">
-                <LinkIcon size={16} />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-500 font-black text-[10px] uppercase tracking-widest">
+                <Youtube size={16} /> YouTube API Sync
               </div>
-              <input 
-                type="url" 
-                placeholder="https://youtube.com/@mi_canal"
-                value={ytChannelUrl}
-                onChange={(e) => onYtChannelUrlChange(e.target.value)}
-                className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all placeholder:text-slate-700"
-              />
+              <div className={`flex items-center gap-1 text-[8px] font-black uppercase tracking-widest ${isYtConnected ? 'text-emerald-500' : 'text-slate-500'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isYtConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                {isYtConnected ? 'Conectado' : 'Desconectado'}
+              </div>
+            </div>
+            
+            {!isYtConnected ? (
+              <button 
+                onClick={onConnectYt}
+                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 hover:bg-red-500 transition-all active:scale-95 shadow-lg"
+              >
+                <Key size={16} /> CONECTAR CON YOUTUBE
+              </button>
+            ) : (
+              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3">
+                <Check className="text-emerald-500" size={20} />
+                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Tu cuenta de YouTube está vinculada correctamente.</p>
+              </div>
+            )}
+
+            <div className="space-y-2 pt-4">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">URL de tu Canal (Opcional)</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500">
+                  <LinkIcon size={16} />
+                </div>
+                <input 
+                  type="url" 
+                  placeholder="https://youtube.com/@mi_canal"
+                  value={ytChannelUrl}
+                  onChange={(e) => onYtChannelUrlChange(e.target.value)}
+                  className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all placeholder:text-slate-700"
+                />
+              </div>
             </div>
             <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">Tip: Puedes encontrar tu URL personalizada en YouTube Studio &gt; Personalización &gt; Información básica.</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">Tip: La URL del canal se usa para los enlaces rápidos en la interfaz.</p>
             </div>
           </div>
 
@@ -814,6 +970,7 @@ const App: React.FC = () => {
   const [combineProgress, setCombineProgress] = useState(0);
   const [combinedVideoUrl, setCombinedVideoUrl] = useState<string | null>(null);
   const [isZipping, setIsZipping] = useState(false);
+  const [isYtConnected, setIsYtConnected] = useState(false);
   const [userIdea, setUserIdea] = useState("");
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false);
   const [latestHybridTrend, setLatestHybridTrend] = useState<Trend | null>(null);
@@ -885,6 +1042,39 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('chunky_yt_url', ytChannelUrl);
   }, [ytChannelUrl]);
+
+  useEffect(() => {
+    const checkYtStatus = async () => {
+      try {
+        const res = await fetch('/api/youtube/status');
+        const data = await res.json();
+        setIsYtConnected(data.connected);
+      } catch (e) {
+        console.error("Error checking YT status:", e);
+      }
+    };
+    checkYtStatus();
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'YOUTUBE_AUTH_SUCCESS') {
+        setIsYtConnected(true);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const handleConnectYouTube = async () => {
+    try {
+      const res = await fetch('/api/youtube/auth-url');
+      const { url } = await res.json();
+      window.open(url, 'youtube_auth', 'width=600,height=700');
+    } catch (e) {
+      console.error("Error connecting YouTube:", e);
+    }
+  };
 
   // Sync voice with persona change
   useEffect(() => {
@@ -1746,6 +1936,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ytChannelUrl={ytChannelUrl}
         onYtChannelUrlChange={setYtChannelUrl}
         activePersona={activePersona}
+        isYtConnected={isYtConnected}
+        onConnectYt={handleConnectYouTube}
       />
 
       <main className="max-w-7xl mx-auto px-4 pt-10">
