@@ -354,6 +354,7 @@ interface StoryboardFrame {
   narrationText: string; 
   videoUrl?: string;
   videoBlob?: Blob; 
+  audioBlob?: Blob;
   isGeneratingVideo?: boolean;
   isGeneratingImage?: boolean;
   hasError?: boolean;
@@ -1471,7 +1472,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     }
   };
 
-  const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<AudioBuffer | null> => {
+  const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<{ buffer: AudioBuffer, blob: Blob } | null> => {
     if (!text || text.trim().length === 0) return null;
     
     try {
@@ -1479,7 +1480,6 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
-      // Simplify prompt and move instruction into the text part as per examples
       const prompt = `Read this text with a ${styleLabel} tone: ${text}`;
       
       const res = await apiRetry(() => ai.models.generateContent({
@@ -1493,28 +1493,30 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             } 
           } 
         },
-      }), 8, 8000) as any; // Even higher retry count and delay for TTS
+      }), 12, 10000) as any; // Increased retries and delay for maximum robustness
       
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
       
       if (base64Audio) {
         const ctx = await ensureAudioContext();
-        const buffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
+        const rawData = decodeBase64(base64Audio);
+        const buffer = await decodeAudioData(rawData, ctx, 24000, 1);
+        const blob = new Blob([rawData], { type: 'audio/mpeg' }); // Assuming mpeg/mp3 based on typical Gemini TTS output
+
         if (playOutLoud) {
           const source = ctx.createBufferSource(); 
           source.buffer = buffer; 
           source.connect(ctx.destination);
           source.start(); 
         }
-        return buffer;
+        return { buffer, blob };
       } else {
         console.error("TTS Warning: No audio data returned in response parts.", res);
       }
     } catch (e) { 
-      console.error("TTS Error (V47.2.1):", e); 
+      console.error("TTS Error (V47.2.2):", e); 
       const details = getErrorDetails(e);
-      // Only set app error if it's not a common transient error that we already retried
       if (!details.isQuota && String(details.code) !== "500") {
         setAppError(details);
       }
@@ -1654,9 +1656,27 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         }
         mediaElements.push(sourceElement);
 
-        if (i > 0) await new Promise(r => setTimeout(r, 1000)); // Rate limiting
-        const buffer = await handlePlayTTS(frame.narrationText, false);
-        audioBuffers.push(buffer);
+        if (i > 0) {
+          // Increased delay with jitter to avoid concurrent request spikes
+          const jitter = Math.random() * 1000;
+          await new Promise(r => setTimeout(r, 2500 + jitter)); 
+        }
+        
+        const ttsResult = await handlePlayTTS(frame.narrationText, false);
+        if (ttsResult) {
+          audioBuffers.push(ttsResult.buffer);
+          // Persist audio blob in storyboard for zipping
+          setSelectedTrend(prev => {
+            if (!prev || !prev.storyboard) return prev;
+            const newStoryboard = [...prev.storyboard];
+            const idx = newStoryboard.findIndex(f => f.id === frame.id);
+            if (idx !== -1) newStoryboard[idx] = { ...newStoryboard[idx], audioBlob: ttsResult.blob };
+            return { ...prev, storyboard: newStoryboard };
+          });
+        } else {
+          console.warn(`TTS failed for frame ${i}, continuing without audio for this segment`);
+          audioBuffers.push(null);
+        }
       }
 
       const dest = ctx.createMediaStreamDestination();
@@ -1766,8 +1786,20 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             rootFolder?.file(`${sceneName}_Narracion.txt`, frame.narrationText);
             if (frame.imageUrl) { rootFolder?.file(`${sceneName}_Imagen.png`, frame.imageUrl.split(',')[1], { base64: true }); }
             if (frame.videoBlob) { rootFolder?.file(`${sceneName}_Video.webm`, frame.videoBlob); }
+            if (frame.audioBlob) { rootFolder?.file(`${sceneName}_Audio.mp3`, frame.audioBlob); }
         }
-        if (combinedVideoUrl) { const res = await fetch(combinedVideoUrl); const blob = await res.blob(); rootFolder?.file(`PELICULA_MAESTRA.webm`, blob); }
+        if (combinedVideoUrl) { 
+          try {
+            const res = await fetch(combinedVideoUrl); 
+            if (res.ok) {
+              const blob = await res.blob(); 
+              rootFolder?.file(`PELICULA_MAESTRA.webm`, blob); 
+            }
+          } catch (e) {
+            console.error("Error fetching combined video for ZIP:", e);
+          }
+        }
+        
         const zipBlob = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a'); link.href = URL.createObjectURL(zipBlob); link.download = `Bundle_${selectedTrend.title.substring(0,15)}.zip`; link.click();
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsZipping(false); }
