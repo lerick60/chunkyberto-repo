@@ -429,8 +429,8 @@ async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 500
       
       if ((details.isQuota || isInternal) && attempt < maxRetries) {
         attempt++;
-        // Exponential backoff with jitter
-        const delay = (baseDelay * Math.pow(2, attempt - 1)) + (Math.random() * 2000);
+        // Exponential backoff with jitter, capped at 30 seconds
+        const delay = Math.min(30000, (baseDelay * Math.pow(2, attempt - 1)) + (Math.random() * 2000));
         console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${details.status}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
@@ -1493,7 +1493,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             } 
           } 
         },
-      }), 12, 10000) as any; // Increased retries and delay for maximum robustness
+      }), 6, 4000) as any; // Reduced retries and base delay for better UX
       
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
@@ -1631,7 +1631,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         setCombineProgress(Math.round((i / readyFrames.length) * 30)); // First 30% is fetching audio and media
         const frame = readyFrames[i];
         
-        // Pre-load media
+        // Pre-load media with timeout
         let sourceElement: HTMLVideoElement | HTMLImageElement;
         if (frame.videoUrl) { 
           sourceElement = document.createElement('video'); 
@@ -1640,43 +1640,60 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
           sourceElement.playsInline = true; 
           sourceElement.crossOrigin = "anonymous";
           const video = sourceElement as HTMLVideoElement;
-          await new Promise((resolve, reject) => {
-            video.oncanplaythrough = resolve;
-            video.onerror = () => reject(new Error("Failed to load video segment"));
-            video.load();
-          });
+          await Promise.race([
+            new Promise((resolve, reject) => {
+              video.oncanplaythrough = resolve;
+              video.onerror = () => reject(new Error(`Error cargando video de escena ${i+1}`));
+              video.load();
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 15000))
+          ]);
         } else { 
           sourceElement = document.createElement('img'); 
           sourceElement.src = frame.imageUrl; 
           sourceElement.crossOrigin = "anonymous";
-          await new Promise((resolve, reject) => {
-            sourceElement.onload = resolve;
-            sourceElement.onerror = () => reject(new Error("Failed to load image segment"));
-          }); 
+          await Promise.race([
+            new Promise((resolve, reject) => {
+              sourceElement.onload = resolve;
+              sourceElement.onerror = () => reject(new Error(`Error cargando imagen de escena ${i+1}`));
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando imagen de escena ${i+1}`)), 10000))
+          ]); 
         }
         mediaElements.push(sourceElement);
 
-        if (i > 0) {
-          // Increased delay with jitter to avoid concurrent request spikes
-          const jitter = Math.random() * 1000;
-          await new Promise(r => setTimeout(r, 2500 + jitter)); 
-        }
-        
-        const ttsResult = await handlePlayTTS(frame.narrationText, false);
-        if (ttsResult) {
-          audioBuffers.push(ttsResult.buffer);
-          // Persist audio blob in storyboard for zipping
-          setSelectedTrend(prev => {
-            if (!prev || !prev.storyboard) return prev;
-            const newStoryboard = [...prev.storyboard];
-            const idx = newStoryboard.findIndex(f => f.id === frame.id);
-            if (idx !== -1) newStoryboard[idx] = { ...newStoryboard[idx], audioBlob: ttsResult.blob };
-            return { ...prev, storyboard: newStoryboard };
-          });
-        } else {
-          console.warn(`TTS failed for frame ${i}, continuing without audio for this segment`);
+        // Fetch TTS - if it fails, we continue to avoid hanging the whole process
+        try {
+          if (i > 0) {
+            const jitter = Math.random() * 500;
+            const delay = 1200 + jitter;
+            console.log(`Esperando ${Math.round(delay)}ms antes de TTS de escena ${i+1}...`);
+            await new Promise(r => setTimeout(r, delay)); 
+          }
+          
+          console.log(`Generando audio para escena ${i+1}/${readyFrames.length}...`);
+          const ttsResult = await handlePlayTTS(frame.narrationText, false);
+          if (ttsResult) {
+            console.log(`Audio generado exitosamente para escena ${i+1}`);
+            audioBuffers.push(ttsResult.buffer);
+            setSelectedTrend(prev => {
+              if (!prev || !prev.storyboard) return prev;
+              const newStoryboard = [...prev.storyboard];
+              const idx = newStoryboard.findIndex(f => f.id === frame.id);
+              if (idx !== -1) newStoryboard[idx] = { ...newStoryboard[idx], audioBlob: ttsResult.blob };
+              return { ...prev, storyboard: newStoryboard };
+            });
+          } else {
+            console.warn(`No se pudo generar audio para escena ${i+1}, se usará silencio.`);
+            audioBuffers.push(null);
+          }
+        } catch (ttsErr) {
+          console.error(`Error crítico en TTS de escena ${i+1}:`, ttsErr);
           audioBuffers.push(null);
         }
+        
+        // Ensure progress is updated even if TTS takes time or fails
+        setCombineProgress(Math.round(((i + 1) / readyFrames.length) * 30));
       }
 
       const dest = ctx.createMediaStreamDestination();
@@ -1687,7 +1704,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
       const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
       const chunks: Blob[] = []; recorder.ondataavailable = (e) => chunks.push(e.data);
-      const recorderPromise = new Promise<string>((resolve) => { recorder.onstop = () => { const blob = new Blob(chunks, { type: 'video/webm' }); resolve(URL.createObjectURL(blob)); }; });
+      const recorderPromise = new Promise<string>((resolve, reject) => { 
+        const timeout = setTimeout(() => reject(new Error("Tiempo de espera agotado esperando el cierre del grabador")), 600000); // 10 min max
+        recorder.onstop = () => { 
+          clearTimeout(timeout);
+          const blob = new Blob(chunks, { type: 'video/webm' }); 
+          resolve(URL.createObjectURL(blob)); 
+        }; 
+      });
       recorder.start();
 
       for (let i = 0; i < readyFrames.length; i++) {
