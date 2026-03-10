@@ -1626,7 +1626,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
       
       for (let i = 0; i < readyFrames.length; i++) {
-        setCombineProgress(Math.round((i / readyFrames.length) * 50)); // First 50% is fetching audio and media
+        setCombineProgress(Math.round((i / readyFrames.length) * 30)); // First 30% is fetching audio and media
         const frame = readyFrames[i];
         
         // Pre-load media
@@ -1675,17 +1675,16 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         const audioBuffer = audioBuffers[i];
         const sourceElement = mediaElements[i];
         
-        if (!audioBuffer) {
-          console.warn(`Skipping frame ${i} due to TTS failure`);
-          continue;
+        // If audio failed, don't skip the frame. Use a default duration of 4 seconds.
+        const segmentDuration = audioBuffer ? audioBuffer.duration : 4.0;
+        
+        if (audioBuffer) {
+          const audioSource = ctx.createBufferSource(); 
+          audioSource.buffer = audioBuffer; 
+          audioSource.connect(dest); 
+          audioSource.start();
         }
         
-        const audioSource = ctx.createBufferSource(); 
-        audioSource.buffer = audioBuffer; 
-        audioSource.connect(dest); 
-        audioSource.start();
-        
-        const segmentDuration = audioBuffer.duration; 
         const startTime = Date.now();
         
         if (sourceElement instanceof HTMLVideoElement) {
@@ -1699,9 +1698,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
           const elapsed = (now - startTime) / 1000;
           const progress = Math.min(1, elapsed / segmentDuration);
           
-          // Update total progress every 200ms to avoid excessive state updates
+          // Update total progress every 200ms
+          // Recording phase is from 30% to 100%
           if (now - lastProgressUpdate > 200) {
-            setCombineProgress(Math.round(((i + progress) / readyFrames.length) * 100));
+            const totalProgress = 30 + Math.round(((i + progress) / readyFrames.length) * 70);
+            setCombineProgress(Math.min(99, totalProgress));
             lastProgressUpdate = now;
           }
           
@@ -1739,8 +1740,12 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 
           await new Promise(r => requestAnimationFrame(r));
         }
-        audioSource.stop();
+        // No need to call audioSource.stop() as it stops when buffer ends
       }
+      
+      // Wait a small bit to ensure the last audio bits are captured by the recorder
+      await new Promise(r => setTimeout(r, 500));
+      
       setCombineProgress(100); recorder.stop(); const finalUrl = await recorderPromise; setCombinedVideoUrl(finalUrl);
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsCombiningVideos(false); }
   };
