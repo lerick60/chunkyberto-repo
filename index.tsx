@@ -1619,19 +1619,24 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!selectedTrend || !selectedTrend.storyboard) return;
     const readyFrames = selectedTrend.storyboard.filter(f => f.videoUrl || f.imageUrl);
     if (readyFrames.length === 0) return;
-    setIsCombiningVideos(true); setCombineProgress(0); setAppError(null);
+    setIsCombiningVideos(true); setCombineProgress(1); setAppError(null);
+    console.log(`Iniciando síntesis de video para ${readyFrames.length} escenas...`);
     try {
       const ctx = await ensureAudioContext();
+      console.log("AudioContext listo.");
       
       // Pre-fetch all TTS audio buffers and media to avoid delays during recording
       const audioBuffers: (AudioBuffer | null)[] = [];
       const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
       
       for (let i = 0; i < readyFrames.length; i++) {
-        setCombineProgress(Math.round((i / readyFrames.length) * 30)); // First 30% is fetching audio and media
+        const currentProgress = Math.max(1, Math.round((i / readyFrames.length) * 30));
+        setCombineProgress(currentProgress);
         const frame = readyFrames[i];
         
-        // Pre-load media with timeout
+        console.log(`Preparando escena ${i+1}/${readyFrames.length}...`);
+        
+        // Pre-load media with timeout and multiple event listeners
         let sourceElement: HTMLVideoElement | HTMLImageElement;
         if (frame.videoUrl) { 
           sourceElement = document.createElement('video'); 
@@ -1642,53 +1647,71 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
           const video = sourceElement as HTMLVideoElement;
           await Promise.race([
             new Promise((resolve, reject) => {
-              video.oncanplaythrough = resolve;
+              if (video.readyState >= 3) { resolve(null); return; }
+              const handler = () => {
+                video.removeEventListener('canplaythrough', handler);
+                video.removeEventListener('canplay', handler);
+                video.removeEventListener('loadeddata', handler);
+                resolve(null);
+              };
+              video.addEventListener('canplaythrough', handler);
+              video.addEventListener('canplay', handler);
+              video.addEventListener('loadeddata', handler);
               video.onerror = () => reject(new Error(`Error cargando video de escena ${i+1}`));
               video.load();
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 15000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 20000))
           ]);
         } else { 
           sourceElement = document.createElement('img'); 
           sourceElement.src = frame.imageUrl; 
           sourceElement.crossOrigin = "anonymous";
+          const img = sourceElement as HTMLImageElement;
           await Promise.race([
             new Promise((resolve, reject) => {
-              sourceElement.onload = resolve;
-              sourceElement.onerror = () => reject(new Error(`Error cargando imagen de escena ${i+1}`));
+              if (img.complete) { resolve(null); return; }
+              img.onload = () => resolve(null);
+              img.onerror = () => reject(new Error(`Error cargando imagen de escena ${i+1}`));
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando imagen de escena ${i+1}`)), 10000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando imagen de escena ${i+1}`)), 15000))
           ]); 
         }
         mediaElements.push(sourceElement);
 
-        // Fetch TTS - if it fails, we continue to avoid hanging the whole process
+        // Fetch TTS - use cached blob if available to save time and API calls
         try {
-          if (i > 0) {
-            const jitter = Math.random() * 500;
-            const delay = 1200 + jitter;
-            console.log(`Esperando ${Math.round(delay)}ms antes de TTS de escena ${i+1}...`);
-            await new Promise(r => setTimeout(r, delay)); 
-          }
-          
-          console.log(`Generando audio para escena ${i+1}/${readyFrames.length}...`);
-          const ttsResult = await handlePlayTTS(frame.narrationText, false);
-          if (ttsResult) {
-            console.log(`Audio generado exitosamente para escena ${i+1}`);
-            audioBuffers.push(ttsResult.buffer);
-            setSelectedTrend(prev => {
-              if (!prev || !prev.storyboard) return prev;
-              const newStoryboard = [...prev.storyboard];
-              const idx = newStoryboard.findIndex(f => f.id === frame.id);
-              if (idx !== -1) newStoryboard[idx] = { ...newStoryboard[idx], audioBlob: ttsResult.blob };
-              return { ...prev, storyboard: newStoryboard };
-            });
+          if (frame.audioBlob) {
+            console.log(`Usando audio pre-generado para escena ${i+1}`);
+            const arrayBuffer = await frame.audioBlob.arrayBuffer();
+            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+            audioBuffers.push(audioBuffer);
           } else {
-            console.warn(`No se pudo generar audio para escena ${i+1}, se usará silencio.`);
-            audioBuffers.push(null);
+            if (i > 0) {
+              const jitter = Math.random() * 500;
+              const delay = 1000 + jitter;
+              console.log(`Esperando ${Math.round(delay)}ms antes de TTS de escena ${i+1}...`);
+              await new Promise(r => setTimeout(r, delay)); 
+            }
+            
+            console.log(`Generando audio para escena ${i+1}/${readyFrames.length}...`);
+            const ttsResult = await handlePlayTTS(frame.narrationText, false);
+            if (ttsResult) {
+              console.log(`Audio generado exitosamente para escena ${i+1}`);
+              audioBuffers.push(ttsResult.buffer);
+              setSelectedTrend(prev => {
+                if (!prev || !prev.storyboard) return prev;
+                const newStoryboard = [...prev.storyboard];
+                const idx = newStoryboard.findIndex(f => f.id === frame.id);
+                if (idx !== -1) newStoryboard[idx] = { ...newStoryboard[idx], audioBlob: ttsResult.blob };
+                return { ...prev, storyboard: newStoryboard };
+              });
+            } else {
+              console.warn(`No se pudo generar audio para escena ${i+1}, se usará silencio.`);
+              audioBuffers.push(null);
+            }
           }
         } catch (ttsErr) {
-          console.error(`Error crítico en TTS de escena ${i+1}:`, ttsErr);
+          console.error(`Error procesando audio de escena ${i+1}:`, ttsErr);
           audioBuffers.push(null);
         }
         
