@@ -1281,7 +1281,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     }
   };
 
-  const handlePlayTTS = async (text: string): Promise<AudioBuffer | null> => {
+  const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<AudioBuffer | null> => {
     if (!text || text.trim().length === 0) return null;
     
     try {
@@ -1311,10 +1311,12 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       if (base64Audio) {
         const ctx = await ensureAudioContext();
         const buffer = await decodeAudioData(decodeBase64(base64Audio), ctx, 24000, 1);
-        const source = ctx.createBufferSource(); 
-        source.buffer = buffer; 
-        source.connect(ctx.destination);
-        source.start(); 
+        if (playOutLoud) {
+          const source = ctx.createBufferSource(); 
+          source.buffer = buffer; 
+          source.connect(ctx.destination);
+          source.start(); 
+        }
         return buffer;
       } else {
         console.error("TTS Warning: No audio data returned in response parts.", res);
@@ -1360,14 +1362,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       setSelectedTrend(prev => (prev ? { ...prev, storyboard: [...frames] } : null));
       for (let i = 0; i < frames.length; i++) {
         try {
-          const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frames[i].prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
+          const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frames[i].prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } })) as any;
           const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
           if (imageData) { frames[i].imageUrl = `data:image/png;base64,${imageData}`; frames[i].isGeneratingImage = false; }
           else { frames[i].hasError = true; frames[i].isGeneratingImage = false; }
         } catch (imgErr) { frames[i].hasError = true; frames[i].isGeneratingImage = false; }
         const updatedFrames = [...frames];
         setSelectedTrend(prev => (prev ? { ...prev, storyboard: updatedFrames } : null));
-        await new Promise(r => setTimeout(r, 400));
+        await new Promise(r => setTimeout(r, 2000));
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setProducingImages(false); }
   };
@@ -1381,7 +1383,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     updateStoryboardState(true);
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
-      const res = await ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }) as any;
+      const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } })) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
         const url = `data:image/png;base64,${imageData}`;
@@ -1402,8 +1404,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     updateStoryboardState(true, false);
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
-      let operation = await ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } });
-      while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await ai.operations.getVideosOperation({ operation }); }
+      let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } })) as any;
+      while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await apiRetry(() => ai.operations.getVideosOperation({ operation })); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
       if (downloadLink) {
         const vidRes = await fetch(downloadLink, {
@@ -1463,7 +1465,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         mediaElements.push(sourceElement);
 
         if (i > 0) await new Promise(r => setTimeout(r, 1000)); // Rate limiting
-        const buffer = await handlePlayTTS(frame.narrationText);
+        const buffer = await handlePlayTTS(frame.narrationText, false);
         audioBuffers.push(buffer);
       }
 
