@@ -1628,6 +1628,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (readyFrames.length === 0) return;
     setIsCombiningVideos(true); setCombineProgress(1); setAppError(null);
     console.log(`Iniciando síntesis de video para ${readyFrames.length} escenas...`);
+    let silentOsc: OscillatorNode | null = null;
+    let silentGain: GainNode | null = null;
     try {
       const ctx = await ensureAudioContext();
       console.log("AudioContext listo.");
@@ -1734,8 +1736,21 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const canvas = document.createElement('canvas');
       const isPortrait = videoDim === '9:16'; canvas.width = isPortrait ? 720 : 1280; canvas.height = isPortrait ? 1280 : 720;
       const canvasCtx = canvas.getContext('2d'); if (!canvasCtx) throw new Error("Canvas context failed");
+      
+      // Draw initial black frame so captureStream has something to capture
+      canvasCtx.fillStyle = '#000';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+      
       const canvasStream = canvas.captureStream(30);
       const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+      
+      // Prevent background throttling by playing a silent oscillator to the main output
+      silentOsc = ctx.createOscillator();
+      silentGain = ctx.createGain();
+      silentGain.gain.value = 0;
+      silentOsc.connect(silentGain);
+      silentGain.connect(ctx.destination);
+      silentOsc.start();
       
       let mimeType = 'video/webm;codecs=vp9,opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -1754,7 +1769,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const recorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
       const chunks: Blob[] = []; recorder.ondataavailable = (e) => chunks.push(e.data);
       const recorderPromise = new Promise<string>((resolve, reject) => { 
-        const timeout = setTimeout(() => reject(new Error("Tiempo de espera agotado esperando el cierre del grabador")), 600000); // 10 min max
+        const timeout = setTimeout(() => reject(new Error("Tiempo de espera agotado esperando el cierre del grabador")), 1800000); // 30 min max
         recorder.onstop = () => { 
           clearTimeout(timeout);
           const finalMimeType = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
@@ -1846,7 +1861,15 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       await new Promise(r => setTimeout(r, 500));
       
       setCombineProgress(100); recorder.stop(); const finalUrl = await recorderPromise; setCombinedVideoUrl(finalUrl);
-    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsCombiningVideos(false); }
+    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { 
+      setIsCombiningVideos(false); 
+      if (silentOsc) {
+        try { silentOsc.stop(); silentOsc.disconnect(); } catch (e) {}
+      }
+      if (silentGain) {
+        try { silentGain.disconnect(); } catch (e) {}
+      }
+    }
   };
 
   const handleDownloadAll = async () => {
@@ -2073,7 +2096,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                     ) : (
                       <div className="flex flex-col items-end gap-2">
                         <button onClick={handleCombineAllVideos} disabled={isCombiningVideos} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
-                        {isCombiningVideos && <span className="text-xs text-amber-400 font-medium animate-pulse">⚠️ Por favor, mantén esta pestaña abierta y visible.</span>}
+                        {isCombiningVideos && <span className="text-xs text-amber-400 font-medium animate-pulse">⚠️ La síntesis ocurre en tiempo real (tarda lo mismo que dura el video). Por favor, mantén esta pestaña abierta.</span>}
                       </div>
                     )}
                   </div>
