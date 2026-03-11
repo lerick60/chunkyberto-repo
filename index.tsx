@@ -1500,7 +1500,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             } 
           } 
         },
-      }), 4, 2000, 15000) as any; // Reduced retries, delay, and added 15s timeout for better UX
+      }), 4, 4000, 30000) as any; // Increased base delay to 4s and timeout to 30s to avoid rate limits
       
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
@@ -1524,11 +1524,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     } catch (e) { 
       console.error("TTS Error (V47.2.2):", e); 
       const details = getErrorDetails(e);
-      if (!details.isQuota && String(details.code) !== "500") {
+      if (!details.isQuota && String(details.code) !== "500" || playOutLoud) {
         setAppError(details);
       }
+      throw e; // Throw the error so the caller knows it failed
     }
-    return null;
   };
 
   const startStoryboardProduction = async () => {
@@ -1568,7 +1568,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         } catch (imgErr) { frames[i].hasError = true; frames[i].isGeneratingImage = false; }
         const updatedFrames = [...frames];
         setSelectedTrend(prev => (prev ? { ...prev, storyboard: updatedFrames } : null));
-        await new Promise(r => setTimeout(r, 2000));
+        await new Promise(r => setTimeout(r, 4000)); // Increased to 4s to avoid rate limits
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setProducingImages(false); }
   };
@@ -1700,8 +1700,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             audioBuffers.push(audioBuffer);
           } else {
             if (i > 0) {
-              const jitter = Math.random() * 500;
-              const delay = 1000 + jitter;
+              const jitter = Math.random() * 1000;
+              const delay = 4000 + jitter; // 4-5 seconds to respect 15 RPM limit
               console.log(`Esperando ${Math.round(delay)}ms antes de TTS de escena ${i+1}...`);
               await new Promise(r => setTimeout(r, delay)); 
             }
@@ -1719,13 +1719,13 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                 return { ...prev, storyboard: newStoryboard };
               });
             } else {
-              console.warn(`No se pudo generar audio para escena ${i+1}, se usará silencio.`);
-              audioBuffers.push(null);
+              console.warn(`No se pudo generar audio para escena ${i+1}.`);
+              throw new Error(`Fallo al generar audio para la escena ${i+1}. Por favor, intenta de nuevo en unos momentos.`);
             }
           }
-        } catch (ttsErr) {
+        } catch (ttsErr: any) {
           console.error(`Error procesando audio de escena ${i+1}:`, ttsErr);
-          audioBuffers.push(null);
+          throw new Error(`Error de audio en escena ${i+1}: ${ttsErr.message || "Límite de cuota o error de red"}`);
         }
         
         // Ensure progress is updated even if TTS takes time or fails
@@ -2096,6 +2096,9 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                     ) : (
                       <div className="flex flex-col items-end gap-2">
                         <button onClick={handleCombineAllVideos} disabled={isCombiningVideos} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
+                        {selectedTrend.storyboard.some(f => !f.imageUrl && !f.videoUrl) && !isCombiningVideos && (
+                          <span className="text-xs text-amber-500 font-medium">⚠️ Faltan imágenes en algunas escenas. Solo se incluirán las escenas listas.</span>
+                        )}
                         {isCombiningVideos && <span className="text-xs text-amber-400 font-medium animate-pulse">⚠️ La síntesis ocurre en tiempo real (tarda lo mismo que dura el video). Por favor, mantén esta pestaña abierta.</span>}
                       </div>
                     )}
