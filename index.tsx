@@ -420,18 +420,23 @@ function getErrorDetails(err: any): DetailedError {
   return { message, code, status, stack, docsLink, isQuota, raw };
 }
 
-async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 5000): Promise<T> {
+async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 5000, timeoutMs = 60000): Promise<T> {
   let attempt = 0;
   while (attempt <= maxRetries) {
-    try { return await fn(); } catch (err: any) {
+    try { 
+      return await Promise.race([
+        fn(),
+        new Promise<T>((_, reject) => setTimeout(() => reject(new Error("API_TIMEOUT")), timeoutMs))
+      ]);
+    } catch (err: any) {
       const details = getErrorDetails(err);
-      const isInternal = String(details.code) === "500" || String(details.status).includes("INTERNAL");
+      const isInternal = String(details.code) === "500" || String(details.status).includes("INTERNAL") || err.message === "API_TIMEOUT";
       
       if ((details.isQuota || isInternal) && attempt < maxRetries) {
         attempt++;
         // Exponential backoff with jitter, capped at 30 seconds
         const delay = Math.min(30000, (baseDelay * Math.pow(2, attempt - 1)) + (Math.random() * 2000));
-        console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${details.status}`);
+        console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${err.message === "API_TIMEOUT" ? "Timeout" : details.status}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -673,7 +678,8 @@ const YouTubeUploadModal: React.FC<{
       const videoBlob = await videoRes.blob();
 
       const formData = new FormData();
-      formData.append("video", videoBlob, "video.webm");
+      const ext = videoBlob.type.includes('mp4') ? 'mp4' : 'webm';
+      formData.append("video", videoBlob, `video.${ext}`);
       formData.append("title", ytTitle);
       formData.append("description", ytDescription);
       formData.append("tags", ytTags);
@@ -970,6 +976,7 @@ const App: React.FC = () => {
   const [isCombiningVideos, setIsCombiningVideos] = useState(false);
   const [combineProgress, setCombineProgress] = useState(0);
   const [combinedVideoUrl, setCombinedVideoUrl] = useState<string | null>(null);
+  const [combinedVideoMimeType, setCombinedVideoMimeType] = useState<string>('video/webm');
   const [isZipping, setIsZipping] = useState(false);
   const [isYtConnected, setIsYtConnected] = useState(false);
   const [userIdea, setUserIdea] = useState("");
@@ -1493,7 +1500,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             } 
           } 
         },
-      }), 6, 4000) as any; // Reduced retries and base delay for better UX
+      }), 4, 2000, 15000) as any; // Reduced retries, delay, and added 15s timeout for better UX
       
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
@@ -1502,7 +1509,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         const ctx = await ensureAudioContext();
         const rawData = decodeBase64(base64Audio);
         const buffer = await decodeAudioData(rawData, ctx, 24000, 1);
-        const blob = new Blob([rawData], { type: 'audio/mpeg' }); // Assuming mpeg/mp3 based on typical Gemini TTS output
+        const blob = new Blob([rawData], { type: 'audio/pcm' }); // Raw PCM data from Gemini
 
         if (playOutLoud) {
           const source = ctx.createBufferSource(); 
@@ -1554,7 +1561,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       setSelectedTrend(prev => (prev ? { ...prev, storyboard: [...frames] } : null));
       for (let i = 0; i < frames.length; i++) {
         try {
-          const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frames[i].prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } })) as any;
+          const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frames[i].prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }), 3, 5000, 45000) as any;
           const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
           if (imageData) { frames[i].imageUrl = `data:image/png;base64,${imageData}`; frames[i].isGeneratingImage = false; }
           else { frames[i].hasError = true; frames[i].isGeneratingImage = false; }
@@ -1575,7 +1582,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     updateStoryboardState(true);
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
-      const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } })) as any;
+      const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }), 3, 5000, 45000) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
         const url = `data:image/png;base64,${imageData}`;
@@ -1596,14 +1603,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     updateStoryboardState(true, false);
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
-      let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } })) as any;
-      while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await apiRetry(() => ai.operations.getVideosOperation({ operation })); }
+      let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } }), 3, 5000, 30000) as any;
+      while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await apiRetry(() => ai.operations.getVideosOperation({ operation }), 3, 5000, 30000); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
       if (downloadLink) {
         const vidRes = await fetch(downloadLink, {
           method: 'GET',
           headers: {
-            'x-goog-api-key': (process.env.GEMINI_API_KEY || process.env.API_KEY || '')
+            'x-goog-api-key': ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "")
           }
         });
         if (!vidRes.ok) throw new Error(`Video download failed: ${vidRes.statusText}`);
@@ -1630,8 +1637,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
       
       for (let i = 0; i < readyFrames.length; i++) {
-        const currentProgress = Math.max(1, Math.round((i / readyFrames.length) * 30));
-        setCombineProgress(currentProgress);
+        const baseProgress = (i / readyFrames.length) * 30;
+        setCombineProgress(Math.max(1, Math.round(baseProgress)));
         const frame = readyFrames[i];
         
         console.log(`Preparando escena ${i+1}/${readyFrames.length}...`);
@@ -1678,12 +1685,16 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         }
         mediaElements.push(sourceElement);
 
+        // Update progress after media load
+        setCombineProgress(Math.round(baseProgress + (15 / readyFrames.length)));
+
         // Fetch TTS - use cached blob if available to save time and API calls
         try {
           if (frame.audioBlob) {
             console.log(`Usando audio pre-generado para escena ${i+1}`);
             const arrayBuffer = await frame.audioBlob.arrayBuffer();
-            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+            const rawData = new Uint8Array(arrayBuffer);
+            const audioBuffer = await decodeAudioData(rawData, ctx, 24000, 1);
             audioBuffers.push(audioBuffer);
           } else {
             if (i > 0) {
@@ -1725,13 +1736,30 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const canvasCtx = canvas.getContext('2d'); if (!canvasCtx) throw new Error("Canvas context failed");
       const canvasStream = canvas.captureStream(30);
       const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-      const recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+      
+      let mimeType = 'video/webm;codecs=vp9,opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'video/webm;codecs=vp8,opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'video/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = ''; // Let the browser choose its default
+            }
+          }
+        }
+      }
+      
+      const recorder = new MediaRecorder(combinedStream, mimeType ? { mimeType } : undefined);
       const chunks: Blob[] = []; recorder.ondataavailable = (e) => chunks.push(e.data);
       const recorderPromise = new Promise<string>((resolve, reject) => { 
         const timeout = setTimeout(() => reject(new Error("Tiempo de espera agotado esperando el cierre del grabador")), 600000); // 10 min max
         recorder.onstop = () => { 
           clearTimeout(timeout);
-          const blob = new Blob(chunks, { type: 'video/webm' }); 
+          const finalMimeType = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
+          setCombinedVideoMimeType(finalMimeType);
+          const blob = new Blob(chunks, { type: finalMimeType }); 
           resolve(URL.createObjectURL(blob)); 
         }; 
       });
@@ -1756,7 +1784,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         
         if (sourceElement instanceof HTMLVideoElement) {
           sourceElement.currentTime = 0;
-          await sourceElement.play();
+          try {
+            await sourceElement.play();
+          } catch (e) {
+            console.warn(`No se pudo reproducir el video de la escena ${i+1}:`, e);
+          }
         }
 
         let lastProgressUpdate = 0;
@@ -1805,7 +1837,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
           canvasCtx.drawImage(sourceElement, (canvas.width - nW) / 2 + offX, (canvas.height - nH) / 2 + offY, nW, nH);
           canvasCtx.globalAlpha = 1.0;
 
-          await new Promise(r => requestAnimationFrame(r));
+          await new Promise(r => setTimeout(r, 33)); // ~30fps, works in background
         }
         // No need to call audioSource.stop() as it stops when buffer ends
       }
@@ -1832,15 +1864,16 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             const frame = selectedTrend.storyboard[i]; const sceneName = `Escena_${(i + 1).toString().padStart(2, '0')}`;
             rootFolder?.file(`${sceneName}_Narracion.txt`, frame.narrationText);
             if (frame.imageUrl) { rootFolder?.file(`${sceneName}_Imagen.png`, frame.imageUrl.split(',')[1], { base64: true }); }
-            if (frame.videoBlob) { rootFolder?.file(`${sceneName}_Video.webm`, frame.videoBlob); }
-            if (frame.audioBlob) { rootFolder?.file(`${sceneName}_Audio.mp3`, frame.audioBlob); }
+            if (frame.videoBlob) { rootFolder?.file(`${sceneName}_Video.mp4`, frame.videoBlob); }
+            if (frame.audioBlob) { rootFolder?.file(`${sceneName}_Audio.pcm`, frame.audioBlob); }
         }
         if (combinedVideoUrl) { 
           try {
             const res = await fetch(combinedVideoUrl); 
             if (res.ok) {
               const blob = await res.blob(); 
-              rootFolder?.file(`PELICULA_MAESTRA.webm`, blob); 
+              const ext = combinedVideoMimeType.includes('mp4') ? 'mp4' : 'webm';
+              rootFolder?.file(`PELICULA_MAESTRA.${ext}`, blob); 
             }
           } catch (e) {
             console.error("Error fetching combined video for ZIP:", e);
@@ -2034,11 +2067,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                     <button onClick={handleDownloadAll} disabled={isZipping} className="flex items-center gap-3 px-8 py-4 bg-slate-800 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl border-2 border-slate-700 hover:border-slate-500 transition-all active:scale-95 disabled:opacity-30"><Archive size={20} /> ZIP</button>
                     {combinedVideoUrl ? (
                       <>
-                        <a href={combinedVideoUrl} download={`${selectedTrend.title.substring(0,10)}_Master.webm`} className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-slate-950 font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-emerald-400 transition-all active:scale-95"><Download size={20} /> DESCARGAR</a>
+                        <a href={combinedVideoUrl} download={`${selectedTrend.title.substring(0,10)}_Master.${combinedVideoMimeType.includes('mp4') ? 'mp4' : 'webm'}`} className="flex items-center gap-3 px-8 py-4 bg-emerald-500 text-slate-950 font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-emerald-400 transition-all active:scale-95"><Download size={20} /> DESCARGAR</a>
                         <button onClick={() => setIsYouTubeModalOpen(true)} className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-red-500 transition-all active:scale-95 ring-4 ring-red-600/20"><Youtube size={20} /> SUBIR A YOUTUBE</button>
                       </>
                     ) : (
-                      <button onClick={handleCombineAllVideos} disabled={isCombiningVideos} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
+                      <div className="flex flex-col items-end gap-2">
+                        <button onClick={handleCombineAllVideos} disabled={isCombiningVideos} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
+                        {isCombiningVideos && <span className="text-xs text-amber-400 font-medium animate-pulse">⚠️ Por favor, mantén esta pestaña abierta y visible.</span>}
+                      </div>
                     )}
                   </div>
                 )}
