@@ -375,6 +375,7 @@ interface Trend {
   analysis?: string;
   interview?: string;
   advance?: string;
+  videoPrompts?: string;
 }
 
 interface Draft {
@@ -502,7 +503,7 @@ export const DownloadButton: React.FC<{ text: string; filename: string }> = ({ t
   );
 };
 
-export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; isRewriting: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, isRewriting, persona }) => {
+export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, isRewriting, isGeneratingVideoPrompts, persona }) => {
   const hasStoryboard = trend.storyboard && trend.storyboard.length > 0;
   return (
     <div className={`bg-slate-800 border-2 ${trend.isMasterSummary ? 'border-indigo-500/50' : 'border-slate-700'} rounded-[2.5rem] p-6 sm:p-10 transition-all hover:border-${persona.color}/30 flex flex-col h-full group relative overflow-hidden shadow-2xl`}>
@@ -585,14 +586,45 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
             {isRewriting ? 'Procesando...' : (trend.isMasterSummary ? 'NARRAR COMPENDIO' : 'NARRAR HISTORIA')}
           </button>
         ) : (
-          <button 
-            type="button" 
-            onClick={(e) => { e.preventDefault(); onSelect(trend); }} 
-            className="w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-emerald-500 hover:bg-emerald-400 active:scale-95 active:bg-emerald-600 text-slate-950 shadow-xl"
-          >
-            {hasStoryboard ? <Video size={18} /> : <Layout size={18} />} 
-            {hasStoryboard ? 'ENTRAR AL ESTUDIO' : 'PRE-PRODUCCIÓN'}
-          </button>
+          <>
+            {!trend.isMasterSummary && (
+              <>
+                {trend.videoPrompts && (
+                  <div className="bg-slate-900/60 border-2 border-slate-700/50 rounded-[1.5rem] p-6 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar mb-3">
+                    <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
+                      <div className="flex items-center gap-2"><Video size={14} /> Video Prompts</div>
+                      <div className="flex items-center gap-2">
+                        <DownloadButton text={trend.videoPrompts} filename={`Prompts_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <CopyButton text={trend.videoPrompts} />
+                      </div>
+                    </div>
+                    <div className="markdown-body italic text-slate-100 text-sm font-bold leading-relaxed selectable-text whitespace-pre-wrap">
+                      <Markdown remarkPlugins={[remarkGfm]}>
+                        {trend.videoPrompts}
+                      </Markdown>
+                    </div>
+                  </div>
+                )}
+                <button 
+                  type="button" 
+                  onClick={(e) => { e.preventDefault(); onGenerateVideoPrompts(trend); }} 
+                  disabled={isGeneratingVideoPrompts}
+                  className={`w-full flex items-center justify-center gap-3 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl mb-3`}
+                >
+                  {isGeneratingVideoPrompts ? <Loader2 size={16} className="animate-spin" /> : <Clapperboard size={16} />} 
+                  {isGeneratingVideoPrompts ? 'Generando...' : 'Video Prompts'}
+                </button>
+              </>
+            )}
+            <button 
+              type="button" 
+              onClick={(e) => { e.preventDefault(); onSelect(trend); }} 
+              className="w-full flex items-center justify-center gap-3 py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-emerald-500 hover:bg-emerald-400 active:scale-95 active:bg-emerald-600 text-slate-950 shadow-xl"
+            >
+              {hasStoryboard ? <Video size={18} /> : <Layout size={18} />} 
+              {hasStoryboard ? 'ENTRAR AL ESTUDIO' : 'PRE-PRODUCCIÓN'}
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -963,6 +995,7 @@ export const App: React.FC = () => {
   const [trends, setTrends] = useState<Trend[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(false);
   const [rewritingId, setRewritingId] = useState<string | null>(null);
+  const [generatingVideoPromptsId, setGeneratingVideoPromptsId] = useState<string | null>(null);
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
   const [category, setCategory] = useState<Category>('animal_news');
   const [appError, setAppError] = useState<DetailedError | null>(null);
@@ -1216,6 +1249,38 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       setTrends(newTrends.slice(0, 16)); hasInitialFetchedRef.current = true;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
   }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles]); 
+
+  const handleGenerateVideoPrompts = async (trend: Trend) => {
+    setGeneratingVideoPromptsId(trend.id); setAppError(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const languageText = getLanguageName(language);
+      
+      const response = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
+        
+Narrative:
+${trend.chunkybertoVersion}
+
+Rules for EACH paragraph:
+1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
+2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). Also include a short descriptive text of fewer than 12 words as an expression of the narrator.
+3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. Also include a short descriptive text of fewer than 12 words summarizing the idea of these remaining sentences, to be narrated in the video.
+4. Separate EVERY generated prompt with at least one blank line.
+5. Target language for the prompts: ${languageText}.
+6. Do not include any conversational filler, just the prompts.`,
+        config: { systemInstruction: `You are an expert video director and prompt engineer.` }
+      })) as any;
+      
+      const finalContent = response.text || "";
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, videoPrompts: finalContent } : t));
+      setTrends(updatedTrends);
+      if (selectedTrend && selectedTrend.id === trend.id) {
+        setSelectedTrend({ ...selectedTrend, videoPrompts: finalContent });
+      }
+    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingVideoPromptsId(null); }
+  };
 
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
@@ -2302,7 +2367,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} isRewriting={rewritingId === t.id} language={language} persona={activePersona} />)}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} language={language} persona={activePersona} />)}</div>
             <div className="max-w-4xl mx-auto mt-20 mb-40 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <div className={`bg-slate-900 border-4 border-${activePersona.color}/30 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group`}><div className={`absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700 text-${activePersona.color}`}><FlaskRound size={120} /></div>
                 <div className="relative z-10 space-y-8">
