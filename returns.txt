@@ -1,0 +1,55 @@
+173:  return bytes;
+194:  return buffer;
+420:  return { message, code, status, stack, docsLink, isQuota, raw };
+427:      return await Promise.race([
+450:  return (
+478:  return (
+497:  return (
+507:  return (
+640:    if (!trend) return;
+673:      return;
+711:  if (!isOpen) return null;
+713:  return (
+885:  if (!isOpen) return null;
+887:  return (
+998:    return saved ? JSON.parse(saved) : [];
+1015:    return saved ? JSON.parse(saved) : defaults;
+1043:      if (!prev || !prev.storyboard) return prev;
+1046:      return { ...prev, storyboard: updatedStoryboard };
+1075:    return () => window.removeEventListener('message', handleMessage);
+1101:    return audioContextRef.current;
+1157:    return true;
+1160:  const getLanguageName = (lang: Language) => { const map = { es: 'Spanish', en: 'English', fr: 'French', de: 'German', zh: 'Mandarin' }; return map[lang]; };
+1186:    return `${categoryPrompt}
+1193:    if (isFetchingTrendsRef.current) return;
+1285:      return finalContent;
+1286:    } catch (err: any) { setAppError(getErrorDetails(err)); return null; } finally { setRewritingId(null); }
+1290:    if (!selectedTrend) return;
+1334:    if (!trend) return;
+1338:      return;
+1391:    if (!userIdea.trim()) return;
+1484:    if (!text || text.trim().length === 0) return null;
+1521:        return { buffer, blob };
+1523:        console.error("TTS Warning: No audio data returned in response parts.", res);
+1536:    if (!selectedTrend || !selectedTrend.chunkybertoVersion) return;
+1578:    if (!selectedTrend || !selectedTrend.storyboard) return;
+1581:      setSelectedTrend(prev => { if (!prev || !prev.storyboard) return prev; const up = [...prev.storyboard]; up[index] = { ...up[index], isGeneratingImage: isGen }; return { ...prev, storyboard: up }; });
+1590:        const finalize = (prev: Trend | null) => { if (!prev || !prev.storyboard) return prev; const current = [...prev.storyboard]; current[index] = { ...current[index], imageUrl: url, isGeneratingImage: false, videoUrl: undefined }; return { ...prev, storyboard: current }; };
+1597:    if (!selectedTrend || !selectedTrend.storyboard) return;
+1600:    if (!frame.imageUrl) return;
+1602:      setSelectedTrend(prev => { if (!prev || !prev.storyboard) return prev; const up = [...prev.storyboard]; up[index] = { ...up[index], isGeneratingVideo: isGen, hasError: error }; return { ...prev, storyboard: up }; });
+1620:        const finalize = (prev: Trend | null) => { if (!prev || !prev.storyboard) return prev; const current = [...prev.storyboard]; current[index] = { ...current[index], videoUrl: vUrl, videoBlob: vidBlob, isGeneratingVideo: false, hasError: false }; return { ...prev, storyboard: current }; };
+1627:    if (!selectedTrend || !selectedTrend.storyboard) return;
+1629:    if (readyFrames.length === 0) return;
+1660:              if (video.readyState >= 3) { resolve(null); return; }
+1682:              if (img.complete) { resolve(null); return; }
+1716:                if (!prev || !prev.storyboard) return prev;
+1720:                return { ...prev, storyboard: newStoryboard };
+1877:    if (!selectedTrend || !selectedTrend.storyboard || selectedTrend.storyboard.length === 0) return;
+1965:    if (!trend && !isGlobal) return null;
+1976:      if (isGlobal) return globalForensicToggles[type];
+1977:      if (trend) return !!trend[type];
+1978:      return false;
+1981:    return (
+1996:    return (
+2018:  return (

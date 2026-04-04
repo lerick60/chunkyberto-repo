@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import ReactDOM from 'react-dom/client';
+
 import { GoogleGenAI, Modality } from "@google/genai";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -446,7 +446,7 @@ async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 500
   throw new Error("Límite de reintentos de API alcanzado.");
 }
 
-const DetailedErrorConsole: React.FC<{ error: DetailedError; onRetry?: () => void; onClose: () => void; activePersona: Persona; }> = ({ error, onRetry, onClose, activePersona }) => {
+export const DetailedErrorConsole: React.FC<{ error: DetailedError; onRetry?: () => void; onClose: () => void; activePersona: Persona; }> = ({ error, onRetry, onClose, activePersona }) => {
   return (
     <div className="bg-slate-900 border-2 border-rose-500/50 rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 max-w-2xl w-full mx-auto my-8">
       <div className="bg-rose-500/10 px-8 py-6 flex items-center justify-between border-b border-rose-500/20">
@@ -469,7 +469,7 @@ const DetailedErrorConsole: React.FC<{ error: DetailedError; onRetry?: () => voi
   );
 };
 
-const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+export const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -483,7 +483,7 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const DownloadButton: React.FC<{ text: string; filename: string }> = ({ text, filename }) => {
+export const DownloadButton: React.FC<{ text: string; filename: string }> = ({ text, filename }) => {
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     const blob = new Blob([text], { type: 'text/plain' });
@@ -502,7 +502,7 @@ const DownloadButton: React.FC<{ text: string; filename: string }> = ({ text, fi
   );
 };
 
-const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; isRewriting: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, isRewriting, persona }) => {
+export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; isRewriting: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, isRewriting, persona }) => {
   const hasStoryboard = trend.storyboard && trend.storyboard.length > 0;
   return (
     <div className={`bg-slate-800 border-2 ${trend.isMasterSummary ? 'border-indigo-500/50' : 'border-slate-700'} rounded-[2.5rem] p-6 sm:p-10 transition-all hover:border-${persona.color}/30 flex flex-col h-full group relative overflow-hidden shadow-2xl`}>
@@ -599,15 +599,15 @@ const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onS
   );
 };
 
-const YouTubeUploadModal: React.FC<{ 
+export const YouTubeUploadModal: React.FC<{ 
   isOpen: boolean; 
   onClose: () => void; 
-  trend: Trend; 
-  videoUrl: string;
+  trend: Trend | null; 
+  videoUrl: string | null;
   activePersona: Persona;
   ytChannelUrl: string;
 }> = ({ isOpen, onClose, trend, videoUrl, activePersona, ytChannelUrl }) => {
-  const [ytTitle, setYtTitle] = useState(trend.title);
+  const [ytTitle, setYtTitle] = useState(trend?.title || "");
   const [ytDescription, setYtDescription] = useState("");
   const [ytTags, setYtTags] = useState("");
   const [privacy, setPrivacy] = useState<YouTubePrivacy>('public');
@@ -628,7 +628,7 @@ const YouTubeUploadModal: React.FC<{
     };
     if (isOpen) {
       checkStatus();
-      setYtTitle(trend.title);
+      setYtTitle(trend?.title || "");
       setUploadStatus('idle');
       setUploadProgress(0);
       setErrorMessage("");
@@ -637,6 +637,7 @@ const YouTubeUploadModal: React.FC<{
   }, [isOpen, trend, activePersona]);
 
   const handleGenerateMetadata = async () => {
+    if (!trend) return;
     setUploadStatus('generating');
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
@@ -872,7 +873,7 @@ const YouTubeUploadModal: React.FC<{
   );
 };
 
-const SettingsModal: React.FC<{
+export const SettingsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   ytChannelUrl: string;
@@ -957,7 +958,7 @@ const SettingsModal: React.FC<{
 
 
 
-const App: React.FC = () => {
+export const App: React.FC = () => {
   // --- States ---
   const [trends, setTrends] = useState<Trend[]>([]);
   const [loadingTrends, setLoadingTrends] = useState(false);
@@ -1959,7 +1960,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     { id: 'ai_exoplanets_creation', label: 'Creación IA - Exoplanetas', icon: <Sparkles size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
-  const ForensicToolkit: React.FC<{ targetTrend?: Trend; isGlobal?: boolean }> = ({ targetTrend, isGlobal }) => {
+  const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
     const trend = targetTrend || selectedTrend;
     if (!trend && !isGlobal) return null;
     
@@ -2133,7 +2134,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                        </div>
                       <button onClick={() => handlePlayTTS(selectedTrend.chunkybertoVersion || selectedTrend.originalSummary)} className={`w-full py-6 rounded-[2rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Volume2 size={24} /> ESCUCHAR COMPLETO</button>
                       <button onClick={handleSaveDraft} className={`w-full py-6 mt-4 rounded-[2rem] bg-indigo-600/20 text-indigo-400 border-2 border-indigo-500/30 hover:border-indigo-500/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Archive size={24} /> GUARDAR BORRADOR</button>
-                      <div className="mt-8 border-t border-slate-700/50 pt-8"><ForensicToolkit /></div>
+                      <div className="mt-8 border-t border-slate-700/50 pt-8">{renderForensicToolkit()}</div>
                    </div>
                 </div>
 
@@ -2266,7 +2267,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
               <div className="space-y-6">
                 {masterRecapTrend && (
                   <div className="animate-in fade-in slide-in-from-top-4 duration-700">
-                    <ForensicToolkit targetTrend={masterRecapTrend} />
+                    {renderForensicToolkit(masterRecapTrend)}
                     
                     {/* Forensic Results for Master Recap */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -2296,7 +2297,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                   </div>
                 )}
                 
-                <ForensicToolkit isGlobal />
+                {renderForensicToolkit(undefined, true)}
                 
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
               </div>
@@ -2307,7 +2308,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-2"><div className={`flex items-center gap-3 text-${activePersona.color} font-black uppercase text-[10px] tracking-[0.4em]`}><FlaskRound size={18} /> LABORATORIO DE IDEAS V47.2.1</div><h3 className="text-3xl font-black uppercase italic leading-none">COMPOSITOR <span className={`text-${activePersona.color}`}>CREATIVO HÍBRIDO</span></h3></div>
                   
-                  <ForensicToolkit isGlobal />
+                  {renderForensicToolkit(undefined, true)}
 
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Extensión de la Narrativa</label>
@@ -2395,4 +2396,3 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
   );
 };
 
-const rootElement = document.getElementById('root'); if (rootElement) { const root = ReactDOM.createRoot(rootElement); root.render(<App />); }
