@@ -1276,7 +1276,33 @@ export const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('chunky_model_settings', JSON.stringify(modelSettings)); }, [modelSettings]);
   useEffect(() => { localStorage.setItem('chunky_language', language); }, [language]);
   useEffect(() => { localStorage.setItem('chunky_persona', selectedPersonaId); }, [selectedPersonaId]);
-  useEffect(() => { localStorage.setItem('chunky_drafts', JSON.stringify(drafts)); }, [drafts]);
+  useEffect(() => { 
+    try {
+      localStorage.setItem('chunky_drafts', JSON.stringify(drafts)); 
+    } catch (e) {
+      console.error("Error saving drafts:", e);
+      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+        // Fallback: Try saving without image URLs to save space
+        try {
+          const strippedDrafts = drafts.map(draft => ({
+            ...draft,
+            trends: draft.trends.map(trend => {
+              if (!trend.storyboard) return trend;
+              return {
+                ...trend,
+                storyboard: trend.storyboard.map(frame => ({ ...frame, imageUrl: '' }))
+              };
+            })
+          }));
+          localStorage.setItem('chunky_drafts', JSON.stringify(strippedDrafts));
+          alert("Advertencia: El borrador se guardó, pero las imágenes se eliminaron porque excedían el límite de almacenamiento del navegador. Tendrás que volver a generarlas.");
+        } catch (fallbackError) {
+          console.error("Fallback error:", fallbackError);
+          alert("No se pudo guardar el borrador: El tamaño de los datos excede el límite de almacenamiento del navegador.");
+        }
+      }
+    }
+  }, [drafts]);
 
   const ensureAudioContext = useCallback(async () => {
     if (!audioContextRef.current) { audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)(); }
@@ -1295,11 +1321,23 @@ export const App: React.FC = () => {
   useEffect(() => { checkApiKeyStatus(); }, [checkApiKeyStatus]);
 
   const handleSaveDraft = () => {
+    // Clean up non-serializable and session-specific data before saving
+    const cleanedTrends = trends.map(trend => {
+      if (!trend.storyboard) return trend;
+      return {
+        ...trend,
+        storyboard: trend.storyboard.map(frame => {
+          const { videoUrl, videoBlob, audioBlob, ...rest } = frame;
+          return rest;
+        })
+      };
+    });
+
     const newDraft: Draft = {
       id: `draft-${Date.now()}`,
       name: selectedTrend?.title || `Proyecto ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`,
       date: new Date().toISOString(),
-      trends,
+      trends: cleanedTrends,
       selectedTrendId: selectedTrend?.id,
       personaId: selectedPersonaId,
       category
