@@ -1164,7 +1164,6 @@ export const App: React.FC = () => {
   // Control de extensión para el Compositor Creativo Híbrido:
   // 'short' = 4300 chars, 'medium' = 8000 chars, 'long' = 15000+ chars.
   const [narrativeLength, setNarrativeLength] = useState<NarrativeLength>('short');
-  const [imageCount, setImageCount] = useState<number>(10);
   const [globalForensicToggles, setGlobalForensicToggles] = useState({ analysis: false, interview: false, advance: false });
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [ytChannelUrl, setYtChannelUrl] = useState(() => localStorage.getItem('chunky_yt_url') || "");
@@ -1817,10 +1816,15 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       
       const promptRes = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
-        contents: `Generate ${imageCount} cinematic scenes for: "${selectedTrend.chunkybertoVersion}". ${visualAnchorContext} FORMAT: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT. LENGUAJE: ${getLanguageName(language)}.`,
-        config: { systemInstruction: "Format exactly with |||." }
+        contents: `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
+For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
+${visualAnchorContext}
+FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
+The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
+LENGUAJE: ${getLanguageName(language)}.`,
+        config: { systemInstruction: "Format exactly with |||. Generate 1 to 4 scenes per paragraph." }
       })) as any;
-      const lines = (promptRes.text || "").split('\n').filter((p: string) => p.includes('|||')).slice(0, imageCount);
+      const lines = (promptRes.text || "").split('\n').filter((p: string) => p.includes('|||'));
       const frames: StoryboardFrame[] = [];
       for (let i = 0; i < lines.length; i++) {
         let [rawIdea, rawPrompt, rawNarration] = lines[i].split('|||').map((s: string) => s.trim());
@@ -2506,10 +2510,6 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Tipo de Transición</label>
                                    <div className="relative"><select value={modelSettings.transitionEffect} onChange={(e) => setModelSettings({...modelSettings, transitionEffect: e.target.value as TransitionEffect})} className="w-full pl-4 pr-10 py-4 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">{transitionOptions.map(t => <option key={t.id} value={t.id}>{t.label.toUpperCase()}</option>)}</select><div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Shuffle size={16} /></div></div>
                                 </div>
-                                <div className="space-y-3">
-                                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Cantidad de Imágenes</label>
-                                   <div className="relative"><select value={imageCount} onChange={(e) => setImageCount(Number(e.target.value))} className="w-full pl-4 pr-10 py-4 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">{[10, 15, 20, 25, 30].map(n => <option key={n} value={n}>{n} IMÁGENES</option>)}</select><div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><LayoutGrid size={16} /></div></div>
-                                </div>
                              </div>
                           </div>
                           <div className="lg:w-1/3 flex justify-center"><button onClick={startStoryboardProduction} disabled={producingImages} className={`bg-${activePersona.color} text-slate-950 px-12 py-12 rounded-full font-black uppercase italic text-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 text-center flex flex-col items-center gap-4`}><div className="w-16 h-16 bg-slate-950/20 rounded-full flex items-center justify-center">{producingImages ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}</div>{producingImages ? 'PROCESANDO...' : 'SINTETIZAR TODO'}</button></div>
@@ -2523,7 +2523,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                       </div>
                       {selectedTrend.storyboard?.map((frame, i) => (
                         <div key={frame.id} className={`p-12 rounded-[5rem] bg-slate-800/30 border-2 ${frame.hasError ? 'border-rose-500/50' : 'border-slate-800'} shadow-2xl backdrop-blur-sm group/frame transition-all hover:bg-slate-800/40 animate-in zoom-in-95 duration-700`}>
-                            <div className="flex items-center justify-between mb-10"><div className="flex items-center gap-6"><span className={`w-16 h-16 flex items-center justify-center ${frame.hasError ? 'bg-rose-500/20 text-rose-500' : `bg-${activePersona.color}/20 text-${activePersona.color}`} rounded-[1.5rem] font-black text-3xl shadow-xl border border-current opacity-80`}>{i+1}</span><div><h4 className="text-xs font-black uppercase tracking-[0.3em] text-white mb-2">ESCENA {i+1} de {imageCount}</h4><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{frame.originalIdea}</p></div></div></div>
+                            <div className="flex items-center justify-between mb-10"><div className="flex items-center gap-6"><span className={`w-16 h-16 flex items-center justify-center ${frame.hasError ? 'bg-rose-500/20 text-rose-500' : `bg-${activePersona.color}/20 text-${activePersona.color}`} rounded-[1.5rem] font-black text-3xl shadow-xl border border-current opacity-80`}>{i+1}</span><div><h4 className="text-xs font-black uppercase tracking-[0.3em] text-white mb-2">ESCENA {i+1} de {selectedTrend.storyboard?.length}</h4><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{frame.originalIdea}</p></div></div></div>
                             <div className="relative mb-6 group/preview">
                               <div className={`aspect-video bg-slate-950 rounded-[4rem] overflow-hidden border-[12px] border-slate-900 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] relative transition-all duration-700 ${videoDim === '9:16' ? 'max-w-[300px] mx-auto' : videoDim === '1:1' ? 'aspect-square max-w-[500px] mx-auto' : ''}`}>
                                 {frame.videoUrl ? <video src={frame.videoUrl} autoPlay muted loop className="w-full h-full object-cover" /> : frame.imageUrl ? <img src={frame.imageUrl} className="w-full h-full object-cover" alt={`Frame ${i+1}`} /> : <div className="w-full h-full flex items-center justify-center bg-slate-900/50"><Loader2 className="animate-spin text-slate-700" size={48} /></div>}
@@ -2576,7 +2576,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                             </div>
                         </div>
                       ))}
-                      {producingImages && selectedTrend.storyboard && selectedTrend.storyboard.length < imageCount && <div className="p-16 rounded-[5rem] bg-slate-900/20 border-4 border-slate-800 border-dashed flex flex-col items-center justify-center min-h-[500px]"><Loader2 size={64} className={`animate-spin text-${activePersona.color} mb-8`} /><h4 className="text-3xl font-black uppercase italic tracking-tighter mb-4">Sintetizando Storyboard...</h4></div>}
+                      {producingImages && (!selectedTrend.storyboard || selectedTrend.storyboard.length === 0) && <div className="p-16 rounded-[5rem] bg-slate-900/20 border-4 border-slate-800 border-dashed flex flex-col items-center justify-center min-h-[500px]"><Loader2 size={64} className={`animate-spin text-${activePersona.color} mb-8`} /><h4 className="text-3xl font-black uppercase italic tracking-tighter mb-4">Sintetizando Storyboard...</h4></div>}
                      </div>
                    )}
                 </div>

@@ -64,3 +64,8 @@ Asistente: Se volvió a habilitar el botón "Sintetizar Película Completa" en t
 Interacción 13:
 Usuario: "en la sintesis de pelicula completa, con modelos gratis, quiero que subas la duracion de cada escena de 7 a 10 segundos por favor"
 Asistente: Se actualizó el motor de síntesis de video para que las imágenes estáticas se muestren durante un promedio de 10 segundos (en lugar de 7) o la duración del audio si este es mayor. También se actualizó la regla correspondiente en `AGENTS.md`.
+
+---
+Interacción 14:
+Usuario: "quiero que la cantidad de imagenes estaticas generadas no se las determine el usuario. Quiero que por cada parrafo de la narracion, se generen entre 1 y 4 vimagenes, en sincronia con la cantidad de ideas completas haya dentro del parrafo.asegurase que cada imagen tenga asociado un texto que represente la idea que se quiere transmitir. Hacer los ajustes necesarios en el proyecto."
+Asistente: Se eliminó el selector de "Cantidad de Imágenes" de la interfaz de usuario. Se actualizó el prompt de generación del Storyboard para que la IA analice la narración párrafo por párrafo y genere dinámicamente entre 1 y 4 escenas por párrafo, dependiendo de la cantidad de ideas completas que contenga. Se aseguró que cada escena generada incluya su propio texto de narración asociado a la idea específica que se está transmitiendo.
