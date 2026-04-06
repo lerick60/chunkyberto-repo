@@ -2066,8 +2066,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         const audioBuffer = audioBuffers[i];
         const sourceElement = mediaElements[i];
         
-        // If audio failed, don't skip the frame. Use a default duration of 4 seconds.
-        const segmentDuration = audioBuffer ? audioBuffer.duration : 4.0;
+        // Si es imagen estática, usar 10 segundos (o la duración del audio si es mayor). Si es video, usar la duración del audio o 4s.
+        let segmentDuration = audioBuffer ? audioBuffer.duration : 4.0;
+        if (!(sourceElement instanceof HTMLVideoElement)) {
+          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration) : 10.0;
+        }
         
         if (audioBuffer) {
           const audioSource = ctx.createBufferSource(); 
@@ -2132,6 +2135,49 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
           canvasCtx.globalAlpha = Math.max(0, Math.min(1, opacity));
           canvasCtx.drawImage(sourceElement, (canvas.width - nW) / 2 + offX, (canvas.height - nH) / 2 + offY, nW, nH);
           canvasCtx.globalAlpha = 1.0;
+
+          // Dibujar subtítulos superpuestos
+          if (frame.narrationText) {
+            const text = frame.narrationText.replace(/^\(Voz masculina\):\s*/i, '');
+            const fontSize = isPortrait ? 28 : 36;
+            canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
+            canvasCtx.textAlign = 'center';
+            canvasCtx.textBaseline = 'bottom';
+            
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+            const maxWidth = canvas.width * 0.85;
+            
+            for (let n = 0; n < words.length; n++) {
+              const testLine = line + words[n] + ' ';
+              const metrics = canvasCtx.measureText(testLine);
+              if (metrics.width > maxWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + ' ';
+              } else {
+                line = testLine;
+              }
+            }
+            lines.push(line);
+            
+            const lineHeight = fontSize * 1.3;
+            const startY = canvas.height - (isPortrait ? 60 : 40) - (lines.length - 1) * lineHeight;
+            
+            for (let k = 0; k < lines.length; k++) {
+              const y = startY + k * lineHeight;
+              
+              // Borde del texto para legibilidad
+              canvasCtx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+              canvasCtx.lineWidth = fontSize * 0.2;
+              canvasCtx.lineJoin = 'round';
+              canvasCtx.strokeText(lines[k], canvas.width / 2, y);
+              
+              // Relleno del texto
+              canvasCtx.fillStyle = '#FFFFFF';
+              canvasCtx.fillText(lines[k], canvas.width / 2, y);
+            }
+          }
 
           await new Promise(r => setTimeout(r, 33)); // ~30fps, works in background
         }
@@ -2525,7 +2571,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <button onClick={() => handleGenerateIndividualImage(i)} disabled={frame.isGeneratingImage || frame.isGeneratingVideo} title={`Usando estilo: ${visualStyle}`} className={`py-6 rounded-[2.5rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}><Repeat size={18} /> RE-IMAGINAR</button>
-                              <button onClick={() => handleGenerateIndividualVideo(i)} disabled={frame.isGeneratingVideo || !frame.imageUrl || frame.isGeneratingImage} className={`py-6 rounded-[2.5rem] ${frame.videoUrl ? 'bg-indigo-900/30 text-indigo-400 border-2 border-indigo-500/30' : `bg-indigo-600 text-white`} font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}>{frame.videoUrl ? <RefreshCcw size={18} /> : <Zap size={18} />} {frame.videoUrl ? 'RE-FILMAR' : 'GENERAR VIDEO'}</button>
+                              <button onClick={() => handleGenerateIndividualVideo(i)} disabled={frame.isGeneratingVideo || !frame.imageUrl || frame.isGeneratingImage || !modelSettings.video} className={`py-6 rounded-[2.5rem] ${frame.videoUrl ? 'bg-indigo-900/30 text-indigo-400 border-2 border-indigo-500/30' : `bg-indigo-600 text-white`} font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}>{frame.videoUrl ? <RefreshCcw size={18} /> : <Zap size={18} />} {frame.videoUrl ? 'RE-FILMAR' : 'GENERAR VIDEO'}</button>
                               <button onClick={() => handlePlayTTS(frame.narrationText)} className="py-6 rounded-[2.5rem] bg-slate-900 text-slate-400 border-2 border-slate-800 font-black text-xs uppercase shadow-2xl hover:text-white transition-all flex items-center justify-center gap-3 active:scale-90"><Volume2 size={18} /> ESCUCHAR VOZ</button>
                             </div>
                         </div>

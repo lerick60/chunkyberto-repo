@@ -49,3 +49,18 @@ Asistente: Se actualizaron las instrucciones de generación (tanto en el código
 Interacción 10:
 Usuario: "quiero desde el inicio la aplicacion me de la opcion de usarlas siguientes opciones: 1. solo modelos generativos gratis. 2. modelos generativos mas economicos posibles 3. modelos generativos normales. 4. modelos generativos de mas alta calidad."
 Asistente: Se agregó un nuevo selector de "Nivel de Modelos Generativos" en la ventana de ajustes del Studio. Este selector permite elegir entre 4 niveles (Gratis, Económico, Normal, Alta Calidad), los cuales configuran automáticamente los modelos de texto, imagen, video y voz a utilizar según el nivel seleccionado, respetando las opciones solicitadas.
+
+---
+Interacción 11:
+Usuario: "Apply the edits shown in the screenshot." (El usuario muestra un error "model is required and must be a string" al intentar generar un video en el modo Gratis).
+Asistente: Se corrigió el error. El modo "Gratis" no incluye un modelo de generación de video (ya que no hay opciones gratuitas disponibles en la API). Para evitar que la aplicación intente generar un video con un modelo vacío y lance un error, se han deshabilitado los botones de "Generar Video" y "Sintetizar Película Completa" cuando el nivel seleccionado no tiene un modelo de video configurado.
+
+---
+Interacción 12:
+Usuario: "quiero que no desanilites el boton de "sintetizar pelicula completa", en el nivel gratis. quiero mejor que la pelicula se haga superponiendo los subtitulos de cada imagen en la parte inferior y ademas, se debe mostrar la imagen original con los efectos indicados al principio y respetando las transiciones indicadas entre imagenes. en el video compuesto, cada imagen estatica debera presentarse un promedio de 7 segundos, antes de cambiar a la siguiente, asi hasta completar todo el video. documentar esto donde se necesite."
+Asistente: Se volvió a habilitar el botón "Sintetizar Película Completa" en todos los niveles. Se actualizó el motor de síntesis de video para que, cuando se utilicen imágenes estáticas (como en el nivel Gratis), estas se muestren durante un promedio de 7 segundos (o la duración del audio si es mayor). Además, se añadió la funcionalidad de superponer los subtítulos (texto de narración) en la parte inferior del video compuesto, manteniendo los efectos de movimiento y transiciones. Se documentaron estas reglas en `AGENTS.md`.
+
+---
+Interacción 13:
+Usuario: "en la sintesis de pelicula completa, con modelos gratis, quiero que subas la duracion de cada escena de 7 a 10 segundos por favor"
+Asistente: Se actualizó el motor de síntesis de video para que las imágenes estáticas se muestren durante un promedio de 10 segundos (en lugar de 7) o la duración del audio si este es mayor. También se actualizó la regla correspondiente en `AGENTS.md`.
