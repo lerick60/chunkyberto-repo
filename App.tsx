@@ -444,17 +444,25 @@ function getErrorDetails(err: any): DetailedError {
   let stack = err?.stack || "";
   let docsLink = "https://ai.google.dev/gemini-api/docs/troubleshooting";
   const raw = err;
+  
   if (err?.message) {
-    message = err.message;
+    message = typeof err.message === 'string' ? err.message : JSON.stringify(err.message);
     try {
-      const parsed = JSON.parse(err.message);
+      const parsed = JSON.parse(message);
       if (parsed.error) {
-        message = parsed.error.message || message;
+        message = parsed.error.message ? (typeof parsed.error.message === 'string' ? parsed.error.message : JSON.stringify(parsed.error.message)) : message;
         code = parsed.error.code || code;
         status = parsed.error.status || status;
       }
     } catch (e) {}
+  } else if (typeof err === 'string') {
+    message = err;
+  } else if (err && typeof err === 'object') {
+    try {
+      message = JSON.stringify(err);
+    } catch (e) {}
   }
+  
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
   const isInternal = String(code) === "500" || String(status).includes("INTERNAL");
   
@@ -466,7 +474,7 @@ function getErrorDetails(err: any): DetailedError {
     message = "Error interno del servidor (500). Reintentando automáticamente...";
   }
   
-  return { message, code, status, stack, docsLink, isQuota, raw };
+  return { message: String(message), code: String(code), status: String(status), stack: String(stack), docsLink, isQuota, raw };
 }
 
 async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 5000, timeoutMs = 60000): Promise<T> {
