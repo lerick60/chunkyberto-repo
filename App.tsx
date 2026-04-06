@@ -225,7 +225,7 @@ interface VoiceOption {
 const MODELS = {
   TEXT: 'gemini-3-flash-preview',       
   IMAGE: 'gemini-2.5-flash-image',     
-  VIDEO: 'veo-3.1-fast-generate-preview', 
+  VIDEO: 'veo-3.1-generate-preview', 
   TTS: 'gemini-2.5-flash-preview-tts'   
 };
 
@@ -344,6 +344,7 @@ interface ModelSettings {
   ttsStyle: TtsStyle;
   motionEffect: MotionEffect;
   transitionEffect: TransitionEffect;
+  erickReferenceImage?: string;
 }
 
 interface StoryboardFrame {
@@ -376,6 +377,7 @@ interface Trend {
   interview?: string;
   advance?: string;
   videoPrompts?: string;
+  imagePrompts?: string;
 }
 
 interface Draft {
@@ -503,7 +505,7 @@ export const DownloadButton: React.FC<{ text: string; filename: string }> = ({ t
   );
 };
 
-export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, isRewriting, isGeneratingVideoPrompts, persona }) => {
+export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; onGenerateImagePrompts: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; isGeneratingImagePrompts: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, onGenerateImagePrompts, isRewriting, isGeneratingVideoPrompts, isGeneratingImagePrompts, persona }) => {
   const hasStoryboard = trend.storyboard && trend.storyboard.length > 0;
   return (
     <div className={`bg-slate-800 border-2 ${trend.isMasterSummary ? 'border-indigo-500/50' : 'border-slate-700'} rounded-[2.5rem] p-6 sm:p-10 transition-all hover:border-${persona.color}/30 flex flex-col h-full group relative overflow-hidden shadow-2xl`}>
@@ -605,15 +607,42 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     </div>
                   </div>
                 )}
-                <button 
-                  type="button" 
-                  onClick={(e) => { e.preventDefault(); onGenerateVideoPrompts(trend); }} 
-                  disabled={isGeneratingVideoPrompts}
-                  className={`w-full flex items-center justify-center gap-3 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl mb-3`}
-                >
-                  {isGeneratingVideoPrompts ? <Loader2 size={16} className="animate-spin" /> : <Clapperboard size={16} />} 
-                  {isGeneratingVideoPrompts ? 'Generando...' : 'Video Prompts'}
-                </button>
+                {trend.imagePrompts && (
+                  <div className="bg-slate-900/60 border-2 border-slate-700/50 rounded-[1.5rem] p-6 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar mb-3">
+                    <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
+                      <div className="flex items-center gap-2"><ImageIcon size={14} /> Image Prompts</div>
+                      <div className="flex items-center gap-2">
+                        <DownloadButton text={trend.imagePrompts} filename={`ImagePrompts_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <CopyButton text={trend.imagePrompts} />
+                      </div>
+                    </div>
+                    <div className="markdown-body italic text-slate-100 text-sm font-bold leading-relaxed selectable-text whitespace-pre-wrap">
+                      <Markdown remarkPlugins={[remarkGfm]}>
+                        {trend.imagePrompts}
+                      </Markdown>
+                    </div>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.preventDefault(); onGenerateVideoPrompts(trend); }} 
+                    disabled={isGeneratingVideoPrompts}
+                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
+                  >
+                    {isGeneratingVideoPrompts ? <Loader2 size={14} className="animate-spin" /> : <Clapperboard size={14} />} 
+                    {isGeneratingVideoPrompts ? 'Generando...' : 'Video Prompts'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={(e) => { e.preventDefault(); onGenerateImagePrompts(trend); }} 
+                    disabled={isGeneratingImagePrompts}
+                    className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
+                  >
+                    {isGeneratingImagePrompts ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />} 
+                    {isGeneratingImagePrompts ? 'Generando...' : 'Image Prompts'}
+                  </button>
+                </div>
               </>
             )}
             <button 
@@ -913,7 +942,9 @@ export const SettingsModal: React.FC<{
   activePersona: Persona;
   isYtConnected: boolean;
   onConnectYt: () => void;
-}> = ({ isOpen, onClose, ytChannelUrl, onYtChannelUrlChange, activePersona, isYtConnected, onConnectYt }) => {
+  modelSettings: ModelSettings;
+  setModelSettings: (settings: ModelSettings) => void;
+}> = ({ isOpen, onClose, ytChannelUrl, onYtChannelUrlChange, activePersona, isYtConnected, onConnectYt, modelSettings, setModelSettings }) => {
   if (!isOpen) return null;
 
   return (
@@ -929,6 +960,40 @@ export const SettingsModal: React.FC<{
         </div>
 
         <div className="p-10 space-y-8">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
+                <Settings size={16} /> Erick Reference Image
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setModelSettings({ ...modelSettings, erickReferenceImage: reader.result as string });
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:tracking-widest file:bg-indigo-500/20 file:text-indigo-400 hover:file:bg-indigo-500/30 cursor-pointer"
+              />
+              {modelSettings.erickReferenceImage && (
+                <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-slate-700">
+                  <img src={modelSettings.erickReferenceImage} alt="Erick Reference" className="w-full h-full object-cover" />
+                  <button onClick={() => setModelSettings({ ...modelSettings, erickReferenceImage: undefined })} className="absolute top-1 right-1 p-1 bg-slate-900/80 rounded-md text-rose-500 hover:text-rose-400"><X size={12} /></button>
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-500 font-bold leading-relaxed">
+              Upload a reference image of Erick. This image will be used to generate video prompts and videos when Erick is mentioned.
+            </p>
+          </div>
+
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-red-500 font-black text-[10px] uppercase tracking-widest">
@@ -996,6 +1061,7 @@ export const App: React.FC = () => {
   const [loadingTrends, setLoadingTrends] = useState(false);
   const [rewritingId, setRewritingId] = useState<string | null>(null);
   const [generatingVideoPromptsId, setGeneratingVideoPromptsId] = useState<string | null>(null);
+  const [generatingImagePromptsId, setGeneratingImagePromptsId] = useState<string | null>(null);
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
   const [category, setCategory] = useState<Category>('animal_news');
   const [appError, setAppError] = useState<DetailedError | null>(null);
@@ -1256,20 +1322,33 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
       const languageText = getLanguageName(language);
       
-      const response = await apiRetry(() => ai.models.generateContent({
-        model: modelSettings.text,
-        contents: `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
+      const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
         
 Narrative:
 ${trend.chunkybertoVersion}
 
 Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
-2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). Also include a short descriptive text of fewer than 12 words as an expression of the narrator.
-3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. Also include a short descriptive text of fewer than 12 words summarizing the idea of these remaining sentences, to be narrated in the video.
-4. Separate EVERY generated prompt with at least one blank line.
-5. Target language for the prompts: ${languageText}.
-6. Do not include any conversational filler, just the prompts.`,
+2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
+3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
+4. Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.
+5. Target language for the prompts: Spanish (Español).
+6. Do not include any conversational filler, just the prompts.
+7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
+8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
+${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
+
+      const contents: any = { parts: [{ text: promptText }] };
+      if (modelSettings.erickReferenceImage) {
+        const base64Data = modelSettings.erickReferenceImage.split(',')[1];
+        const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ inlineData: { data: base64Data, mimeType } });
+      }
+
+      const response = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: contents,
         config: { systemInstruction: `You are an expert video director and prompt engineer.` }
       })) as any;
       
@@ -1280,6 +1359,52 @@ Rules for EACH paragraph:
         setSelectedTrend({ ...selectedTrend, videoPrompts: finalContent });
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingVideoPromptsId(null); }
+  };
+
+  const handleGenerateImagePrompts = async (trend: Trend) => {
+    setGeneratingImagePromptsId(trend.id); setAppError(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const languageText = getLanguageName(language);
+      
+      const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
+        
+Narrative:
+${trend.chunkybertoVersion}
+
+Rules for EACH paragraph:
+1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
+2. For Section 1, generate a highly descriptive image prompt (visuals, lighting, camera angles, action). Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
+3. For Section 2, generate another highly descriptive image prompt for the remaining sentences. Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
+4. Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.
+5. Target language for the prompts: Spanish (Español).
+6. Do not include any conversational filler, just the prompts.
+7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
+8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
+${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
+
+      const contents: any = { parts: [{ text: promptText }] };
+      if (modelSettings.erickReferenceImage) {
+        const base64Data = modelSettings.erickReferenceImage.split(',')[1];
+        const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ inlineData: { data: base64Data, mimeType } });
+      }
+
+      const response = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: contents,
+        config: { systemInstruction: `You are an expert image director and prompt engineer.` }
+      })) as any;
+      
+      const finalContent = response.text;
+      
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, imagePrompts: finalContent } : t));
+      setTrends(updatedTrends);
+      if (selectedTrend && selectedTrend.id === trend.id) {
+        setSelectedTrend({ ...selectedTrend, imagePrompts: finalContent });
+      }
+    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingImagePromptsId(null); }
   };
 
   const handleRewrite = async (trend: Trend) => {
@@ -1669,7 +1794,20 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     updateStoryboardState(true, false);
     try {
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
-      let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: `${visualStyle} film: ${frame.originalIdea}.`, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config: { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim } }), 3, 5000, 30000) as any;
+      
+      const config: any = { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim };
+      const promptText = `${visualStyle} film: ${frame.originalIdea}.`;
+      
+      if (modelSettings.erickReferenceImage && (promptText.toLowerCase().includes('erick') || frame.prompt.toLowerCase().includes('erick'))) {
+        const base64Data = modelSettings.erickReferenceImage.split(',')[1];
+        const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        config.referenceImages = [{
+          image: { imageBytes: base64Data, mimeType },
+          referenceType: 'ASSET' // VideoGenerationReferenceType.ASSET
+        }];
+      }
+
+      let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: promptText, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config }), 3, 5000, 30000) as any;
       while (!operation.done) { await new Promise(resolve => setTimeout(resolve, 10000)); operation = await apiRetry(() => ai.operations.getVideosOperation({ operation }), 3, 5000, 30000); }
       const downloadLink = (operation as any).response?.generatedVideos?.[0]?.video?.uri;
       if (downloadLink) {
@@ -2144,6 +2282,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         activePersona={activePersona}
         isYtConnected={isYtConnected}
         onConnectYt={handleConnectYouTube}
+        modelSettings={modelSettings}
+        setModelSettings={setModelSettings}
       />
 
       <main className="max-w-7xl mx-auto px-4 pt-10">
@@ -2367,7 +2507,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} language={language} persona={activePersona} />)}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} language={language} persona={activePersona} />)}</div>
             <div className="max-w-4xl mx-auto mt-20 mb-40 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <div className={`bg-slate-900 border-4 border-${activePersona.color}/30 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group`}><div className={`absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700 text-${activePersona.color}`}><FlaskRound size={120} /></div>
                 <div className="relative z-10 space-y-8">

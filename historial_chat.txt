@@ -1,0 +1,46 @@
+Historial de Chat - Proyecto Chunkybertos Studio
+
+---
+Interacción 1:
+Usuario: (Solicitud inicial para actualizar la generación de prompts de video, dividiendo por párrafos y agregando expresiones de narrador).
+Asistente: Se actualizó la función `handleGenerateVideoPrompts` para procesar la narrativa párrafo por párrafo, generando dos prompts por párrafo (uno para las primeras dos oraciones y otro para el resto) e incluyendo expresiones cortas para el narrador.
+
+---
+Interacción 2:
+Usuario: "no quiero que me pongas en los prompt indicadores de parrafo ni de seccion."
+Asistente: Se ajustaron las instrucciones del generador de prompts para prohibir estrictamente que la IA incluya etiquetas como "Párrafo 1", "Sección 1", "Prompt de video:" o "Narrador:".
+
+---
+Interacción 3:
+Usuario: "asegurar que todas las frases que se le indiquen a cada prompt que se incluyan, sean unicamente en espaniol. tambien asegurarse que sea la voz usada sea masculina. agregar estas indicaciones de formato, en los archivos de configuracion y de skills que se necesite. para que los prompts no fallen de estos requerimientos."
+Asistente: Se actualizaron las instrucciones para forzar el idioma español y la voz masculina en las expresiones del narrador. Además, se creó el archivo `AGENTS.md` para guardar estas reglas y asegurar que el sistema las recuerde en futuras modificaciones.
+
+---
+Interacción 4:
+Usuario: "quiero cambiar el limite de 12 palabras por descripcion de parrafo, por desde 12 hasta 50 palabras, segun lo que sea mas descriptivo. agregar este requerimiento en deonde se necesite para enforzarlo."
+Asistente: Se actualizó el límite de palabras en el código y en el archivo `AGENTS.md` para que las expresiones del narrador tengan entre 12 y 50 palabras, dependiendo de lo que resulte más descriptivo.
+
+---
+Interacción 5:
+Usuario: "quiero que la persona de la foto sea utilizada como ingrediente durante la generacion de los prompts de video y como la misma generacion de videos donde se mencione a Erick. guardar esto en los requerimientos."
+Asistente: Se agregó una opción en los Ajustes del Studio para subir una "Imagen de Referencia de Erick". Se actualizó la generación de prompts para usar esta imagen como contexto visual, y se actualizó el modelo de video a `veo-3.1-generate-preview` para enviar la foto como imagen de referencia (`referenceImages`) cuando se mencione a Erick. También se guardó esta regla en `AGENTS.md`.
+
+---
+Interacción 6:
+Usuario: "puedes guardar el historial del chat en un archivo de texto llamado historial_chat.txt y agregarlo a los archivos del proyecto?"
+Asistente: (Creación de este archivo).
+
+---
+Interacción 7:
+Usuario: "cambiar los limites de cantidad de palabras del narrador de 12 a 50 a un maximo de 22 palabras tanto en todos los prompts que se generen. tambien asegurate que los prompts de imagenes y video solo suban en idioma espaniol. favor de corregir donde sea necesario en el proyecto para actualizar los requerimientos."
+Asistente: Se actualizó el código y el archivo `AGENTS.md` para que las expresiones del narrador tengan un límite máximo de 22 palabras. Además, se forzó que tanto los prompts de video como los de imágenes se generen estrictamente en español (Español), sin importar el idioma seleccionado en la interfaz.
+
+---
+Interacción 8:
+Usuario: "cuando se genere un prompt de video con una expresion de voz asociada, evitar separar los fragmentos con una linea, como se muestra en la imagen. la voz debera ser parte del mismo prompt asociado. favor de actualizar los archivos necesarios para respetar los requerimientos."
+Asistente: Se actualizaron las instrucciones de generación para los prompts de video e imagen. Ahora, la expresión del narrador se agregará inmediatamente en la línea siguiente a la descripción visual, sin dejar una línea en blanco entre ellas. Cada bloque completo (descripción visual + narrador) seguirá estando separado por una línea en blanco. También se actualizó `AGENTS.md` para reflejar esta regla.
+
+---
+Interacción 9:
+Usuario: "necesito que claramente le indiques al prompt cuando inicia la narracion y cuando termina. en la imagen se ve que desapareciste "(voz masculina)" por lo que ahora puede haber error en la interpretacion del prompt. arreglarlo y actualizar donde se necesite."
+Asistente: Se actualizaron las instrucciones de generación (tanto en el código como en `AGENTS.md`) para exigir explícitamente que cada expresión del narrador comience exactamente con el prefijo "(Voz masculina): ". Se modificó la regla que prohibía todas las etiquetas para permitir específicamente esta.
