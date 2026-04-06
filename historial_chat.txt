@@ -44,3 +44,8 @@ Asistente: Se actualizaron las instrucciones de generación para los prompts de 
 Interacción 9:
 Usuario: "necesito que claramente le indiques al prompt cuando inicia la narracion y cuando termina. en la imagen se ve que desapareciste "(voz masculina)" por lo que ahora puede haber error en la interpretacion del prompt. arreglarlo y actualizar donde se necesite."
 Asistente: Se actualizaron las instrucciones de generación (tanto en el código como en `AGENTS.md`) para exigir explícitamente que cada expresión del narrador comience exactamente con el prefijo "(Voz masculina): ". Se modificó la regla que prohibía todas las etiquetas para permitir específicamente esta.
+
+---
+Interacción 10:
+Usuario: "quiero desde el inicio la aplicacion me de la opcion de usarlas siguientes opciones: 1. solo modelos generativos gratis. 2. modelos generativos mas economicos posibles 3. modelos generativos normales. 4. modelos generativos de mas alta calidad."
+Asistente: Se agregó un nuevo selector de "Nivel de Modelos Generativos" en la ventana de ajustes del Studio. Este selector permite elegir entre 4 niveles (Gratis, Económico, Normal, Alta Calidad), los cuales configuran automáticamente los modelos de texto, imagen, video y voz a utilizar según el nivel seleccionado, respetando las opciones solicitadas.

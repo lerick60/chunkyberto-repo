@@ -335,6 +335,8 @@ const PERSONAS: Persona[] = [
   }
 ];
 
+type ModelTier = 'free' | 'economical' | 'normal' | 'high_quality';
+
 interface ModelSettings {
   text: string;
   image: string;
@@ -345,7 +347,51 @@ interface ModelSettings {
   motionEffect: MotionEffect;
   transitionEffect: TransitionEffect;
   erickReferenceImage?: string;
+  tier: ModelTier;
 }
+
+const MODEL_TIERS = {
+  free: {
+    label: 'Gratis',
+    description: 'Solo modelos generativos gratis.',
+    models: {
+      text: 'gemini-3-flash-preview',
+      image: 'gemini-2.5-flash-image',
+      video: '',
+      tts: 'gemini-2.5-flash-preview-tts'
+    }
+  },
+  economical: {
+    label: 'Económico',
+    description: 'Modelos generativos más económicos posibles.',
+    models: {
+      text: 'gemini-3.1-flash-lite-preview',
+      image: 'gemini-2.5-flash-image',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-2.5-flash-preview-tts'
+    }
+  },
+  normal: {
+    label: 'Normal',
+    description: 'Modelos generativos normales.',
+    models: {
+      text: 'gemini-3-flash-preview',
+      image: 'gemini-2.5-flash-image',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-2.5-flash-preview-tts'
+    }
+  },
+  high_quality: {
+    label: 'Alta Calidad',
+    description: 'Modelos generativos de más alta calidad.',
+    models: {
+      text: 'gemini-3.1-pro-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-generate-preview',
+      tts: 'gemini-2.5-flash-preview-tts'
+    }
+  }
+};
 
 interface StoryboardFrame {
   id: string;
@@ -963,6 +1009,36 @@ export const SettingsModal: React.FC<{
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
+                <Cpu size={16} /> Nivel de Modelos Generativos
+              </div>
+            </div>
+            <div className="relative">
+              <select 
+                value={modelSettings.tier} 
+                onChange={(e) => {
+                  const newTier = e.target.value as ModelTier;
+                  setModelSettings({
+                    ...modelSettings,
+                    tier: newTier,
+                    text: MODEL_TIERS[newTier].models.text,
+                    image: MODEL_TIERS[newTier].models.image,
+                    video: MODEL_TIERS[newTier].models.video,
+                    tts: MODEL_TIERS[newTier].models.tts
+                  });
+                }} 
+                className="w-full pl-4 pr-10 py-4 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none"
+              >
+                {Object.entries(MODEL_TIERS).map(([key, tier]) => (
+                  <option key={key} value={key}>{tier.label.toUpperCase()} - {tier.description}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Cpu size={16} /></div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
                 <Settings size={16} /> Erick Reference Image
               </div>
             </div>
@@ -1101,17 +1177,18 @@ export const App: React.FC = () => {
   const activePersona = PERSONAS.find(p => p.id === selectedPersonaId) || PERSONAS[0];
   const [modelSettings, setModelSettings] = useState<ModelSettings>(() => {
     const saved = localStorage.getItem('chunky_model_settings');
-    const defaults = {
-      text: MODELS.TEXT,
-      image: MODELS.IMAGE,
-      video: MODELS.VIDEO, 
-      tts: MODELS.TTS,
+    const defaults: ModelSettings = {
+      text: MODEL_TIERS.normal.models.text,
+      image: MODEL_TIERS.normal.models.image,
+      video: MODEL_TIERS.normal.models.video, 
+      tts: MODEL_TIERS.normal.models.tts,
       voiceName: activePersona.voiceDefault,
       ttsStyle: 'standard' as TtsStyle,
       motionEffect: 'zoom_in' as MotionEffect,
-      transitionEffect: 'fade_black' as TransitionEffect
+      transitionEffect: 'fade_black' as TransitionEffect,
+      tier: 'normal'
     };
-    return saved ? JSON.parse(saved) : defaults;
+    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
   });
 
   const isFetchingTrendsRef = useRef(false);
