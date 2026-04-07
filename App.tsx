@@ -2116,10 +2116,10 @@ LENGUAJE: ${getLanguageName(language)}.`,
         const audioBuffer = audioBuffers[i];
         const sourceElement = mediaElements[i];
         
-        // Si es imagen estática, usar 10 segundos (o la duración del audio si es mayor). Si es video, usar la duración del audio o 4s.
-        let segmentDuration = audioBuffer ? audioBuffer.duration : 4.0;
+        // Si es imagen estática, usar 10 segundos (o la duración del audio + 1s si es mayor). Si es video, usar la duración del audio + 1s o 4s.
+        let segmentDuration = audioBuffer ? audioBuffer.duration + 1.0 : 4.0;
         if (!(sourceElement instanceof HTMLVideoElement)) {
-          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration) : 10.0;
+          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 1.0) : 10.0;
         }
         
         if (audioBuffer) {
