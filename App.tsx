@@ -107,7 +107,8 @@ import {
   UploadCloud,
   Link as LinkIcon,
   Telescope,
-  LayoutGrid
+  LayoutGrid,
+  CheckCircle
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -206,7 +207,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation';
 
-type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy';
+type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
 type NarrativeLength = 'short' | 'medium' | 'long';
 type TtsStyle = 'standard' | 'playful' | 'documentary';
@@ -1149,6 +1150,12 @@ export const App: React.FC = () => {
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
   const [category, setCategory] = useState<Category>('animal_news');
   const [appError, setAppError] = useState<DetailedError | null>(null);
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'warning' | 'error'} | null>(null);
+
+  const showNotification = (message: string, type: 'success' | 'warning' | 'error' = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null); 
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('chunky_language') as Language) || 'es');
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>(() => localStorage.getItem('chunky_persona') || PERSONAS[0].id);
@@ -1295,11 +1302,13 @@ export const App: React.FC = () => {
             })
           }));
           localStorage.setItem('chunky_drafts', JSON.stringify(strippedDrafts));
-          alert("Advertencia: El borrador se guardó, pero las imágenes se eliminaron porque excedían el límite de almacenamiento del navegador. Tendrás que volver a generarlas.");
+          showNotification("Advertencia: El borrador se guardó, pero las imágenes se eliminaron porque excedían el límite de almacenamiento del navegador. Tendrás que volver a generarlas.", 'warning');
         } catch (fallbackError) {
           console.error("Fallback error:", fallbackError);
-          alert("No se pudo guardar el borrador: El tamaño de los datos excede el límite de almacenamiento del navegador.");
+          showNotification("No se pudo guardar el borrador: El tamaño de los datos excede el límite de almacenamiento del navegador.", 'error');
         }
+      } else {
+        showNotification("Error al guardar el borrador en el almacenamiento local.", 'error');
       }
     }
   }, [drafts]);
@@ -1343,7 +1352,7 @@ export const App: React.FC = () => {
       category
     };
     setDrafts(prev => [newDraft, ...prev]);
-    alert("Borrador guardado con éxito.");
+    showNotification("Borrador guardado con éxito.", 'success');
   };
 
   const handleLoadDraft = (draft: Draft) => {
@@ -2285,7 +2294,13 @@ LENGUAJE: ${getLanguageName(language)}.`,
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsZipping(false); }
   };
 
-  const visualStyles: ImageStyle[] = ['Cinematic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Sketch', '3D Render', 'Neo-Noir', 'Photorealistic', 'CGI', 'Epic Fantasy'];
+  const visualStyles: ImageStyle[] = [
+    'Cinematic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Sketch', 
+    '3D Render', 'Neo-Noir', 'Photorealistic', 'CGI', 'Epic Fantasy',
+    'Watercolor', 'Pop Art', 'Steampunk', 'Minimalist', 'Pixel Art',
+    'Vintage Photography', 'Origami', 'Claymation', 'Gothic', 'Synthwave',
+    'Comic Book', 'Surrealism'
+  ];
   const dimensions: VideoDimension[] = ['16:9', '9:16', '1:1', '4:3', '3:4'];
   const motionOptions: {id: MotionEffect, label: string}[] = [
     {id: 'none', label: 'Estático'},
@@ -2393,6 +2408,20 @@ LENGUAJE: ${getLanguageName(language)}.`,
 
   return (
     <div className={`min-h-screen pb-40 text-slate-100 bg-[#0f172a] selection:bg-${activePersona.color}/30`}>
+      {notification && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4 fade-in duration-300">
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl border flex items-center gap-3 font-bold text-sm ${
+            notification.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' :
+            notification.type === 'warning' ? 'bg-amber-950/90 border-amber-500/50 text-amber-200' :
+            'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+          }`}>
+            {notification.type === 'error' ? <AlertTriangle size={20} className="text-rose-500" /> :
+             notification.type === 'warning' ? <AlertTriangle size={20} className="text-amber-500" /> :
+             <CheckCircle size={20} className="text-emerald-500" />}
+            {notification.message}
+          </div>
+        </div>
+      )}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-3xl border-b border-slate-800 px-4 py-6 flex items-center justify-between shadow-2xl">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedTrend(null)}>
           <div className={`bg-${activePersona.color} p-2.5 rounded-xl shadow-lg`}>{activePersona.icon}</div>
@@ -2492,7 +2521,22 @@ LENGUAJE: ${getLanguageName(language)}.`,
                     {selectedTrend.thumbnailUrl ? (<img src={selectedTrend.thumbnailUrl} className="w-full h-full object-cover" alt="YouTube Thumbnail" />) : (<div className="flex flex-col items-center gap-3 text-slate-700"><Youtube size={64} /><span className="text-[10px] font-black uppercase tracking-widest">Sin Miniatura</span></div>)}
                     {generatingThumbnail && (<div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center z-20"><Loader2 className="animate-spin text-emerald-500 mb-4" size={48} /><span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Generando Portada...</span></div>)}
                  </div>
-                 <div className="flex-1 space-y-4"><h3 className="text-3xl font-black uppercase italic tracking-tighter">YouTube <span className={`text-${activePersona.color}`}>Cover Art.</span></h3><p className="text-slate-400 text-sm font-medium italic">"Arte de portada optimizado para YouTube utilizando el perfil visual de {activePersona.name}."</p><button onClick={handleGenerateThumbnail} disabled={generatingThumbnail} className={`px-10 py-5 bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-widest border-2 border-slate-700 hover:border-${activePersona.color} transition-all shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50`}>{generatingThumbnail ? <Loader2 size={18} className="animate-spin" /> : <LucideImage size={18} />}{selectedTrend.thumbnailUrl ? 'RE-GENERAR MINIATURA' : 'GENERAR MINIATURA PRO'}</button></div>
+                 <div className="flex-1 space-y-4">
+                   <h3 className="text-3xl font-black uppercase italic tracking-tighter">YouTube <span className={`text-${activePersona.color}`}>Cover Art.</span></h3>
+                   <p className="text-slate-400 text-sm font-medium italic">"Arte de portada optimizado para YouTube utilizando el perfil visual de {activePersona.name}."</p>
+                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                     <div className="relative w-full sm:w-64">
+                       <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value as ImageStyle)} className="w-full pl-4 pr-10 py-5 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                         {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                       </select>
+                       <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
+                     </div>
+                     <button onClick={handleGenerateThumbnail} disabled={generatingThumbnail} className={`px-10 py-5 bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-widest border-2 border-slate-700 hover:border-${activePersona.color} transition-all shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50`}>
+                       {generatingThumbnail ? <Loader2 size={18} className="animate-spin" /> : <LucideImage size={18} />}
+                       {selectedTrend.thumbnailUrl ? 'RE-GENERAR MINIATURA' : 'GENERAR MINIATURA PRO'}
+                     </button>
+                   </div>
+                 </div>
                </div>
              </div>
 
