@@ -2205,15 +2205,6 @@ LENGUAJE: ${getLanguageName(language)}.`,
           segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 1.0) : 10.0;
         }
         
-        if (audioBuffer) {
-          const audioSource = ctx.createBufferSource(); 
-          audioSource.buffer = audioBuffer; 
-          audioSource.connect(dest); 
-          audioSource.start();
-        }
-        
-        const startTime = Date.now();
-        
         if (sourceElement instanceof HTMLVideoElement) {
           sourceElement.currentTime = 0;
           try {
@@ -2222,6 +2213,15 @@ LENGUAJE: ${getLanguageName(language)}.`,
             console.warn(`No se pudo reproducir el video de la escena ${i+1}:`, e);
           }
         }
+
+        if (audioBuffer) {
+          const audioSource = ctx.createBufferSource(); 
+          audioSource.buffer = audioBuffer; 
+          audioSource.connect(dest); 
+          audioSource.start();
+        }
+        
+        const startTime = Date.now();
 
         let lastProgressUpdate = 0;
         while (Date.now() - startTime < segmentDuration * 1000) {
