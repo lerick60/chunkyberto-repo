@@ -207,7 +207,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation';
 
-type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism';
+type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
 type NarrativeLength = 'short' | 'medium' | 'long';
 type TtsStyle = 'standard' | 'playful' | 'documentary';
@@ -2299,7 +2299,7 @@ LENGUAJE: ${getLanguageName(language)}.`,
     '3D Render', 'Neo-Noir', 'Photorealistic', 'CGI', 'Epic Fantasy',
     'Watercolor', 'Pop Art', 'Steampunk', 'Minimalist', 'Pixel Art',
     'Vintage Photography', 'Origami', 'Claymation', 'Gothic', 'Synthwave',
-    'Comic Book', 'Surrealism'
+    'Comic Book', 'Surrealism', 'Horror/Terror', 'Futuristic', 'Star Wars', 'Pixar'
   ];
   const dimensions: VideoDimension[] = ['16:9', '9:16', '1:1', '4:3', '3:4'];
   const motionOptions: {id: MotionEffect, label: string}[] = [
