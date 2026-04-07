@@ -108,7 +108,8 @@ import {
   Link as LinkIcon,
   Telescope,
   LayoutGrid,
-  CheckCircle
+  CheckCircle,
+  UserPlus
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -1140,9 +1141,18 @@ export const SettingsModal: React.FC<{
 
 
 
+interface CustomCharacter {
+  id: string;
+  name: string;
+  imageUrl: string;
+  base64?: string;
+  mimeType?: string;
+}
+
 export const App: React.FC = () => {
   // --- States ---
   const [trends, setTrends] = useState<Trend[]>([]);
+  const [customCharacters, setCustomCharacters] = useState<(CustomCharacter | null)[]>([null, null, null, null]);
   const [loadingTrends, setLoadingTrends] = useState(false);
   const [rewritingId, setRewritingId] = useState<string | null>(null);
   const [generatingVideoPromptsId, setGeneratingVideoPromptsId] = useState<string | null>(null);
@@ -1329,6 +1339,42 @@ export const App: React.FC = () => {
   
   useEffect(() => { checkApiKeyStatus(); }, [checkApiKeyStatus]);
 
+  const handleCharacterUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const name = file.name.replace(/\.[^/.]+$/, "");
+    const imageUrl = URL.createObjectURL(file);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = (reader.result as string).split(',')[1];
+      setCustomCharacters(prev => {
+        const newChars = [...prev];
+        newChars[index] = { id: `char-${Date.now()}`, name, imageUrl, base64, mimeType: file.type };
+        return newChars;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeCharacter = (index: number) => {
+    setCustomCharacters(prev => {
+      const newChars = [...prev];
+      newChars[index] = null;
+      return newChars;
+    });
+  };
+
+  const updateCharacterName = (index: number, name: string) => {
+    setCustomCharacters(prev => {
+      const newChars = [...prev];
+      if (newChars[index]) {
+        newChars[index] = { ...newChars[index]!, name };
+      }
+      return newChars;
+    });
+  };
+
   const handleSaveDraft = () => {
     // Clean up non-serializable and session-specific data before saving
     const cleanedTrends = trends.map(trend => {
@@ -1453,7 +1499,12 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
       const languageText = getLanguageName(language);
       
-      const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
+      const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
+      const characterContext = activeCharacters.length > 0 
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the video generator can recreate them accurately. Do not just use their names in the prompt.`
+        : '';
+
+      const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -1476,6 +1527,9 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
         contents.parts.push({ inlineData: { data: base64Data, mimeType } });
       }
+      activeCharacters.forEach(c => {
+        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType } });
+      });
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -1498,7 +1552,12 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
       const languageText = getLanguageName(language);
       
-      const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.
+      const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
+      const characterContext = activeCharacters.length > 0 
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the image generator can recreate them accurately. Do not just use their names in the prompt.`
+        : '';
+
+      const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -1521,6 +1580,9 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
         contents.parts.push({ inlineData: { data: base64Data, mimeType } });
       }
+      activeCharacters.forEach(c => {
+        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType } });
+      });
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -2718,6 +2780,34 @@ LENGUAJE: ${getLanguageName(language)}.`,
                 {renderForensicToolkit(undefined, true)}
                 
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                  {[0, 1, 2, 3].map(index => {
+                    const char = customCharacters[index];
+                    return char ? (
+                      <div key={index} className="relative rounded-3xl border-2 border-slate-700 bg-slate-800/50 overflow-hidden group flex flex-col">
+                        <button onClick={() => removeCharacter(index)} className="absolute top-2 right-2 z-10 bg-rose-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600"><X size={14}/></button>
+                        <div className="w-full aspect-square relative">
+                          <img src={char.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt={char.name} />
+                        </div>
+                        <input 
+                          type="text" 
+                          value={char.name} 
+                          onChange={(e) => updateCharacterName(index, e.target.value)}
+                          className="w-full bg-slate-900 border-t border-slate-700 p-3 text-[10px] uppercase tracking-widest font-black text-center text-white focus:outline-none focus:bg-slate-950 transition-colors"
+                        />
+                      </div>
+                    ) : (
+                      <label key={index} className="aspect-square rounded-3xl border-2 border-dashed border-slate-700 bg-slate-800/30 hover:bg-slate-800/50 hover:border-slate-500 transition-all cursor-pointer flex flex-col items-center justify-center gap-3 text-slate-500 hover:text-slate-300 group">
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleCharacterUpload(e, index)} />
+                        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform relative overflow-hidden">
+                          <UserPlus size={28} className="relative z-10" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">Nuevo<br/>Personaje</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} language={language} persona={activePersona} />)}</div>
