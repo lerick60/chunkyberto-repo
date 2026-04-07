@@ -452,17 +452,29 @@ function getErrorDetails(err: any): DetailedError {
     try {
       const parsed = JSON.parse(message);
       if (parsed.error) {
-        message = parsed.error.message ? (typeof parsed.error.message === 'string' ? parsed.error.message : JSON.stringify(parsed.error.message)) : message;
+        message = parsed.error.message ? (typeof parsed.error.message === 'string' ? parsed.error.message : JSON.stringify(parsed.error.message)) : (typeof parsed.error === 'string' ? parsed.error : message);
         code = parsed.error.code || code;
         status = parsed.error.status || status;
       }
     } catch (e) {}
   } else if (typeof err === 'string') {
     message = err;
+    try {
+      const parsed = JSON.parse(message);
+      if (parsed.error) {
+        message = typeof parsed.error === 'string' ? parsed.error : JSON.stringify(parsed.error);
+      }
+    } catch (e) {}
   } else if (err && typeof err === 'object') {
     try {
       message = JSON.stringify(err);
     } catch (e) {}
+  }
+
+  if (message.includes("Forbidden") || message.includes("API key not valid") || message.includes("API_KEY_INVALID")) {
+    message = "Error de Autenticación (Forbidden). Si estás ejecutando esto en GCP (Cloud Run), asegúrate de haber configurado la variable de entorno GEMINI_API_KEY en la configuración de tu servicio en Cloud Run.";
+    status = "FORBIDDEN";
+    code = "403";
   }
   
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
