@@ -2254,14 +2254,14 @@ LENGUAJE: ${getLanguageName(language)}.`;
           }
         }
 
+        const startTime = Date.now();
+
         if (audioBuffer) {
           const audioSource = ctx.createBufferSource(); 
           audioSource.buffer = audioBuffer; 
           audioSource.connect(dest); 
           audioSource.start();
         }
-        
-        const startTime = Date.now();
 
         let lastProgressUpdate = 0;
         while (Date.now() - startTime < segmentDuration * 1000) {
