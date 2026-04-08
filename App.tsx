@@ -1943,14 +1943,31 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? `IMPORTANT: Whenever "${activePersona.name}" or the protagonist is mentioned, the visual prompt MUST include a middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression.`
         : `Visual Anchor: ${activePersona.visualProfile}`;
       
-      const promptRes = await apiRetry(() => ai.models.generateContent({
-        model: modelSettings.text,
-        contents: `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
+      const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
+      const characterContext = activeCharacters.length > 0 
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the image generator can recreate them accurately. Do not just use their names in the prompt.`
+        : '';
+
+      const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
-${visualAnchorContext}
+${visualAnchorContext}${characterContext}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
-LENGUAJE: ${getLanguageName(language)}.`,
+LENGUAJE: ${getLanguageName(language)}.`;
+
+      const contents: any = { parts: [{ text: promptText }] };
+      if (modelSettings.erickReferenceImage) {
+        const base64Data = modelSettings.erickReferenceImage.split(',')[1];
+        const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ inlineData: { data: base64Data, mimeType } });
+      }
+      activeCharacters.forEach(c => {
+        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType || 'image/jpeg' } });
+      });
+
+      const promptRes = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: contents,
         config: { systemInstruction: "Format exactly with |||. Generate 1 to 4 scenes per paragraph." }
       })) as any;
       const lines = (promptRes.text || "").split('\n').filter((p: string) => p.includes('|||'));
@@ -2008,13 +2025,30 @@ LENGUAJE: ${getLanguageName(language)}.`,
       const config: any = { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim };
       const promptText = `${visualStyle} film: ${frame.originalIdea}.`;
       
+      const referenceImagesPayload: any[] = [];
+
       if (modelSettings.erickReferenceImage && (promptText.toLowerCase().includes('erick') || frame.prompt.toLowerCase().includes('erick'))) {
         const base64Data = modelSettings.erickReferenceImage.split(',')[1];
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
-        config.referenceImages = [{
+        referenceImagesPayload.push({
           image: { imageBytes: base64Data, mimeType },
-          referenceType: 'ASSET' // VideoGenerationReferenceType.ASSET
-        }];
+          referenceType: 'ASSET'
+        });
+      }
+
+      const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
+      activeCharacters.forEach(c => {
+        if (promptText.toLowerCase().includes(c.name.toLowerCase()) || frame.prompt.toLowerCase().includes(c.name.toLowerCase())) {
+          referenceImagesPayload.push({
+            image: { imageBytes: c.base64, mimeType: c.mimeType || 'image/jpeg' },
+            referenceType: 'ASSET'
+          });
+        }
+      });
+
+      // Veo only supports up to 3 reference images
+      if (referenceImagesPayload.length > 0) {
+        config.referenceImages = referenceImagesPayload.slice(0, 3);
       }
 
       let operation = await apiRetry(() => ai.models.generateVideos({ model: modelSettings.video, prompt: promptText, image: { imageBytes: frame.imageUrl.split(',')[1], mimeType: 'image/png' }, config }), 3, 5000, 30000) as any;
