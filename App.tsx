@@ -1513,7 +1513,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       
       const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
       const characterContext = activeCharacters.length > 0 
-        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the video generator can recreate them accurately. Do not just use their names in the prompt.`
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the video generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
@@ -1537,10 +1537,12 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
       if (modelSettings.erickReferenceImage) {
         const base64Data = modelSettings.erickReferenceImage.split(',')[1];
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ text: `Reference image for character: Erick` });
         contents.parts.push({ inlineData: { data: base64Data, mimeType } });
       }
       activeCharacters.forEach(c => {
-        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType } });
+        contents.parts.push({ text: `Reference image for character: ${c.name}` });
+        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType || 'image/jpeg' } });
       });
 
       const response = await apiRetry(() => ai.models.generateContent({
@@ -1566,7 +1568,7 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
       
       const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
       const characterContext = activeCharacters.length > 0 
-        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the image generator can recreate them accurately. Do not just use their names in the prompt.`
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
@@ -1590,10 +1592,12 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
       if (modelSettings.erickReferenceImage) {
         const base64Data = modelSettings.erickReferenceImage.split(',')[1];
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ text: `Reference image for character: Erick` });
         contents.parts.push({ inlineData: { data: base64Data, mimeType } });
       }
       activeCharacters.forEach(c => {
-        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType } });
+        contents.parts.push({ text: `Reference image for character: ${c.name}` });
+        contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType || 'image/jpeg' } });
       });
 
       const response = await apiRetry(() => ai.models.generateContent({
@@ -1945,7 +1949,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       
       const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
       const characterContext = activeCharacters.length > 0 
-        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Their names are: ${activeCharacters.map(c => c.name).join(', ')}. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in detail (hair, clothes, features, colors) based on the provided images so the image generator can recreate them accurately. Do not just use their names in the prompt.`
+        ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
       const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
@@ -1959,9 +1963,11 @@ LENGUAJE: ${getLanguageName(language)}.`;
       if (modelSettings.erickReferenceImage) {
         const base64Data = modelSettings.erickReferenceImage.split(',')[1];
         const mimeType = modelSettings.erickReferenceImage.split(';')[0].split(':')[1];
+        contents.parts.push({ text: `Reference image for character: Erick` });
         contents.parts.push({ inlineData: { data: base64Data, mimeType } });
       }
       activeCharacters.forEach(c => {
+        contents.parts.push({ text: `Reference image for character: ${c.name}` });
         contents.parts.push({ inlineData: { data: c.base64, mimeType: c.mimeType || 'image/jpeg' } });
       });
 
