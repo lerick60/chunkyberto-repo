@@ -1470,7 +1470,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     } else if (category === 'ai_exoplanets_creation') {
       categoryPrompt = `Crea 15 breves sinopsis sobre historias generadas por IA con temas de: Viajes a exoplanetas, Predicciones de Flora y Fauna en Exoplanetas, así como predicciones sobre climas de estos exoplanetas.`;
     } else if (category === 'biographies') {
-      categoryPrompt = `Crea 15 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+      categoryPrompt = `Crea 15 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Debes mencionar el nombre de la persona cuya biografía se está redactando al menos una vez en cada narración.`;
     }
 
     return `${categoryPrompt}
@@ -1674,6 +1674,7 @@ RULES:
 4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
+${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
@@ -1851,6 +1852,7 @@ RULES:
 4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
+${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { 
           tools: [{ googleSearch: {} }], 
