@@ -206,7 +206,7 @@ type Category =
   | 'ai_mystery_horror' | 'ai_sci_fi' | 'ai_fables' | 'ai_galactic' | 'ai_labrador_mischief' | 'ai_romantic_drama'
   | 'ai_beauty_tips' | 'ai_nutrition' | 'ai_real_estate_sales' | 'ai_home_remedies' | 'ai_catholic_events' | 'news_real_estate'
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
-  | 'exoplanetas' | 'ai_exoplanets_creation';
+  | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -281,7 +281,7 @@ const PERSONAS: Persona[] = [
     voiceDefault: 'Charon',
     introductionPrefix: "Chunkyberto, tu Labrador negro preferido",
     visualProfile: "A majestic adult Black Labrador Retriever with shiny jet-black fur, friendly brown eyes, and an enthusiastic expression.",
-    identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.\n**Narrative Voice:** Fluida y conectada. Aunque seas un perro, tu narración debe tener una progresión lógica y natural, uniendo ideas y oraciones sin que suenen entrecortadas o aisladas.`
+    identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.\n**Narrative Voice:** Fluida y conectada. Aunque seas un perro, tu narración debe tener una progresión lógica y natural, uniendo ideas y oraciones sin que suenen entrecortadas o aisladas.\n**Literary Style:** CRÍTICO: Escribe de tal modo que un niño de 10 años lo pueda entender perfectamente. Usa un lenguaje sencillo, divertido, con analogías fáciles de comprender y evita la jerga técnica complicada.`
   },
   {
     id: 'erick_betancourt',
@@ -1469,6 +1469,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Busca todas las noticias recientes relacionadas con exoplanetas, historias sobre planes de viaje a exoplanetas y estimados sobre fauna y flora de exoplanetas basados en su tipo de estrella. Genera 15 historias/noticias sobre esto.`;
     } else if (category === 'ai_exoplanets_creation') {
       categoryPrompt = `Crea 15 breves sinopsis sobre historias generadas por IA con temas de: Viajes a exoplanetas, Predicciones de Flora y Fauna en Exoplanetas, así como predicciones sobre climas de estos exoplanetas.`;
+    } else if (category === 'biographies') {
+      categoryPrompt = `Crea 15 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -2463,6 +2465,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
     { id: 'ai_galactic', label: 'Misterios Galácticos', icon: <Dna size={14} />, exclusive: 'erickberto' },
     { id: 'exoplanetas', label: 'Exoplanetas', icon: <Telescope size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
     { id: 'ai_exoplanets_creation', label: 'Creación IA - Exoplanetas', icon: <Sparkles size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
+    { id: 'biographies', label: 'Biografías Famosas', icon: <BookOpen size={14} />, exclusive: ['chunkyberto', 'luna', 'erick_betancourt', 'erickberto'] },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {

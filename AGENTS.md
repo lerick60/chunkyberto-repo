@@ -12,3 +12,8 @@ When generating or modifying the video prompts functionality:
 1. The "Sintetizar Película Completa" button must remain enabled even if the video generation model is not available (e.g., in the "Gratis" tier).
 2. If a scene only has a static image (no video), the synthesis process must display the static image for an average of 10 seconds (or the duration of the TTS audio, whichever is longer).
 3. The synthesis process must overlay the narration text as subtitles at the bottom of the video, applying the selected motion and transition effects to the static images.
+
+# Biographies Category Rules
+1. The "Biografías Famosas" (biographies) category is available for all main personas (Chunkyberto, Luna, Erick Betancourt, and Erickberto).
+2. This category must strictly generate narratives about biographies of scientists, famous people, and famous politicians (both living and deceased).
+3. The generated biography must strictly reflect the unique literary style, personality, and point of view of the currently selected persona.
