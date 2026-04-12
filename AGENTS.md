@@ -20,3 +20,9 @@ When generating or modifying the video prompts functionality:
 
 # Narrative Hook Rules
 1. Short Narratives Hook: All narratives shorter than 10000 characters generated from internet seeds or user ideas MUST start with a masterful hook. This hook must not be a cheap trick, but promise intrigue, entertainment, and give the reader a real sense of the pleasures to expect. It must awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.
+2. Short Narrative Architecture: Beyond the hook, narratives under 10000 characters must sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows:
+   - Unity of impression and single effect (constant tension, no filler).
+   - Focused structure (single main conflict, few characters, single setting).
+   - Inescapable central conflict (clear goal and obstacle).
+   - Memorable climax and ending (twist, epiphany, or open ending).
+   - Every scene must earn its place (relentless condensation, cause-and-effect logic).
