@@ -1675,6 +1675,7 @@ RULES:
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
+${maxLength < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the narrative (immediately after the prefix) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
       })) as any;
@@ -1853,6 +1854,7 @@ RULES:
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
+${charLimit < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the narrative (immediately after the prefix) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { 
           tools: [{ googleSearch: {} }], 
