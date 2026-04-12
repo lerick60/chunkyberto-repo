@@ -1634,7 +1634,7 @@ ${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick 
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
   3. Body of the story advance (Teaser/Preview).
   4. The story title in bold: "**${trend.title}**".
-  5. Body of the remaining narration (Main Story).
+  5. Body of the remaining narration (Main Story). The VERY FIRST sentences of this main story MUST be the MASTERFUL HOOK.
 - CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
@@ -1644,10 +1644,21 @@ ${activePersona.introductionPrefix}
 [Contenido del avance aquí...]
 
 **${trend.title}**
-[Contenido de la narración restante aquí...]
+[MASTERFUL HOOK goes here, followed by the rest of the story...]
 `;
       } else {
-        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.";
+        forensicModifiers += `
+- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.
+- MANDATORY HIERARCHY:
+  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
+  2. The story title in bold: "**${trend.title}**".
+  3. Body of the narration. The VERY FIRST sentences of this narration MUST be the MASTERFUL HOOK.
+- RESPONSE TEMPLATE:
+${activePersona.introductionPrefix}
+
+**${trend.title}**
+[MASTERFUL HOOK goes here, followed by the rest of the story...]
+`;
       }
 
       let maxLength = 4300;
@@ -1675,7 +1686,7 @@ RULES:
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
-${maxLength < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the narrative (immediately after the prefix) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
+${maxLength < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the main narrative (immediately after the story title) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
 ${maxLength < 10000 ? '9. SHORT NARRATIVE ARCHITECTURE (CRITICAL): Sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows: 1) Unity of impression and single effect (constant tension, no filler). 2) Focused structure (single main conflict, few characters, single setting). 3) Inescapable central conflict (clear goal and obstacle). 4) Memorable climax and ending (twist, epiphany, or open ending). 5) Every scene must earn its place (relentless condensation, cause-and-effect logic).' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { systemInstruction: `You are ${activePersona.name}.` }
@@ -1809,7 +1820,7 @@ IDIOMA: ${lang}`;
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
   3. Body of the story advance (Teaser/Preview).
   4. The story title in bold (e.g., "**Título**").
-  5. Body of the remaining narration (Main Story).
+  5. Body of the remaining narration (Main Story). The VERY FIRST sentences of this main story MUST be the MASTERFUL HOOK.
 - CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
@@ -1819,10 +1830,21 @@ ${activePersona.introductionPrefix}
 [Contenido del avance aquí...]
 
 **[Título]**
-[Contenido de la narración restante aquí...]
+[MASTERFUL HOOK goes here, followed by the rest of the story...]
 `;
       } else {
-        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.";
+        forensicModifiers += `
+- ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.
+- MANDATORY HIERARCHY:
+  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix}").
+  2. The story title in bold (e.g., "**Título**").
+  3. Body of the narration. The VERY FIRST sentences of this narration MUST be the MASTERFUL HOOK.
+- RESPONSE TEMPLATE:
+${activePersona.introductionPrefix}
+
+**[Título]**
+[MASTERFUL HOOK goes here, followed by the rest of the story...]
+`;
       }
 
       const charLimit = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 20000;
@@ -1855,7 +1877,7 @@ RULES:
 5. TARGET LANGUAGE: ${languageText}.
 6. NO ASTERISKS (CRITICAL): Do NOT use asterisks (*) for emphasis or bolding EXCEPT for the story title${globalForensicToggles.advance ? ' and the phrase "**Avance de la Historia**"' : ''}. Use line breaks or extra spacing to highlight other important sentences.
 ${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
-${charLimit < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the narrative (immediately after the prefix) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
+${charLimit < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the main narrative (immediately after the story title) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
 ${charLimit < 10000 ? '9. SHORT NARRATIVE ARCHITECTURE (CRITICAL): Sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows: 1) Unity of impression and single effect (constant tension, no filler). 2) Focused structure (single main conflict, few characters, single setting). 3) Inescapable central conflict (clear goal and obstacle). 4) Memorable climax and ending (twist, epiphany, or open ending). 5) Every scene must earn its place (relentless condensation, cause-and-effect logic).' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
         config: { 
