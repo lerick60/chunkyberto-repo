@@ -234,7 +234,8 @@ const MODELS = {
 const AVAILABLE_VOICES: VoiceOption[] = [
   { id: 'Charon', name: 'Charon', gender: 'Masculina', accent: 'Profundo / Clásico', description: 'Voz profunda con matices narrativos pesados.' },
   { id: 'Kore', name: 'Kore', gender: 'Femenina', accent: 'Latino / Dulce', description: 'Voz suave, ideal para historias infantiles o tranquilas.' },
-  { id: 'Zephyr', name: 'Zephyr', gender: 'Femenina', accent: 'Neutro / Profesional', description: 'Voz vibrante y enérgica, perfecta para noticias y guías.' },
+  { id: 'Zephyr', name: 'Zephyr', gender: 'Femenina', accent: 'Inglés / Profesional', description: 'Voz vibrante y enérgica con acento inglés, perfecta para noticias y guías.' },
+  { id: 'Aoede', name: 'Aoede', gender: 'Femenina', accent: 'Inglés / Británico', description: 'Voz sofisticada y elegante con acento inglés, ideal para Luna.' },
   { id: 'Puck', name: 'Puck', gender: 'Masculina', accent: 'Juvenil / Urbano', description: 'Voz rápida y jovial para contenidos dinámicos.' },
   { id: 'Fenrir', name: 'Fenrir', gender: 'Masculina', accent: 'Sobrio / Técnico', description: 'Voz autoritaria, excelente para documentales y tecnología.' },
 ];
@@ -1984,6 +1985,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 
       const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
+CRITICAL: Ignore empty lines or paragraphs that do not contain narrative text. Do NOT generate scenes for empty lines.
 ${visualAnchorContext}${characterContext}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
@@ -2010,6 +2012,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
       const frames: StoryboardFrame[] = [];
       for (let i = 0; i < lines.length; i++) {
         let [rawIdea, rawPrompt, rawNarration] = lines[i].split('|||').map((s: string) => s.trim());
+        if (!rawIdea || !rawPrompt || !rawNarration) continue; // Skip empty scenes
         frames.push({ id: `frame-${i}-${Date.now()}`, imageUrl: '', prompt: rawPrompt, originalIdea: rawIdea, narrationText: rawNarration, isGeneratingImage: true, dimension: videoDim, style: visualStyle });
       }
       setSelectedTrend(prev => (prev ? { ...prev, storyboard: [...frames] } : null));
@@ -2648,7 +2651,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
                       </>
                     ) : (
                       <div className="flex flex-col items-end gap-2">
-                        <button onClick={handleCombineAllVideos} disabled={isCombiningVideos} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
+                        <button onClick={handleCombineAllVideos} disabled={isCombiningVideos || selectedTrend.storyboard.some(f => !f.narrationText || f.narrationText.trim() === '')} className={`flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase text-sm tracking-widest rounded-full shadow-2xl hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-30`}><Film size={20} /> SINTETIZAR PELÍCULA COMPLETA</button>
                         {selectedTrend.storyboard.some(f => !f.imageUrl && !f.videoUrl) && !isCombiningVideos && (
                           <span className="text-xs text-amber-500 font-medium">⚠️ Faltan imágenes en algunas escenas. Solo se incluirán las escenas listas.</span>
                         )}
@@ -2681,6 +2684,11 @@ LENGUAJE: ${getLanguageName(language)}.`;
                        {selectedTrend.thumbnailUrl ? 'RE-GENERAR MINIATURA' : 'GENERAR MINIATURA PRO'}
                      </button>
                    </div>
+                   {selectedTrend.storyboard?.some(f => !f.narrationText || f.narrationText.trim() === '') && (
+                     <div className="mt-6 text-center">
+                       <span className="text-rose-400 font-bold text-sm tracking-wide" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>No debe haber guiones vacios, favor de corregir</span>
+                     </div>
+                   )}
                  </div>
                </div>
              </div>
