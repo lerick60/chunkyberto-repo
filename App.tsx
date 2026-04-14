@@ -749,20 +749,9 @@ export const YouTubeUploadModal: React.FC<{
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'preparing' | 'generating' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await fetch('/api/youtube/status');
-        const data = await res.json();
-        setIsConnected(data.connected);
-      } catch (e) {
-        console.error("Error checking YT status:", e);
-      }
-    };
     if (isOpen) {
-      checkStatus();
       setYtTitle(trend?.title || "");
       setUploadStatus('idle');
       setUploadProgress(0);
@@ -846,9 +835,9 @@ export const YouTubeUploadModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-6 overflow-y-auto">
-      <div className="bg-slate-900 border-2 border-red-500/30 rounded-[3rem] w-full max-w-2xl overflow-hidden shadow-[0_0_50px_-12px_rgba(239,68,68,0.4)] animate-in zoom-in-95 duration-300">
-        <div className="bg-red-600/10 px-8 py-6 flex items-center justify-between border-b border-red-500/20">
+    <div className="fixed inset-0 z-[300] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-6">
+      <div className="bg-slate-900 border-2 border-red-500/30 rounded-[3rem] w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden shadow-[0_0_50px_-12px_rgba(239,68,68,0.4)] animate-in zoom-in-95 duration-300">
+        <div className="bg-red-600/10 px-8 py-6 flex items-center justify-between border-b border-red-500/20 shrink-0">
           <div className="flex items-center gap-3 text-red-500 font-black uppercase text-xs tracking-widest">
             <Youtube size={24} /> YouTube Publisher Pro
           </div>
@@ -857,7 +846,7 @@ export const YouTubeUploadModal: React.FC<{
           </button>
         </div>
 
-        <div className="p-10 space-y-8">
+        <div className="p-10 space-y-8 overflow-y-auto">
           {uploadStatus === 'idle' || uploadStatus === 'generating' ? (
             <>
               <div className="space-y-6">
@@ -919,7 +908,7 @@ export const YouTubeUploadModal: React.FC<{
                 {uploadStatus === 'generating' ? <Loader2 className="animate-spin" size={20} /> : <UploadCloud size={20} />} 
                 {uploadStatus === 'generating' ? 'GENERANDO METADATOS...' : 'PUBLICAR AHORA'}
               </button>
-              {!isConnected && (
+              {!ytSettings?.isConnected && (
                 <p className="text-center text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
                   ⚠️ YouTube API no conectada. Ve a Ajustes.
                 </p>
@@ -1020,9 +1009,9 @@ export const SettingsModal: React.FC<{
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[400] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-6 overflow-y-auto">
-      <div className="bg-slate-900 border-2 border-slate-700 rounded-[3rem] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-        <div className="px-8 py-6 border-b border-slate-800 flex items-center justify-between">
+    <div className="fixed inset-0 z-[400] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-6">
+      <div className="bg-slate-900 border-2 border-slate-700 rounded-[3rem] w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="px-8 py-6 border-b border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 text-slate-100 font-black uppercase text-xs tracking-widest">
             <Settings size={20} /> Ajustes del Studio
           </div>
@@ -1031,7 +1020,7 @@ export const SettingsModal: React.FC<{
           </button>
         </div>
 
-        <div className="p-10 space-y-8">
+        <div className="p-10 space-y-8 overflow-y-auto">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
