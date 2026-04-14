@@ -729,14 +729,19 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
   );
 };
 
+export interface PersonaYtSettings {
+  url: string;
+  isConnected: boolean;
+}
+
 export const YouTubeUploadModal: React.FC<{ 
   isOpen: boolean; 
   onClose: () => void; 
   trend: Trend | null; 
   videoUrl: string | null;
   activePersona: Persona;
-  ytChannelUrl: string;
-}> = ({ isOpen, onClose, trend, videoUrl, activePersona, ytChannelUrl }) => {
+  ytSettings: PersonaYtSettings;
+}> = ({ isOpen, onClose, trend, videoUrl, activePersona, ytSettings }) => {
   const [ytTitle, setYtTitle] = useState(trend?.title || "");
   const [ytDescription, setYtDescription] = useState("");
   const [ytTags, setYtTags] = useState("");
@@ -954,9 +959,9 @@ export const YouTubeUploadModal: React.FC<{
                 <p className="text-slate-400 text-sm font-medium">Tu obra maestra ya está en la cola de procesamiento de YouTube.</p>
               </div>
               <div className="flex flex-col gap-3 pt-6">
-                {ytChannelUrl && (
+                {ytSettings?.url && (
                   <a 
-                    href={ytChannelUrl} 
+                    href={ytSettings.url} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="w-full py-4 bg-red-600 text-white rounded-xl font-black uppercase text-xs tracking-widest hover:bg-red-500 transition-all flex items-center justify-center gap-2"
@@ -1006,14 +1011,12 @@ export const YouTubeUploadModal: React.FC<{
 export const SettingsModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  ytChannelUrl: string;
-  onYtChannelUrlChange: (url: string) => void;
+  ytSettings: Record<string, PersonaYtSettings>;
+  onUpdateYtSettings: (personaId: string, settings: PersonaYtSettings) => void;
   activePersona: Persona;
-  isYtConnected: boolean;
-  onConnectYt: () => void;
   modelSettings: ModelSettings;
   setModelSettings: (settings: ModelSettings) => void;
-}> = ({ isOpen, onClose, ytChannelUrl, onYtChannelUrlChange, activePersona, isYtConnected, onConnectYt, modelSettings, setModelSettings }) => {
+}> = ({ isOpen, onClose, ytSettings, onUpdateYtSettings, activePersona, modelSettings, setModelSettings }) => {
   if (!isOpen) return null;
 
   return (
@@ -1093,50 +1096,7 @@ export const SettingsModal: React.FC<{
             </p>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-red-500 font-black text-[10px] uppercase tracking-widest">
-                <Youtube size={16} /> YouTube API Sync
-              </div>
-              <div className={`flex items-center gap-1 text-[8px] font-black uppercase tracking-widest ${isYtConnected ? 'text-emerald-500' : 'text-slate-500'}`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${isYtConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`}></div>
-                {isYtConnected ? 'Conectado' : 'Desconectado'}
-              </div>
-            </div>
-            
-            {!isYtConnected ? (
-              <button 
-                onClick={onConnectYt}
-                className="w-full py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-3 hover:bg-red-500 transition-all active:scale-95 shadow-lg"
-              >
-                <Key size={16} /> CONECTAR CON YOUTUBE
-              </button>
-            ) : (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3">
-                <Check className="text-emerald-500" size={20} />
-                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Tu cuenta de YouTube está vinculada correctamente.</p>
-              </div>
-            )}
 
-            <div className="space-y-2 pt-4">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">URL de tu Canal (Opcional)</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500">
-                  <LinkIcon size={16} />
-                </div>
-                <input 
-                  type="url" 
-                  placeholder="https://youtube.com/@mi_canal"
-                  value={ytChannelUrl}
-                  onChange={(e) => onYtChannelUrlChange(e.target.value)}
-                  className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all placeholder:text-slate-700"
-                />
-              </div>
-            </div>
-            <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">Tip: La URL del canal se usa para los enlaces rápidos en la interfaz.</p>
-            </div>
-          </div>
 
           <div className="pt-4">
             <button 
@@ -1192,7 +1152,6 @@ export const App: React.FC = () => {
   const [combinedVideoUrl, setCombinedVideoUrl] = useState<string | null>(null);
   const [combinedVideoMimeType, setCombinedVideoMimeType] = useState<string>('video/webm');
   const [isZipping, setIsZipping] = useState(false);
-  const [isYtConnected, setIsYtConnected] = useState(false);
   const [userIdea, setUserIdea] = useState("");
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false);
   const [latestHybridTrend, setLatestHybridTrend] = useState<Trend | null>(null);
@@ -1204,7 +1163,10 @@ export const App: React.FC = () => {
   const [narrativeLength, setNarrativeLength] = useState<NarrativeLength>('short');
   const [globalForensicToggles, setGlobalForensicToggles] = useState({ analysis: false, interview: false, advance: false });
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
-  const [ytChannelUrl, setYtChannelUrl] = useState(() => localStorage.getItem('chunky_yt_url') || "");
+  const [ytSettings, setYtSettings] = useState<Record<string, PersonaYtSettings>>(() => {
+    const saved = localStorage.getItem('chunky_yt_settings');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [drafts, setDrafts] = useState<Draft[]>(() => {
     const saved = localStorage.getItem('chunky_drafts');
     return saved ? JSON.parse(saved) : [];
@@ -1262,40 +1224,11 @@ export const App: React.FC = () => {
 
   // Persistencia de canal de youtube
   useEffect(() => {
-    localStorage.setItem('chunky_yt_url', ytChannelUrl);
-  }, [ytChannelUrl]);
+    localStorage.setItem('chunky_yt_settings', JSON.stringify(ytSettings));
+  }, [ytSettings]);
 
-  useEffect(() => {
-    const checkYtStatus = async () => {
-      try {
-        const res = await fetch('/api/youtube/status');
-        const data = await res.json();
-        setIsYtConnected(data.connected);
-      } catch (e) {
-        console.error("Error checking YT status:", e);
-      }
-    };
-    checkYtStatus();
-  }, []);
-
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'YOUTUBE_AUTH_SUCCESS') {
-        setIsYtConnected(true);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
-  const handleConnectYouTube = async () => {
-    try {
-      const res = await fetch('/api/youtube/auth-url');
-      const { url } = await res.json();
-      window.open(url, 'youtube_auth', 'width=600,height=700');
-    } catch (e) {
-      console.error("Error connecting YouTube:", e);
-    }
+  const handleUpdateYtSettings = (personaId: string, settings: PersonaYtSettings) => {
+    setYtSettings(prev => ({ ...prev, [personaId]: settings }));
   };
 
   // Sync voice with persona change
@@ -2580,18 +2513,33 @@ LENGUAJE: ${getLanguageName(language)}.`;
             <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest">Economical Mode Active</span>
             <span className="text-[7px] font-black text-slate-500 uppercase">V47.2.1</span>
           </div>
-          {ytChannelUrl && (
+          {ytSettings[activePersona.id]?.url && (
             <a 
-              href={ytChannelUrl} 
+              href={ytSettings[activePersona.id].url} 
               target="_blank" 
               rel="noopener noreferrer" 
-              title="Mi Canal de YouTube"
+              title={`Canal de YouTube de ${activePersona.name}`}
               className="p-2.5 rounded-xl bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600/20 transition-all flex items-center gap-2"
             >
               <Youtube size={18} />
               <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Mi Canal</span>
             </a>
           )}
+          <div className="relative hidden sm:block">
+            <select 
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="appearance-none p-2.5 pl-9 pr-4 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-white transition-all font-black text-[9px] uppercase tracking-tighter cursor-pointer outline-none"
+              title="Idioma Global"
+            >
+              <option value="es">ESPAÑOL</option>
+              <option value="en">ENGLISH</option>
+              <option value="fr">FRANÇAIS</option>
+            </select>
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+              <Globe2 size={14} />
+            </div>
+          </div>
           <button 
             onClick={() => setIsDraftsModalOpen(true)}
             className="p-2.5 rounded-xl bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-600/20 transition-all flex items-center gap-2"
@@ -2620,18 +2568,16 @@ LENGUAJE: ${getLanguageName(language)}.`;
           trend={selectedTrend}
           videoUrl={combinedVideoUrl}
           activePersona={activePersona}
-          ytChannelUrl={ytChannelUrl}
+          ytSettings={ytSettings[activePersona.id] || { url: '', isConnected: false }}
         />
       )}
 
       <SettingsModal 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        ytChannelUrl={ytChannelUrl}
-        onYtChannelUrlChange={setYtChannelUrl}
+        ytSettings={ytSettings}
+        onUpdateYtSettings={handleUpdateYtSettings}
         activePersona={activePersona}
-        isYtConnected={isYtConnected}
-        onConnectYt={handleConnectYouTube}
         modelSettings={modelSettings}
         setModelSettings={setModelSettings}
       />

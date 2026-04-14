@@ -18,6 +18,11 @@ When generating or modifying the video prompts functionality:
 2. This category must strictly generate narratives about biographies of scientists, famous people, and famous politicians (both living and deceased).
 3. The generated biography must strictly reflect the unique literary style, personality, and point of view of the currently selected persona.
 
+# YouTube Integration Rules
+1. Each persona has its own independent YouTube channel configuration.
+2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
+3. When uploading a video or viewing the channel, the application must use the specific YouTube configuration of the currently active persona.
+
 # Narrative Hook Rules
 1. Short Narratives Hook: All narratives shorter than 10000 characters generated from internet seeds or user ideas MUST start with a masterful hook. This hook must not be a cheap trick, but promise intrigue, entertainment, and give the reader a real sense of the pleasures to expect. It must awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.
 2. Short Narrative Architecture: Beyond the hook, narratives under 10000 characters must sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows:
