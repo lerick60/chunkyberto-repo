@@ -1096,6 +1096,77 @@ export const SettingsModal: React.FC<{
             </p>
           </div>
 
+          {/* YouTube Settings */}
+          <div className="pt-4 border-t-2 border-slate-800">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-red-600/20 flex items-center justify-center text-red-500">
+                <Youtube size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-white">Canales de YouTube</h3>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Configuración por Persona</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {PERSONAS.map(p => {
+                const pSettings = ytSettings[p.id] || { url: '', isConnected: false };
+                return (
+                  <div key={p.id} className="p-4 bg-slate-950/50 border border-slate-800 rounded-2xl space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className={`flex items-center gap-2 text-${p.color} font-black text-xs uppercase tracking-widest`}>
+                        {p.icon} {p.name}
+                      </div>
+                      <div className={`flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest ${pSettings.isConnected ? 'text-emerald-500' : 'text-slate-500'}`}>
+                        <div className={`w-2 h-2 rounded-full ${pSettings.isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'}`}></div>
+                        {pSettings.isConnected ? 'Conectado' : 'Desconectado'}
+                      </div>
+                    </div>
+                    
+                    {!pSettings.isConnected ? (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="relative flex-1">
+                          <input 
+                            type="url" 
+                            placeholder="https://youtube.com/@mi_canal"
+                            value={pSettings.url}
+                            onChange={(e) => onUpdateYtSettings(p.id, { ...pSettings, url: e.target.value })}
+                            className="w-full bg-slate-900 border-2 border-slate-800 rounded-xl pl-10 pr-4 py-3 font-bold text-white focus:border-red-500 outline-none transition-all placeholder:text-slate-700 text-xs"
+                          />
+                          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500"><LinkIcon size={14} /></div>
+                        </div>
+                        <button 
+                          onClick={() => onUpdateYtSettings(p.id, { ...pSettings, isConnected: true })} 
+                          disabled={!pSettings.url} 
+                          className="px-6 py-3 bg-red-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-red-500 transition-all disabled:opacity-50 disabled:hover:bg-red-600 whitespace-nowrap flex items-center justify-center gap-2"
+                        >
+                          <Youtube size={14} /> Conectar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0"><CheckCircle size={16} /></div>
+                          <div className="truncate">
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">API Sincronizada</p>
+                            <p className="text-xs text-slate-400 truncate font-medium">{pSettings.url}</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => onUpdateYtSettings(p.id, { ...pSettings, isConnected: false })} 
+                          className="p-2 text-slate-500 hover:text-rose-500 transition-colors shrink-0"
+                          title="Desconectar"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
 
 
           <div className="pt-4">
