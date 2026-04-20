@@ -31,3 +31,6 @@ When generating or modifying the video prompts functionality:
    - Inescapable central conflict (clear goal and obstacle).
    - Memorable climax and ending (twist, epiphany, or open ending).
    - Every scene must earn its place (relentless condensation, cause-and-effect logic).
+
+# Generative Models Rules
+1. The "Gratis" (free) mode must always include the latest free models. Currently: `veo-3.1-lite-generate-preview` for video logic and `gemini-3.1-flash-tts-preview` for TTS.

@@ -360,8 +360,8 @@ const MODEL_TIERS = {
     models: {
       text: 'gemini-3-flash-preview',
       image: 'gemini-2.5-flash-image',
-      video: '',
-      tts: 'gemini-2.5-flash-preview-tts'
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   economical: {
@@ -371,7 +371,7 @@ const MODEL_TIERS = {
       text: 'gemini-3.1-flash-lite-preview',
       image: 'gemini-2.5-flash-image',
       video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-2.5-flash-preview-tts'
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   normal: {
@@ -381,7 +381,7 @@ const MODEL_TIERS = {
       text: 'gemini-3-flash-preview',
       image: 'gemini-2.5-flash-image',
       video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-2.5-flash-preview-tts'
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   high_quality: {
@@ -391,7 +391,7 @@ const MODEL_TIERS = {
       text: 'gemini-3.1-pro-preview',
       image: 'gemini-3.1-flash-image-preview',
       video: 'veo-3.1-generate-preview',
-      tts: 'gemini-2.5-flash-preview-tts'
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   }
 };
