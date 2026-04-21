@@ -28,20 +28,24 @@ async function startServer() {
 
   // API Routes
   app.get("/api/youtube/auth-url", (req, res) => {
+    const { personaId } = req.query;
+    if (!personaId) return res.status(400).json({ error: "Missing personaId" });
+
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
       scope: SCOPES,
       prompt: "consent",
+      state: personaId.toString(),
     });
     res.json({ url: authUrl });
   });
 
   app.get("/api/youtube/callback", async (req, res) => {
-    const { code } = req.query;
+    const { code, state: personaId } = req.query;
     try {
       const { tokens } = await oauth2Client.getToken(code);
-      // Store tokens in a secure cookie
-      res.cookie("yt_tokens", JSON.stringify(tokens), {
+      // Store tokens in a secure cookie specific to the persona
+      res.cookie(`yt_tokens_${personaId}`, JSON.stringify(tokens), {
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -50,14 +54,15 @@ async function startServer() {
       
       res.send(`
         <html>
-          <body style="background: #020617; color: white; font-family: sans-serif; display: flex; items-center; justify-content: center; height: 100vh; margin: 0;">
+          <body style="background: #020617; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
             <div style="text-align: center;">
               <h1 style="color: #ef4444;">YouTube Conectado</h1>
-              <p>Autenticación exitosa. Esta ventana se cerrará automáticamente.</p>
+              <p>Autenticación exitosa para la persona: <strong>${personaId}</strong></p>
+              <p>Esta ventana se cerrará automáticamente.</p>
               <script>
                 if (window.opener) {
-                  window.opener.postMessage({ type: 'YOUTUBE_AUTH_SUCCESS' }, '*');
-                  setTimeout(() => window.close(), 1000);
+                  window.opener.postMessage({ type: 'YOUTUBE_AUTH_SUCCESS', personaId: '${personaId}' }, '*');
+                  setTimeout(() => window.close(), 2000);
                 } else {
                   window.location.href = '/';
                 }
@@ -68,19 +73,24 @@ async function startServer() {
       `);
     } catch (error) {
       console.error("Error exchanging code for tokens:", error);
-      res.status(500).send("Authentication failed");
+      res.status(500).send("Authentication failed: " + error.message);
     }
   });
 
   app.get("/api/youtube/status", (req, res) => {
-    const tokens = req.cookies.yt_tokens;
+    const { personaId } = req.query;
+    if (!personaId) return res.status(400).json({ error: "Missing personaId" });
+    const tokens = req.cookies[`yt_tokens_${personaId}`];
     res.json({ connected: !!tokens });
   });
 
   app.post("/api/youtube/upload", upload.single("video"), async (req, res) => {
-    const tokens = req.cookies.yt_tokens;
+    const { personaId } = req.body;
+    if (!personaId) return res.status(400).json({ error: "Missing personaId" });
+
+    const tokens = req.cookies[`yt_tokens_${personaId}`];
     if (!tokens) {
-      return res.status(401).json({ error: "Not authenticated with YouTube" });
+      return res.status(401).json({ error: `Not authenticated with YouTube for persona ${personaId}` });
     }
 
     const { title, description, tags, privacy } = req.body;
@@ -90,6 +100,7 @@ async function startServer() {
       return res.status(400).json({ error: "No video file provided" });
     }
 
+    let tempPath = null;
     try {
       const auth = new google.auth.OAuth2(
         process.env.YOUTUBE_CLIENT_ID,
@@ -99,9 +110,11 @@ async function startServer() {
 
       const youtube = google.youtube({ version: "v3", auth });
 
-      // Write the buffer to a temp file for reliable streaming to YouTube API
-      const tempPath = path.join(__dirname, `temp_${Date.now()}.webm`);
+      // Write the buffer to a temp file for reliable streaming
+      tempPath = path.join(__dirname, `temp_upload_${personaId}_${Date.now()}.webm`);
       fs.writeFileSync(tempPath, videoFile.buffer);
+
+      console.log(`Starting real YouTube upload for persona ${personaId}: ${title}`);
 
       const uploadRes = await youtube.videos.insert({
         part: "snippet,status",
@@ -110,10 +123,11 @@ async function startServer() {
             title,
             description,
             tags: tags ? tags.split(",").map(t => t.trim()) : [],
-            categoryId: "22",
+            categoryId: "22", // People & Blogs
           },
           status: {
             privacyStatus: privacy || "private",
+            selfDeclaredMadeForKids: false,
           },
         },
         media: {
@@ -121,15 +135,17 @@ async function startServer() {
         },
       });
 
-      // Cleanup temp file
-      if (fs.existsSync(tempPath)) {
-        fs.unlinkSync(tempPath);
-      }
+      console.log(`YouTube upload successful. Video ID: ${uploadRes.data.id}`);
 
       res.json({ success: true, videoId: uploadRes.data.id });
     } catch (error) {
       console.error("YouTube Upload Error:", error);
       res.status(500).json({ error: error.message });
+    } finally {
+      // Cleanup temp file
+      if (tempPath && fs.existsSync(tempPath)) {
+        try { fs.unlinkSync(tempPath); } catch(e) { console.error("Temp file cleanup failed:", e); }
+      }
     }
   });
 

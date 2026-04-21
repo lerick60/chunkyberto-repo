@@ -809,6 +809,7 @@ export const YouTubeUploadModal: React.FC<{
       formData.append("description", ytDescription);
       formData.append("tags", ytTags);
       formData.append("privacy", privacy);
+      formData.append("personaId", activePersona.id);
 
       setUploadStatus('uploading');
       setUploadProgress(10);
@@ -1117,7 +1118,7 @@ export const SettingsModal: React.FC<{
                         <div className="relative flex-1">
                           <input 
                             type="url" 
-                            placeholder="https://youtube.com/@mi_canal"
+                            placeholder="Enlace del Canal (Informativo)"
                             value={pSettings.url}
                             onChange={(e) => onUpdateYtSettings(p.id, { ...pSettings, url: e.target.value })}
                             className="w-full bg-slate-900 border-2 border-slate-800 rounded-xl pl-10 pr-4 py-3 font-bold text-white focus:border-red-500 outline-none transition-all placeholder:text-slate-700 text-xs"
@@ -1125,11 +1126,24 @@ export const SettingsModal: React.FC<{
                           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-500"><LinkIcon size={14} /></div>
                         </div>
                         <button 
-                          onClick={() => onUpdateYtSettings(p.id, { ...pSettings, isConnected: true })} 
-                          disabled={!pSettings.url} 
-                          className="px-6 py-3 bg-red-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-red-500 transition-all disabled:opacity-50 disabled:hover:bg-red-600 whitespace-nowrap flex items-center justify-center gap-2"
+                          onClick={() => {
+                            const width = 600;
+                            const height = 700;
+                            const left = window.innerWidth / 2 - width / 2;
+                            const top = window.innerHeight / 2 - height / 2;
+                            
+                            fetch(`/api/youtube/auth-url?personaId=${p.id}`)
+                              .then(r => r.json())
+                              .then(data => {
+                                if (data.url) {
+                                  window.open(data.url, 'YouTubeAuth', `width=${width},height=${height},left=${left},top=${top}`);
+                                }
+                              })
+                              .catch(err => alert("Error al obtener URL de autenticación"));
+                          }} 
+                          className="px-6 py-3 bg-red-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-red-500 transition-all whitespace-nowrap flex items-center justify-center gap-2"
                         >
-                          <Youtube size={14} /> Conectar
+                          <Youtube size={14} /> Autenticar con Google
                         </button>
                       </div>
                     ) : (
@@ -1290,6 +1304,37 @@ export const App: React.FC = () => {
   const handleUpdateYtSettings = (personaId: string, settings: PersonaYtSettings) => {
     setYtSettings(prev => ({ ...prev, [personaId]: settings }));
   };
+
+  const checkYoutubeStatus = useCallback(async (personaId: string) => {
+    try {
+      const res = await fetch(`/api/youtube/status?personaId=${personaId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setYtSettings(prev => ({
+          ...prev,
+          [personaId]: { ...(prev[personaId] || { url: '' }), isConnected: data.connected }
+        }));
+      }
+    } catch (e) {
+      console.error("Error checking YouTube status:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'YOUTUBE_AUTH_SUCCESS' && event.data.personaId) {
+        checkYoutubeStatus(event.data.personaId);
+        showNotification(`YouTube conectado con éxito para ${PERSONAS.find(p => p.id === event.data.personaId)?.name || 'la persona'}.`, 'success');
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [checkYoutubeStatus]);
+
+  // Check initial status for all personas
+  useEffect(() => {
+    PERSONAS.forEach(p => checkYoutubeStatus(p.id));
+  }, [checkYoutubeStatus]);
 
   // Sync voice with persona change
   useEffect(() => {
