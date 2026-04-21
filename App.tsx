@@ -227,8 +227,8 @@ interface VoiceOption {
 const MODELS = {
   TEXT: 'gemini-3-flash-preview',       
   IMAGE: 'gemini-2.5-flash-image',     
-  VIDEO: 'veo-3.1-generate-preview', 
-  TTS: 'gemini-2.5-flash-preview-tts'   
+  VIDEO: 'veo-3.1-lite-generate-preview', 
+  TTS: 'gemini-3.1-flash-tts-preview'   
 };
 
 const AVAILABLE_VOICES: VoiceOption[] = [
@@ -2343,22 +2343,23 @@ LENGUAJE: ${getLanguageName(language)}.`;
       });
       recorder.start();
 
+      const startTimeOffset = ctx.currentTime;
+      let globalAudioTime = startTimeOffset;
+
       for (let i = 0; i < readyFrames.length; i++) {
         const frame = readyFrames[i];
         const audioBuffer = audioBuffers[i];
         const sourceElement = mediaElements[i];
         
         // REGLA DE SÍNTESIS: Priorizar video generado si existe.
-        // Si es video, la duración inicial es el audio + 1s o 4s, pero se ajusta a la duración real del video si es mayor.
-        // Si es imagen estática, usar 10 segundos (o la duración del audio + 1s si es mayor).
-        let segmentDuration = audioBuffer ? audioBuffer.duration + 1.0 : 4.0;
+        // Si es video, la duración es el audio (con margen mínimo) o la duración del video.
+        // Si es imagen estática, mínimo 10s (Regla 3 de AGENTS.md) o duración del audio.
+        let segmentDuration = audioBuffer ? audioBuffer.duration + 0.2 : 4.0;
         
         if (sourceElement instanceof HTMLVideoElement) {
           const video = sourceElement as HTMLVideoElement;
-          // Asegurar duración válida
           let vDur = video.duration;
           if (isNaN(vDur) || vDur === Infinity) vDur = 6.0;
-          
           segmentDuration = Math.max(segmentDuration, vDur);
           video.currentTime = 0;
           try {
@@ -2367,31 +2368,28 @@ LENGUAJE: ${getLanguageName(language)}.`;
             console.warn(`No se pudo reproducir el video de la escena ${i+1}:`, e);
           }
         } else {
-          // Regla para imágenes estáticas (mínimo 10s según AGENTS.md)
-          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 1.0) : 10.0;
+          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 0.2) : 10.0;
         }
 
-        const startTime = Date.now();
+        const sceneStartTime = globalAudioTime;
 
         if (audioBuffer) {
           const audioSource = ctx.createBufferSource(); 
           audioSource.buffer = audioBuffer; 
           audioSource.connect(dest); 
-          audioSource.start();
+          audioSource.start(sceneStartTime); 
         }
 
         let lastProgressUpdate = 0;
-        while (Date.now() - startTime < segmentDuration * 1000) {
-          const now = Date.now();
-          const elapsed = (now - startTime) / 1000;
-          const progress = Math.min(1, elapsed / segmentDuration);
+        while (ctx.currentTime < sceneStartTime + segmentDuration) {
+          const nowMs = Date.now();
+          const elapsed = ctx.currentTime - sceneStartTime;
+          const progress = Math.min(1, Math.max(0, elapsed / segmentDuration));
           
-          // Update total progress every 200ms
-          // Recording phase is from 30% to 100%
-          if (now - lastProgressUpdate > 200) {
+          if (nowMs - lastProgressUpdate > 200) {
             const totalProgress = 30 + Math.round(((i + progress) / readyFrames.length) * 70);
             setCombineProgress(Math.min(99, totalProgress));
-            lastProgressUpdate = now;
+            lastProgressUpdate = nowMs;
           }
           
           canvasCtx.fillStyle = '#000'; 
@@ -2485,7 +2483,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
 
           await new Promise(r => setTimeout(r, 33)); // ~30fps, works in background
         }
-        // No need to call audioSource.stop() as it stops when buffer ends
+        globalAudioTime += segmentDuration;
       }
       
       // Wait a small bit to ensure the last audio bits are captured by the recorder
