@@ -2126,13 +2126,14 @@ LENGUAJE: ${getLanguageName(language)}.`;
     console.log(`Iniciando síntesis de video para ${readyFrames.length} escenas...`);
     let silentOsc: OscillatorNode | null = null;
     let silentGain: GainNode | null = null;
+    const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
+    const audioBuffers: (AudioBuffer | null)[] = [];
+    
     try {
       const ctx = await ensureAudioContext();
       console.log("AudioContext listo.");
       
       // Pre-fetch all TTS audio buffers and media to avoid delays during recording
-      const audioBuffers: (AudioBuffer | null)[] = [];
-      const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
       
       for (let i = 0; i < readyFrames.length; i++) {
         const baseProgress = (i / readyFrames.length) * 30;
@@ -2147,37 +2148,52 @@ LENGUAJE: ${getLanguageName(language)}.`;
         
         if (hasVideo) { 
           console.log(`Composición: Priorizando VIDEO para escena ${i+1}`);
-          sourceElement = document.createElement('video'); 
-          sourceElement.src = frame.videoUrl as string; 
-          sourceElement.muted = true; 
-          sourceElement.playsInline = true; 
-          sourceElement.crossOrigin = "anonymous";
-          sourceElement.loop = true; // Asegurar que el video no se detenga si es más corto que la narración
-          const video = sourceElement as HTMLVideoElement;
+          const vid = document.createElement('video');
+          vid.style.display = 'none';
+          document.body.appendChild(vid);
+          vid.src = frame.videoUrl as string; 
+          vid.muted = true; 
+          vid.playsInline = true; 
+          vid.crossOrigin = "anonymous";
+          vid.loop = true;
+          sourceElement = vid;
+          
           await Promise.race([
             new Promise((resolve, reject) => {
-              if (video.readyState >= 3) { resolve(null); return; }
-              const handler = () => {
-                console.log(`Video de escena ${i+1} cargado (ReadyState: ${video.readyState})`);
-                video.removeEventListener('canplaythrough', handler);
-                video.removeEventListener('canplay', handler);
-                video.removeEventListener('loadeddata', handler);
-                resolve(null);
+              const checkReady = () => {
+                if (vid.readyState >= 2 && !isNaN(vid.duration) && vid.videoWidth > 0) {
+                  console.log(`Video listo: Escena ${i+1}, Duración: ${vid.duration}s, Dim: ${vid.videoWidth}x${vid.videoHeight}`);
+                  resolve(null);
+                  return true;
+                }
+                return false;
               };
-              video.addEventListener('canplaythrough', handler);
-              video.addEventListener('canplay', handler);
-              video.addEventListener('loadeddata', handler);
-              video.onerror = () => reject(new Error(`Error cargando video de escena ${i+1}`));
-              video.load();
+              if (checkReady()) return;
+
+              const handler = () => {
+                if (checkReady()) {
+                  vid.removeEventListener('canplay', handler);
+                  vid.removeEventListener('loadedmetadata', handler);
+                  vid.removeEventListener('loadeddata', handler);
+                }
+              };
+              vid.addEventListener('canplay', handler);
+              vid.addEventListener('loadedmetadata', handler);
+              vid.addEventListener('loadeddata', handler);
+              vid.onerror = () => reject(new Error(`Error cargando video de escena ${i+1}`));
+              vid.load();
             }),
             new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 25000))
           ]);
         } else { 
           console.log(`Composición: Usando IMAGEN para escena ${i+1}`);
-          sourceElement = document.createElement('img'); 
-          sourceElement.src = frame.imageUrl; 
-          sourceElement.crossOrigin = "anonymous";
-          const img = sourceElement as HTMLImageElement;
+          const img = document.createElement('img');
+          img.style.display = 'none';
+          document.body.appendChild(img);
+          img.src = frame.imageUrl; 
+          img.crossOrigin = "anonymous";
+          sourceElement = img;
+          
           await Promise.race([
             new Promise((resolve, reject) => {
               if (img.complete) { resolve(null); return; }
@@ -2293,12 +2309,15 @@ LENGUAJE: ${getLanguageName(language)}.`;
         let segmentDuration = audioBuffer ? audioBuffer.duration + 1.0 : 4.0;
         
         if (sourceElement instanceof HTMLVideoElement) {
-          // Asegurar que el video se use completamente si no hay audio o si es más largo que el audio
-          segmentDuration = Math.max(segmentDuration, (sourceElement as HTMLVideoElement).duration || 0);
+          const video = sourceElement as HTMLVideoElement;
+          // Asegurar duración válida
+          let vDur = video.duration;
+          if (isNaN(vDur) || vDur === Infinity) vDur = 6.0;
           
-          sourceElement.currentTime = 0;
+          segmentDuration = Math.max(segmentDuration, vDur);
+          video.currentTime = 0;
           try {
-            await sourceElement.play();
+            await video.play();
           } catch (e) {
             console.warn(`No se pudo reproducir el video de la escena ${i+1}:`, e);
           }
@@ -2363,6 +2382,16 @@ LENGUAJE: ${getLanguageName(language)}.`;
           }
 
           canvasCtx.globalAlpha = Math.max(0, Math.min(1, opacity));
+          
+          // Sincronización forzada para video
+          if (sourceElement instanceof HTMLVideoElement) {
+             const video = sourceElement as HTMLVideoElement;
+             // Forzar currentTime si el video se detiene o para asegurar fotograma correcto
+             if (!video.paused && Math.abs(video.currentTime - elapsed) > 0.5) {
+                video.currentTime = elapsed % (video.duration || 6);
+             }
+          }
+
           canvasCtx.drawImage(sourceElement, (canvas.width - nW) / 2 + offX, (canvas.height - nH) / 2 + offY, nW, nH);
           canvasCtx.globalAlpha = 1.0;
 
@@ -2417,8 +2446,22 @@ LENGUAJE: ${getLanguageName(language)}.`;
       // Wait a small bit to ensure the last audio bits are captured by the recorder
       await new Promise(r => setTimeout(r, 500));
       
-      setCombineProgress(100); recorder.stop(); const finalUrl = await recorderPromise; setCombinedVideoUrl(finalUrl);
-    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { 
+      setCombineProgress(100); 
+      recorder.stop(); 
+      const finalUrl = await recorderPromise; 
+      setCombinedVideoUrl(finalUrl);
+      
+      // Cleanup DOM elements
+      mediaElements.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (err: any) { 
+      setAppError(getErrorDetails(err)); 
+      // Cleanup DOM elements on error
+      mediaElements.forEach(el => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } finally { 
       setIsCombiningVideos(false); 
       if (silentOsc) {
         try { silentOsc.stop(); silentOsc.disconnect(); } catch (e) {}
