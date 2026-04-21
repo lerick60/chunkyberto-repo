@@ -791,6 +791,7 @@ export const YouTubeUploadModal: React.FC<{
   };
 
   const handleRealUpload = async () => {
+    const isConnected = ytSettings[activePersona.id]?.isConnected;
     if (!isConnected) {
       setErrorMessage("Debes conectar tu cuenta de YouTube en Ajustes primero.");
       setUploadStatus('error');
@@ -908,7 +909,7 @@ export const YouTubeUploadModal: React.FC<{
                 {uploadStatus === 'generating' ? <Loader2 className="animate-spin" size={20} /> : <UploadCloud size={20} />} 
                 {uploadStatus === 'generating' ? 'GENERANDO METADATOS...' : 'PUBLICAR AHORA'}
               </button>
-              {!ytSettings?.isConnected && (
+              {!ytSettings[activePersona.id]?.isConnected && (
                 <p className="text-center text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
                   ⚠️ YouTube API no conectada. Ve a Ajustes.
                 </p>
@@ -1451,20 +1452,20 @@ MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, 
 
     const commonFormat = `FORMATO MANDATORIO DE SALIDA:
 1. Inicia cada bloque con el delimitador $$$.
-2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 15 de los títulos y mini-resúmenes.
-3. ITEMS 2 al 16 son las historias individuales.
+2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 10 de los títulos y mini-resúmenes.
+3. ITEMS 2 al 11 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
 5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto${globalForensicToggles.advance ? ' EXCEPTO para el título de la historia y la frase "**Avance de la Historia**"' : ''}. Si deseas resaltar algo, usa saltos de línea o espacios adicionales. NO INCLUYAS 'Avance de la Historia' ni secuelas a menos que se te pida explícitamente.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
-    let categoryPrompt = `Identifica 15 historias trending en tiempo real conectadas a la categoría: ${category}.`;
+    let categoryPrompt = `Identifica 10 historias trending en tiempo real conectadas a la categoría: ${category}.`;
     if (category === 'exoplanetas') {
-      categoryPrompt = `Busca todas las noticias recientes relacionadas con exoplanetas, historias sobre planes de viaje a exoplanetas y estimados sobre fauna y flora de exoplanetas basados en su tipo de estrella. Genera 15 historias/noticias sobre esto.`;
+      categoryPrompt = `Busca todas las noticias recientes relacionadas con exoplanetas, historias sobre planes de viaje a exoplanetas y estimados sobre fauna y flora de exoplanetas basados en su tipo de estrella. Genera 10 historias/noticias sobre esto.`;
     } else if (category === 'ai_exoplanets_creation') {
-      categoryPrompt = `Crea 15 breves sinopsis sobre historias generadas por IA con temas de: Viajes a exoplanetas, Predicciones de Flora y Fauna en Exoplanetas, así como predicciones sobre climas de estos exoplanetas.`;
+      categoryPrompt = `Crea 10 breves sinopsis sobre historias generadas por IA con temas de: Viajes a exoplanetas, Predicciones de Flora y Fauna en Exoplanetas, así como predicciones sobre climas de estos exoplanetas.`;
     } else if (category === 'biographies') {
-      categoryPrompt = `Crea 15 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Debes mencionar el nombre de la persona cuya biografía se está redactando al menos una vez en cada narración.`;
+      categoryPrompt = `Crea 10 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Debes mencionar el nombre de la persona cuya biografía se está redactando al menos una vez en cada narración.`;
     }
 
     return `${categoryPrompt}
@@ -1480,13 +1481,29 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
-      if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW DIALOGUES. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW dialogues. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       
-      const response = await apiRetry(() => ai.models.generateContent({ 
-        model: modelSettings.text, 
-        contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
-        config: { tools: [{ googleSearch: {} }] } 
-      })) as any;
+      let response: any;
+      try {
+        response = await apiRetry(() => ai.models.generateContent({ 
+          model: modelSettings.text, 
+          contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
+          config: { tools: [{ googleSearch: {} }] } 
+        }), 1, 3000, 40000) as any;
+      } catch (firstErr: any) {
+        const details = getErrorDetails(firstErr);
+        if (details.isQuota || firstErr.message === "API_TIMEOUT") {
+          console.log("Trend Fetch: Hitting quota with grounding, falling back to non-grounded generation...");
+          // Fallback: Try without googleSearch if grounded search fails
+          response = await apiRetry(() => ai.models.generateContent({ 
+            model: modelSettings.text, 
+            contents: generateDefaultPrompt() + extraForensic + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
+          }), 1, 2000, 30000) as any;
+        } else {
+          throw firstErr;
+        }
+      }
+
       const fullText = (response.text || "");
       const rawBlocks = fullText.split('$$$').map(b => b.trim()).filter(b => b.length > 0);
       const newTrends: Trend[] = [];
@@ -2571,7 +2588,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
         <div className="flex items-center gap-2">
           <div className="hidden md:flex flex-col items-end mr-4">
             <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest">Economical Mode Active</span>
-            <span className="text-[7px] font-black text-slate-500 uppercase">V47.2.1</span>
+            <span className="text-[7px] font-black text-slate-500 uppercase">V47.2.3</span>
           </div>
           {ytSettings[activePersona.id]?.url && (
             <a 
@@ -2911,7 +2928,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
             <div className="max-w-4xl mx-auto mt-20 mb-40 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <div className={`bg-slate-900 border-4 border-${activePersona.color}/30 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group`}><div className={`absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700 text-${activePersona.color}`}><FlaskRound size={120} /></div>
                 <div className="relative z-10 space-y-8">
-                  <div className="space-y-2"><div className={`flex items-center gap-3 text-${activePersona.color} font-black uppercase text-[10px] tracking-[0.4em]`}><FlaskRound size={18} /> LABORATORIO DE IDEAS V47.2.1</div><h3 className="text-3xl font-black uppercase italic leading-none">COMPOSITOR <span className={`text-${activePersona.color}`}>CREATIVO HÍBRIDO</span></h3></div>
+                  <div className="space-y-2"><div className={`flex items-center gap-3 text-${activePersona.color} font-black uppercase text-[10px] tracking-[0.4em]`}><FlaskRound size={18} /> LABORATORIO DE IDEAS V47.2.3</div><h3 className="text-3xl font-black uppercase italic leading-none">COMPOSITOR <span className={`text-${activePersona.color}`}>CREATIVO HÍBRIDO</span></h3></div>
                   
                   {renderForensicToolkit(undefined, true)}
 
@@ -2943,7 +2960,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
           </>
         )}
       </main>
-      <footer className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 py-4 px-6 flex justify-between items-center z-40"><div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">V47.2.1 | TTS Validated | YouTube Sync | Publisher Pro | Editable Narration (ENT) | Asset Strip (SAS)</div><div className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div><span className="text-[8px] font-black uppercase text-slate-400">IA ACTIVA</span></div></footer>
+      <footer className="fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 py-4 px-6 flex justify-between items-center z-40"><div className="text-[8px] font-black text-slate-500 uppercase tracking-[0.4em]">V47.2.3 | Stable Trends | TTS Validated | YouTube Sync | Publisher Pro | Editable Narration (ENT) | Asset Strip (SAS)</div><div className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 border border-slate-800 rounded-full"><div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div><span className="text-[8px] font-black uppercase text-slate-400">IA ACTIVA</span></div></footer>
 
       {isDraftsModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
