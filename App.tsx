@@ -791,8 +791,7 @@ export const YouTubeUploadModal: React.FC<{
   };
 
   const handleRealUpload = async () => {
-    const isConnected = ytSettings[activePersona.id]?.isConnected;
-    if (!isConnected) {
+    if (!ytSettings?.isConnected) {
       setErrorMessage("Debes conectar tu cuenta de YouTube en Ajustes primero.");
       setUploadStatus('error');
       return;
@@ -909,7 +908,7 @@ export const YouTubeUploadModal: React.FC<{
                 {uploadStatus === 'generating' ? <Loader2 className="animate-spin" size={20} /> : <UploadCloud size={20} />} 
                 {uploadStatus === 'generating' ? 'GENERANDO METADATOS...' : 'PUBLICAR AHORA'}
               </button>
-              {!ytSettings[activePersona.id]?.isConnected && (
+              {!ytSettings?.isConnected && (
                 <p className="text-center text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
                   ⚠️ YouTube API no conectada. Ve a Ajustes.
                 </p>
@@ -2144,17 +2143,22 @@ LENGUAJE: ${getLanguageName(language)}.`;
         
         // Pre-load media with timeout and multiple event listeners
         let sourceElement: HTMLVideoElement | HTMLImageElement;
-        if (frame.videoUrl) { 
+        const hasVideo = !!frame.videoUrl && frame.videoUrl.length > 0;
+        
+        if (hasVideo) { 
+          console.log(`Composición: Priorizando VIDEO para escena ${i+1}`);
           sourceElement = document.createElement('video'); 
-          sourceElement.src = frame.videoUrl; 
+          sourceElement.src = frame.videoUrl as string; 
           sourceElement.muted = true; 
           sourceElement.playsInline = true; 
           sourceElement.crossOrigin = "anonymous";
+          sourceElement.loop = true; // Asegurar que el video no se detenga si es más corto que la narración
           const video = sourceElement as HTMLVideoElement;
           await Promise.race([
             new Promise((resolve, reject) => {
               if (video.readyState >= 3) { resolve(null); return; }
               const handler = () => {
+                console.log(`Video de escena ${i+1} cargado (ReadyState: ${video.readyState})`);
                 video.removeEventListener('canplaythrough', handler);
                 video.removeEventListener('canplay', handler);
                 video.removeEventListener('loadeddata', handler);
@@ -2166,9 +2170,10 @@ LENGUAJE: ${getLanguageName(language)}.`;
               video.onerror = () => reject(new Error(`Error cargando video de escena ${i+1}`));
               video.load();
             }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 20000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tiempo de espera agotado cargando video de escena ${i+1}`)), 25000))
           ]);
         } else { 
+          console.log(`Composición: Usando IMAGEN para escena ${i+1}`);
           sourceElement = document.createElement('img'); 
           sourceElement.src = frame.imageUrl; 
           sourceElement.crossOrigin = "anonymous";
@@ -2336,12 +2341,16 @@ LENGUAJE: ${getLanguageName(language)}.`;
           let offX = 0;
           let offY = 0;
 
-          if (modelSettings.motionEffect === 'zoom_in') {
-             scale = 1.0 + (progress * 0.18); 
-          } else if (modelSettings.motionEffect === 'pan_right') {
-             offX = progress * 120; 
-          } else if (modelSettings.motionEffect === 'pan_left') {
-             offX = -progress * 120;
+          // REGLA: Los efectos de movimiento SOLO se aplican a imágenes estáticas.
+          // Los videos generados se muestran tal cual para mantener su integridad.
+          if (!(sourceElement instanceof HTMLVideoElement)) {
+            if (modelSettings.motionEffect === 'zoom_in') {
+               scale = 1.0 + (progress * 0.18); 
+            } else if (modelSettings.motionEffect === 'pan_right') {
+               offX = progress * 120; 
+            } else if (modelSettings.motionEffect === 'pan_left') {
+               offX = -progress * 120;
+            }
           }
 
           const nW = sW * baseRatio * scale; const nH = sH * baseRatio * scale;
