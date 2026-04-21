@@ -2282,19 +2282,24 @@ LENGUAJE: ${getLanguageName(language)}.`;
         const audioBuffer = audioBuffers[i];
         const sourceElement = mediaElements[i];
         
-        // Si es imagen estática, usar 10 segundos (o la duración del audio + 1s si es mayor). Si es video, usar la duración del audio + 1s o 4s.
+        // REGLA DE SÍNTESIS: Priorizar video generado si existe.
+        // Si es video, la duración inicial es el audio + 1s o 4s, pero se ajusta a la duración real del video si es mayor.
+        // Si es imagen estática, usar 10 segundos (o la duración del audio + 1s si es mayor).
         let segmentDuration = audioBuffer ? audioBuffer.duration + 1.0 : 4.0;
-        if (!(sourceElement instanceof HTMLVideoElement)) {
-          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 1.0) : 10.0;
-        }
         
         if (sourceElement instanceof HTMLVideoElement) {
+          // Asegurar que el video se use completamente si no hay audio o si es más largo que el audio
+          segmentDuration = Math.max(segmentDuration, (sourceElement as HTMLVideoElement).duration || 0);
+          
           sourceElement.currentTime = 0;
           try {
             await sourceElement.play();
           } catch (e) {
             console.warn(`No se pudo reproducir el video de la escena ${i+1}:`, e);
           }
+        } else {
+          // Regla para imágenes estáticas (mínimo 10s según AGENTS.md)
+          segmentDuration = audioBuffer ? Math.max(10.0, audioBuffer.duration + 1.0) : 10.0;
         }
 
         const startTime = Date.now();
