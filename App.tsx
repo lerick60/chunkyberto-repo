@@ -1261,7 +1261,23 @@ export const App: React.FC = () => {
       transitionEffect: 'fade_black' as TransitionEffect,
       tier: 'normal'
     };
-    return saved ? { ...defaults, ...JSON.parse(saved) } : defaults;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const tierModels = MODEL_TIERS[parsed.tier as ModelTier]?.models || defaults;
+        return {
+          ...defaults,
+          ...parsed,
+          text: parsed.text || tierModels.text,
+          image: parsed.image || tierModels.image,
+          video: parsed.video || tierModels.video,
+          tts: parsed.tts || tierModels.tts
+        };
+      } catch (e) {
+        return defaults;
+      }
+    }
+    return defaults;
   });
 
   const isFetchingTrendsRef = useRef(false);
@@ -2937,7 +2953,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                               <button onClick={() => handleGenerateIndividualImage(i)} disabled={frame.isGeneratingImage || frame.isGeneratingVideo} title={`Usando estilo: ${visualStyle}`} className={`py-6 rounded-[2.5rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}><Repeat size={18} /> RE-IMAGINAR</button>
-                              <button onClick={() => handleGenerateIndividualVideo(i)} disabled={frame.isGeneratingVideo || !frame.imageUrl || frame.isGeneratingImage || !modelSettings.video} className={`py-6 rounded-[2.5rem] ${frame.videoUrl ? 'bg-indigo-900/30 text-indigo-400 border-2 border-indigo-500/30' : `bg-indigo-600 text-white`} font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}>{frame.videoUrl ? <RefreshCcw size={18} /> : <Zap size={18} />} {frame.videoUrl ? 'RE-FILMAR' : 'GENERAR VIDEO'}</button>
+                              <button onClick={() => handleGenerateIndividualVideo(i)} disabled={frame.isGeneratingVideo || !frame.imageUrl || frame.isGeneratingImage || !(modelSettings.video || MODELS.VIDEO)} className={`py-6 rounded-[2.5rem] ${frame.videoUrl ? 'bg-indigo-900/30 text-indigo-400 border-2 border-indigo-500/30' : `bg-indigo-600 text-white`} font-black text-xs uppercase shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-30`}>{frame.videoUrl ? <RefreshCcw size={18} /> : <Zap size={18} />} {frame.videoUrl ? 'RE-FILMAR' : 'GENERAR VIDEO'}</button>
                               <button onClick={() => handlePlayTTS(frame.narrationText)} className="py-6 rounded-[2.5rem] bg-slate-900 text-slate-400 border-2 border-slate-800 font-black text-xs uppercase shadow-2xl hover:text-white transition-all flex items-center justify-center gap-3 active:scale-90"><Volume2 size={18} /> ESCUCHAR VOZ</button>
                             </div>
                         </div>
