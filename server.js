@@ -18,11 +18,22 @@ async function startServer() {
   app.use(express.json());
   app.use(cookieParser("chunkyberto-secret"));
 
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.YOUTUBE_CLIENT_ID,
-    process.env.YOUTUBE_CLIENT_SECRET,
-    `${process.env.APP_URL}/api/youtube/callback`
-  );
+  function getYouTubeCredentials(personaId) {
+    const suffix = personaId ? personaId.toUpperCase() : '';
+    const clientId = process.env[`YOUTUBE_CLIENT_ID_${suffix}`] || process.env.YOUTUBE_CLIENT_ID;
+    const clientSecret = process.env[`YOUTUBE_CLIENT_SECRET_${suffix}`] || process.env.YOUTUBE_CLIENT_SECRET;
+    return { clientId, clientSecret };
+  }
+
+  function getOAuthClient(personaId) {
+    const { clientId, clientSecret } = getYouTubeCredentials(personaId);
+    if (!clientId || !clientSecret) return null;
+    return new google.auth.OAuth2(
+      clientId,
+      clientSecret,
+      `${process.env.APP_URL}/api/youtube/callback`
+    );
+  }
 
   const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
 
@@ -30,6 +41,12 @@ async function startServer() {
   app.get("/api/youtube/auth-url", (req, res) => {
     const { personaId } = req.query;
     if (!personaId) return res.status(400).json({ error: "Missing personaId" });
+
+    const oauth2Client = getOAuthClient(personaId);
+    if (!oauth2Client) {
+      const suffix = personaId.toUpperCase();
+      return res.status(500).json({ error: `Faltan las credenciales exclusivas para esta persona. Asegúrate de configurar YOUTUBE_CLIENT_ID_${suffix} y YOUTUBE_CLIENT_SECRET_${suffix} (o los valores globales) en las variables de entorno.` });
+    }
 
     const authUrl = oauth2Client.generateAuthUrl({
       access_type: "offline",
@@ -42,6 +59,12 @@ async function startServer() {
 
   app.get("/api/youtube/callback", async (req, res) => {
     const { code, state: personaId } = req.query;
+    
+    const oauth2Client = getOAuthClient(personaId);
+    if (!oauth2Client) {
+      return res.status(500).send("Faltan las credenciales de YouTube para esta persona.");
+    }
+
     try {
       const { tokens } = await oauth2Client.getToken(code);
       // Store tokens in a secure cookie specific to the persona
@@ -102,10 +125,8 @@ async function startServer() {
 
     let tempPath = null;
     try {
-      const auth = new google.auth.OAuth2(
-        process.env.YOUTUBE_CLIENT_ID,
-        process.env.YOUTUBE_CLIENT_SECRET
-      );
+      const { clientId, clientSecret } = getYouTubeCredentials(personaId);
+      const auth = new google.auth.OAuth2(clientId, clientSecret);
       auth.setCredentials(JSON.parse(tokens));
 
       const youtube = google.youtube({ version: "v3", auth });

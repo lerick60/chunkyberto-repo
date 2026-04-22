@@ -1137,6 +1137,8 @@ export const SettingsModal: React.FC<{
                               .then(data => {
                                 if (data.url) {
                                   window.open(data.url, 'YouTubeAuth', `width=${width},height=${height},left=${left},top=${top}`);
+                                } else if (data.error) {
+                                  alert("Error: " + data.error + "\n\nPor favor, configura estas variables en la sección Secrets / Environment Variables de AI Studio.");
                                 }
                               })
                               .catch(err => alert("Error al obtener URL de autenticación"));
