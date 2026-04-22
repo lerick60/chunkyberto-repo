@@ -58,8 +58,28 @@ async function startServer() {
   });
 
   app.get("/api/youtube/callback", async (req, res) => {
-    const { code, state: personaId } = req.query;
+    const { code, state: personaId, error } = req.query;
     
+    if (error) {
+      console.error("YouTube OAuth URL Error:", error);
+      return res.status(400).send(`
+        <html>
+          <body style="background: #020617; color: white; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center;">
+            <div>
+              <h1 style="color: #ef4444;">Error de Autorización</h1>
+              <p>Ocurrió un error al intentar conectarse: <strong>${error}</strong></p>
+              <p>Asegúrate de haber ingresado bien las credenciales y que las URL de redirección estén correctas en Google Cloud Console.</p>
+              <button onclick="window.close()" style="margin-top: 20px; padding: 10px 20px; background: #334155; color: white; border: none; border-radius: 8px; cursor: pointer;">Cerrar esta ventana</button>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    if (!code) {
+      return res.status(400).send("No se proporcionó un código de autorización.");
+    }
+
     const oauth2Client = getOAuthClient(personaId);
     if (!oauth2Client) {
       return res.status(500).send("Faltan las credenciales de YouTube para esta persona.");

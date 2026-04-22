@@ -857,7 +857,7 @@ export const YouTubeUploadModal: React.FC<{
                     type="text" 
                     value={ytTitle} 
                     onChange={(e) => setYtTitle(e.target.value)}
-                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all"
+                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-red-500 outline-none transition-all"
                   />
                 </div>
 
@@ -866,7 +866,7 @@ export const YouTubeUploadModal: React.FC<{
                   <textarea 
                     value={ytDescription} 
                     onChange={(e) => setYtDescription(e.target.value)}
-                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-medium text-slate-300 focus:border-red-500 outline-none transition-all min-h-[120px] custom-scrollbar"
+                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-slate-300 focus:border-red-500 outline-none transition-all min-h-[120px] custom-scrollbar"
                   />
                 </div>
 
@@ -877,7 +877,7 @@ export const YouTubeUploadModal: React.FC<{
                     value={ytTags} 
                     onChange={(e) => setYtTags(e.target.value)}
                     placeholder="tag1, tag2, tag3..."
-                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 font-bold text-white focus:border-red-500 outline-none transition-all"
+                    className="w-full bg-slate-950 border-2 border-slate-800 rounded-2xl px-6 py-4 text-sm font-medium text-white focus:border-red-500 outline-none transition-all"
                   />
                 </div>
 
