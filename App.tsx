@@ -1604,7 +1604,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           model: modelSettings.text, 
           contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
           config: { tools: [{ googleSearch: {} }] } 
-        }), 1, 3000, 40000) as any;
+        }), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         if (details.isQuota || firstErr.message === "API_TIMEOUT") {
@@ -1613,7 +1613,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
             contents: generateDefaultPrompt() + extraForensic + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
-          }), 1, 2000, 30000) as any;
+          }), 1, 2000, 90000) as any;
         } else {
           throw firstErr;
         }
