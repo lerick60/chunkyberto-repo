@@ -439,6 +439,57 @@ interface Draft {
   category: Category;
 }
 
+// --- IndexedDB for Drafts (bypasses 5MB localStorage limit) ---
+const DB_NAME = 'ChunkyStudioDB';
+const STORE_NAME = 'drafts';
+const DB_VERSION = 1;
+
+const initDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const saveDraftsToDB = async (drafts: Draft[]): Promise<void> => {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const request = store.put(drafts, 'all_drafts');
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error("IndexedDB error:", err);
+    throw err;
+  }
+};
+
+const loadDraftsFromDB = async (): Promise<Draft[]> => {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const request = store.get('all_drafts');
+      request.onsuccess = () => resolve(request.result || []);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (err) {
+    console.error("IndexedDB load error:", err);
+    return [];
+  }
+};
+
 // --- Error Handling ---
 function getErrorDetails(err: any): DetailedError {
   let message = "Error desconocido";
@@ -1243,11 +1294,34 @@ export const App: React.FC = () => {
     const saved = localStorage.getItem('chunky_yt_settings');
     return saved ? JSON.parse(saved) : {};
   });
-  const [drafts, setDrafts] = useState<Draft[]>(() => {
-    const saved = localStorage.getItem('chunky_drafts');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [drafts, setDrafts] = useState<Draft[]>([]);
   const [isDraftsModalOpen, setIsDraftsModalOpen] = useState(false);
+  const [draftsLoaded, setDraftsLoaded] = useState(false);
+
+  // Cargar borradores desde IndexedDB al inicio
+  useEffect(() => {
+    const loadDrafts = async () => {
+      try {
+        let loaded = await loadDraftsFromDB();
+        
+        // Si no hay borradores en la DB pero hay en localStorage (Migración)
+        if (loaded.length === 0) {
+          const fallbackSaved = localStorage.getItem('chunky_drafts');
+          if (fallbackSaved) {
+            loaded = JSON.parse(fallbackSaved);
+            await saveDraftsToDB(loaded); // Guardar en IDB
+          }
+        }
+        
+        setDrafts(loaded);
+      } catch (err) {
+        console.error("No se pudieron cargar los borradores:", err);
+      } finally {
+        setDraftsLoaded(true);
+      }
+    };
+    loadDrafts();
+  }, []);
 
   const activePersona = PERSONAS.find(p => p.id === selectedPersonaId) || PERSONAS[0];
   const [modelSettings, setModelSettings] = useState<ModelSettings>(() => {
@@ -1363,34 +1437,13 @@ export const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('chunky_language', language); }, [language]);
   useEffect(() => { localStorage.setItem('chunky_persona', selectedPersonaId); }, [selectedPersonaId]);
   useEffect(() => { 
-    try {
-      localStorage.setItem('chunky_drafts', JSON.stringify(drafts)); 
-    } catch (e) {
-      console.error("Error saving drafts:", e);
-      if (e instanceof DOMException && e.name === 'QuotaExceededError') {
-        // Fallback: Try saving without image URLs to save space
-        try {
-          const strippedDrafts = drafts.map(draft => ({
-            ...draft,
-            trends: draft.trends.map(trend => {
-              if (!trend.storyboard) return trend;
-              return {
-                ...trend,
-                storyboard: trend.storyboard.map(frame => ({ ...frame, imageUrl: '' }))
-              };
-            })
-          }));
-          localStorage.setItem('chunky_drafts', JSON.stringify(strippedDrafts));
-          showNotification("Advertencia: El borrador se guardó, pero las imágenes se eliminaron porque excedían el límite de almacenamiento del navegador. Tendrás que volver a generarlas.", 'warning');
-        } catch (fallbackError) {
-          console.error("Fallback error:", fallbackError);
-          showNotification("No se pudo guardar el borrador: El tamaño de los datos excede el límite de almacenamiento del navegador.", 'error');
-        }
-      } else {
-        showNotification("Error al guardar el borrador en el almacenamiento local.", 'error');
-      }
-    }
-  }, [drafts]);
+    if (!draftsLoaded) return; // No guardar en el inicio
+    
+    saveDraftsToDB(drafts).catch((e) => {
+      console.error("Error saving drafts to IndexedDB:", e);
+      showNotification("Error crítico al guardar el borrador. Es posible que el almacenamiento esté saturado.", 'error');
+    });
+  }, [drafts, draftsLoaded]);
 
   const ensureAudioContext = useCallback(async () => {
     if (!audioContextRef.current) { audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)(); }
