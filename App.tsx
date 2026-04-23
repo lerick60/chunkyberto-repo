@@ -2857,36 +2857,6 @@ LENGUAJE: ${getLanguageName(language)}.`;
              </div>
              {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)}  />}
              
-             <div className="mb-12">
-               <div className={`p-8 rounded-[4rem] bg-slate-900/50 border-4 border-slate-800 backdrop-blur-sm flex flex-col md:flex-row items-center gap-10`}>
-                 <div className="md:w-1/3 aspect-video bg-slate-950 rounded-[3rem] overflow-hidden border-8 border-slate-900 shadow-2xl flex items-center justify-center relative">
-                    {selectedTrend.thumbnailUrl ? (<img src={selectedTrend.thumbnailUrl} className="w-full h-full object-cover" alt="YouTube Thumbnail" />) : (<div className="flex flex-col items-center gap-3 text-slate-700"><Youtube size={64} /><span className="text-[10px] font-black uppercase tracking-widest">Sin Miniatura</span></div>)}
-                    {generatingThumbnail && (<div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center z-20"><Loader2 className="animate-spin text-emerald-500 mb-4" size={48} /><span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Generando Portada...</span></div>)}
-                 </div>
-                 <div className="flex-1 space-y-4">
-                   <h3 className="text-3xl font-black uppercase italic tracking-tighter">YouTube <span className={`text-${activePersona.color}`}>Cover Art.</span></h3>
-                   <p className="text-slate-400 text-sm font-medium italic">"Arte de portada optimizado para YouTube utilizando el perfil visual de {activePersona.name}."</p>
-                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                     <div className="relative w-full sm:w-64">
-                       <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value as ImageStyle)} className="w-full pl-4 pr-10 py-5 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
-                         {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-                       </select>
-                       <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
-                     </div>
-                     <button onClick={handleGenerateThumbnail} disabled={generatingThumbnail} className={`px-10 py-5 bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-widest border-2 border-slate-700 hover:border-${activePersona.color} transition-all shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50`}>
-                       {generatingThumbnail ? <Loader2 size={18} className="animate-spin" /> : <LucideImage size={18} />}
-                       {selectedTrend.thumbnailUrl ? 'RE-GENERAR MINIATURA' : 'GENERAR MINIATURA PRO'}
-                     </button>
-                   </div>
-                   {selectedTrend.storyboard?.some(f => !f.narrationText || f.narrationText.trim() === '') && (
-                     <div className="mt-6 text-center">
-                       <span className="text-rose-400 font-bold text-sm tracking-wide" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>No debe haber guiones vacios, favor de corregir</span>
-                     </div>
-                   )}
-                 </div>
-               </div>
-             </div>
-
              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
                 <div className="lg:col-span-4 space-y-8">
                    <div className="bg-slate-800/80 backdrop-blur-md p-10 rounded-[4rem] border-2 border-slate-700 shadow-2xl sticky top-32">
@@ -2908,6 +2878,34 @@ LENGUAJE: ${getLanguageName(language)}.`;
                 </div>
 
                 <div className="lg:col-span-8 space-y-12">
+                   <div className={`p-8 rounded-[4rem] bg-slate-900/50 border-4 border-slate-800 backdrop-blur-sm flex flex-col md:flex-row items-center gap-10`}>
+                     <div className="md:w-1/3 aspect-video bg-slate-950 rounded-[3rem] overflow-hidden border-8 border-slate-900 shadow-2xl flex items-center justify-center relative">
+                        {selectedTrend.thumbnailUrl ? (<img src={selectedTrend.thumbnailUrl} className="w-full h-full object-cover" alt="YouTube Thumbnail" />) : (<div className="flex flex-col items-center gap-3 text-slate-700"><Youtube size={64} /><span className="text-[10px] font-black uppercase tracking-widest">Sin Miniatura</span></div>)}
+                        {generatingThumbnail && (<div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center z-20"><Loader2 className="animate-spin text-emerald-500 mb-4" size={48} /><span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Generando Portada...</span></div>)}
+                     </div>
+                     <div className="flex-1 space-y-4">
+                       <h3 className="text-3xl font-black uppercase italic tracking-tighter">YouTube <span className={`text-${activePersona.color}`}>Cover Art.</span></h3>
+                       <p className="text-slate-400 text-sm font-medium italic">"Arte de portada optimizado para YouTube utilizando el perfil visual de {activePersona.name}."</p>
+                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                         <div className="relative w-full sm:w-64">
+                           <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value as ImageStyle)} className="w-full pl-4 pr-10 py-5 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                             {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                           </select>
+                           <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
+                         </div>
+                         <button onClick={handleGenerateThumbnail} disabled={generatingThumbnail} className={`px-10 py-5 bg-slate-800 text-white rounded-2xl font-black uppercase text-xs tracking-widest border-2 border-slate-700 hover:border-${activePersona.color} transition-all shadow-xl flex items-center gap-3 active:scale-95 disabled:opacity-50`}>
+                           {generatingThumbnail ? <Loader2 size={18} className="animate-spin" /> : <LucideImage size={18} />}
+                           {selectedTrend.thumbnailUrl ? 'RE-GENERAR MINIATURA' : 'GENERAR MINIATURA PRO'}
+                         </button>
+                       </div>
+                       {selectedTrend.storyboard?.some(f => !f.narrationText || f.narrationText.trim() === '') && (
+                         <div className="mt-6 text-center">
+                           <span className="text-rose-400 font-bold text-sm tracking-wide" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000' }}>No debe haber guiones vacios, favor de corregir</span>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+
                    {(selectedTrend.analysis || selectedTrend.interview) && (
                      <div className="space-y-8 animate-in fade-in slide-in-from-top-6 duration-500">
                         {selectedTrend.analysis && (<div className="bg-purple-900/10 border-2 border-purple-500/20 p-8 rounded-[3rem] relative group shadow-2xl"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-purple-400 font-black text-[10px] uppercase tracking-[0.3em]"><BrainCircuit size={16} /> Resultado Análisis Literario</div><div className="flex items-center gap-2"><CopyButton text={selectedTrend.analysis} /><button onClick={() => { setSelectedTrend(prev => prev ? {...prev, analysis: undefined} : null); }} className="p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-400"><X size={14}/></button></div></div><p className="text-sm text-slate-300 leading-relaxed italic whitespace-pre-wrap">{selectedTrend.analysis}</p></div>)}

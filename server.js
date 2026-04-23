@@ -18,10 +18,21 @@ async function startServer() {
   app.use(express.json());
   app.use(cookieParser("chunkyberto-secret"));
 
+  function cleanSecret(val) {
+    if (!val) return val;
+    // Remove leading/trailing spaces and accidental surrounding quotes
+    return val.trim().replace(/^["']|["']$/g, '');
+  }
+
   function getYouTubeCredentials(personaId) {
     const suffix = personaId ? personaId.toUpperCase() : '';
-    const clientId = process.env[`YOUTUBE_CLIENT_ID_${suffix}`] || process.env.YOUTUBE_CLIENT_ID;
-    const clientSecret = process.env[`YOUTUBE_CLIENT_SECRET_${suffix}`] || process.env.YOUTUBE_CLIENT_SECRET;
+    const clientId = cleanSecret(process.env[`YOUTUBE_CLIENT_ID_${suffix}`]) || cleanSecret(process.env.YOUTUBE_CLIENT_ID);
+    const clientSecret = cleanSecret(process.env[`YOUTUBE_CLIENT_SECRET_${suffix}`]) || cleanSecret(process.env.YOUTUBE_CLIENT_SECRET);
+    
+    if (clientId) {
+      console.log(`[OAuth Check] Usando Client ID para ${personaId || 'Global'}: ${clientId.substring(0, 15)}...`);
+    }
+
     return { clientId, clientSecret };
   }
 
