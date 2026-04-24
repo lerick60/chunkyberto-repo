@@ -481,58 +481,20 @@ const loadDraftsFromDB = async (): Promise<Draft[]> => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const store = tx.objectStore(STORE_NAME);
       const request = store.get('all_drafts');
-      request.onsuccess = () => resolve(request.result || []);
-      request.onerror = () => reject(request.error);
-    });
-  } catch (err) {
-    console.error("IndexedDB load error:", err);
-    return [];
-  }
-};
-
-// --- IndexedDB for Drafts (bypasses 5MB localStorage limit) ---
-const DB_NAME = 'ChunkyStudioDB';
-const STORE_NAME = 'drafts';
-const DB_VERSION = 1;
-
-const initDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-};
-
-const saveDraftsToDB = async (drafts: Draft[]): Promise<void> => {
-  try {
-    const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      const store = tx.objectStore(STORE_NAME);
-      const request = store.put(drafts, 'all_drafts');
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
-  } catch (err) {
-    console.error("IndexedDB error:", err);
-    throw err;
-  }
-};
-
-const loadDraftsFromDB = async (): Promise<Draft[]> => {
-  try {
-    const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const request = store.get('all_drafts');
-      request.onsuccess = () => resolve(request.result || []);
+      request.onsuccess = () => {
+        const loaded = request.result || [];
+        // Revive videoBlob into fresh videoUrl
+        loaded.forEach((d: Draft) => {
+          d.trends?.forEach((t: Trend) => {
+            t.storyboard?.forEach((f: StoryboardFrame) => {
+              if (f.videoBlob instanceof Blob) {
+                f.videoUrl = URL.createObjectURL(f.videoBlob);
+              }
+            });
+          });
+        });
+        resolve(loaded);
+      };
       request.onerror = () => reject(request.error);
     });
   } catch (err) {
@@ -2321,7 +2283,6 @@ LENGUAJE: ${getLanguageName(language)}.`;
           vid.src = frame.videoUrl as string; 
           vid.muted = true; 
           vid.playsInline = true; 
-          vid.crossOrigin = "anonymous";
           vid.loop = true;
           sourceElement = vid;
           
@@ -2551,8 +2512,8 @@ LENGUAJE: ${getLanguageName(language)}.`;
           // Sincronización forzada para video
           if (sourceElement instanceof HTMLVideoElement) {
              const video = sourceElement as HTMLVideoElement;
-             // Forzar currentTime si el video se detiene o para asegurar fotograma correcto
-             if (!video.paused && Math.abs(video.currentTime - elapsed) > 0.5) {
+             // Si el video está pausado (ej. por restricciones del navegador) o desfasado, lo forzamos a avanzar
+             if (video.paused || Math.abs(video.currentTime - (elapsed % (video.duration || 6))) > 0.5) {
                 video.currentTime = elapsed % (video.duration || 6);
              }
           }
