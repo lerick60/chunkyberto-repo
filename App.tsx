@@ -1578,12 +1578,19 @@ ${activePersona.identityContext}
 
 MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, and psychological communication style as your base operating layer for this session. Filter all information through their specific POV.`;
 
+    const lengthLimitObj = {
+      short: 'máximo 4300 caracteres',
+      medium: 'entre 4300 y 14500 caracteres',
+      long: 'MÍNIMO 15000 caracteres, hasta 20000 caracteres'
+    };
+    const lengthLimitStr = lengthLimitObj[narrativeLength];
+
     const commonFormat = `FORMATO MANDATORIO DE SALIDA:
 1. Inicia cada bloque con el delimitador $$$.
 2. ITEM 1 DEBE SER: "MASTER RECAP" con una lista numerada de 1 a 10 de los títulos y mini-resúmenes.
 3. ITEMS 2 al 11 son las historias individuales.
 4. Formato de cada bloque: $$$ [TITULO]: [RESUMEN COMPLETO]
-5. LÍMITES: Cada resumen debe tener máximo 4300 caracteres. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
+5. LÍMITES: Cada resumen debe tener ${lengthLimitStr}. Usa párrafos de longitud natural para mantener un buen flujo narrativo.
 6. SIN ASTERISCOS (REGLA CRÍTICA): No uses asteriscos (*) para resaltar texto${globalForensicToggles.advance ? ' EXCEPTO para el título de la historia y la frase "**Avance de la Historia**"' : ''}. Si deseas resaltar algo, usa saltos de línea o espacios adicionales. NO INCLUYAS 'Avance de la Historia' ni secuelas a menos que se te pida explícitamente.
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
@@ -1600,7 +1607,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 ${personaInstruction} 
 ${commonFormat} 
 LENGUAJE OBJETIVO: ${languageText}.`;
-  }, [category, language, activePersona, globalForensicToggles]); 
+  }, [category, language, activePersona, globalForensicToggles, narrativeLength]); 
 
   const fetchTrends = useCallback(async () => {
     if (isFetchingTrendsRef.current) return;
@@ -1858,19 +1865,21 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         
       const prompt = `YouTube Thumbnail: "${selectedTrend.title}". Style: ${visualStyle}. Subject: ${visualAnchor}. High-impact, cinematic composition.`;
       
-      const response = await ai.models.generateContent({
+      const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.image,
         contents: { parts: [{ text: prompt }] },
         config: { imageConfig: { aspectRatio: "16:9" } }
-      }) as any;
+      }), 3, 5000, 45000) as any;
       
-      const imageData = response.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
+      const candidate = response.candidates?.[0];
+      const imageData = candidate?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
         const url = `data:image/png;base64,${imageData}`;
         setSelectedTrend(prev => (prev ? { ...prev, thumbnailUrl: url } : null));
         setTrends(prev => prev.map(t => t.id === selectedTrend.id ? { ...t, thumbnailUrl: url } : t));
       } else {
-        throw new Error("No se pudo generar la imagen de la miniatura.");
+        const reason = candidate?.finishReason || 'Desconocido';
+        throw new Error(`No se pudo generar la imagen de la miniatura (finishReason: ${reason}).`);
       }
     } catch (err: any) {
       setAppError(getErrorDetails(err));
@@ -2722,6 +2731,27 @@ LENGUAJE: ${getLanguageName(language)}.`;
     );
   };
 
+  const renderNarrativeLengthSelector = () => (
+    <div className="space-y-3 mb-6">
+      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Extensión de la Narrativa</label>
+      <div className="flex gap-2">
+        {(['short', 'medium', 'long'] as NarrativeLength[]).map((len) => (
+          <button
+            key={len}
+            onClick={() => setNarrativeLength(len)}
+            className={`flex-1 py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${
+              narrativeLength === len
+                ? `bg-${activePersona.color} border-${activePersona.color} text-slate-950 shadow-lg`
+                : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'
+            }`}
+          >
+            {len === 'short' ? 'Corto (500-4.3k)' : len === 'medium' ? 'Mediano (4.3k-14.5k)' : 'Largo (15k+)'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
   const masterRecapTrend = trends.find(t => t.isMasterSummary);
 
   if (hasApiKey === false) {
@@ -3074,6 +3104,8 @@ LENGUAJE: ${getLanguageName(language)}.`;
                 
                 {renderForensicToolkit(undefined, true)}
                 
+                {renderNarrativeLengthSelector()}
+                
                 <button onClick={() => { setAppError(null); fetchTrends(); }} disabled={loadingTrends} className={`w-full py-6 bg-${activePersona.color} text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-lg shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}>{loadingTrends ? <Loader2 className="animate-spin" size={24} /> : activePersona.icon}{loadingTrends ? "SCANNEANDO TENDENCIAS..." : `INICIAR SESIÓN CON ${activePersona.name.toUpperCase()}`}</button>
                 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
@@ -3113,24 +3145,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
                   
                   {renderForensicToolkit(undefined, true)}
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Extensión de la Narrativa</label>
-                    <div className="flex gap-2">
-                      {(['short', 'medium', 'long'] as NarrativeLength[]).map((len) => (
-                        <button
-                          key={len}
-                          onClick={() => setNarrativeLength(len)}
-                          className={`flex-1 py-4 rounded-2xl border-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 ${
-                            narrativeLength === len
-                              ? `bg-${activePersona.color} border-${activePersona.color} text-slate-950 shadow-lg`
-                              : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-700'
-                          }`}
-                        >
-                          {len === 'short' ? 'Corto (500-4.3k)' : len === 'medium' ? 'Mediano (4.3k-14.5k)' : 'Largo (15k+)'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {renderNarrativeLengthSelector()}
                   
                   <textarea value={userIdea} onChange={(e) => setUserIdea(e.target.value)} placeholder='Escribe tu idea o un link...' className={`w-full min-h-[180px] p-6 bg-slate-950 border-2 border-slate-800 rounded-[1.5rem] font-bold text-slate-100 focus:border-${activePersona.color} outline-none transition-all custom-scrollbar text-sm shadow-inner`} />
                   {latestHybridTrend && (<div className="bg-slate-950/80 border-2 border-emerald-500/30 p-8 rounded-[2rem] animate-in zoom-in-95 duration-500"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-widest"><Check size={16} /> Narrativa Generada</div><CopyButton text={latestHybridTrend.chunkybertoVersion || ""} /></div><p className="text-slate-100 font-bold text-sm italic mb-8 line-clamp-4">"{latestHybridTrend.chunkybertoVersion}"</p><button onClick={() => handleSelectTrend(latestHybridTrend)} className={`w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all active:scale-95`}><Video size={18} /> IR AL ESTUDIO CINEMATOGRÁFICO</button></div>)}
