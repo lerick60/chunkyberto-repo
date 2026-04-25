@@ -1679,7 +1679,8 @@ Rules for EACH paragraph:
 7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
-${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
+10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
+${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
 
       const contents: any = { parts: [{ text: promptText }] };
       if (modelSettings.erickReferenceImage) {
@@ -1734,7 +1735,8 @@ Rules for EACH paragraph:
 7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
-${modelSettings.erickReferenceImage ? '10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
+10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
+${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
 
       const contents: any = { parts: [{ text: promptText }] };
       if (modelSettings.erickReferenceImage) {
@@ -2157,7 +2159,8 @@ CRITICAL: Ignore empty lines or paragraphs that do not contain narrative text. D
 ${visualAnchorContext}${characterContext}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
-LENGUAJE: ${getLanguageName(language)}.`;
+LENGUAJE: ${getLanguageName(language)}.
+CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the narrative. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.`;
 
       const contents: any = { parts: [{ text: promptText }] };
       if (modelSettings.erickReferenceImage) {
