@@ -2002,15 +2002,15 @@ ${activePersona.introductionPrefix}
         ? "Mediano: 4300-14500 caracteres." 
         : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud, pero sin exceder los 20,000 caracteres.";
 
-      const response = await apiRetry(() => ai.models.generateContent({
-        model: modelSettings.text,
-        contents: `USER BRIEF: ${userIdea}
+      let response: any;
+      const basePromptStr = `USER BRIEF: ${userIdea}
 
 STRICT NARRATION REQUEST:
 PERSONA TO ADOPT: ${activePersona.name}. 
 FULL IDENTITY SOURCE: ${activePersona.identityContext} 
 
 Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
+CRITICAL INSTRUCTION: If the user brief contains URLs (web pages or YouTube videos, each separated by a new line), you MUST use your search capabilities to extract the context from those sources (up to 5 links as requested) and use them collectively as the foundational inspiration for the story.
 EXTENSION TARGET: ${lengthInstruction}
 CRITICAL: If the target is "Largo", you MUST provide a very long and detailed narrative (at least 15,000 characters). Expand on every detail, scene, and dialogue.
 
@@ -2027,13 +2027,34 @@ RULES:
 ${category === 'biographies' ? '7. CRITICAL: You MUST explicitly mention the name of the person whose biography is being narrated at least once in the text.' : ''}
 ${charLimit < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the main narrative (immediately after the story title) with a masterful hook. It must not be a cheap trick, but promise real intrigue and entertainment, giving the reader a true sense of the pleasures to expect. It must do one or more of the following: awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.' : ''}
 ${charLimit < 10000 ? '9. SHORT NARRATIVE ARCHITECTURE (CRITICAL): Sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows: 1) Unity of impression and single effect (constant tension, no filler). 2) Focused structure (single main conflict, few characters, single setting). 3) Inescapable central conflict (clear goal and obstacle). 4) Memorable climax and ending (twist, epiphany, or open ending). 5) Every scene must earn its place (relentless condensation, cause-and-effect logic).' : ''}
-${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`,
-        config: { 
-          tools: [{ googleSearch: {} }], 
-          systemInstruction: `You are ${activePersona.name}.`,
-          maxOutputTokens: 16384
+${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
+
+      try {
+        response = await apiRetry(() => ai.models.generateContent({
+          model: modelSettings.text,
+          contents: basePromptStr,
+          config: { 
+            tools: [{ googleSearch: {} }], 
+            systemInstruction: `You are ${activePersona.name}.`,
+            maxOutputTokens: 16384
+          }
+        }), 1, 3000, 90000) as any;
+      } catch (firstErr: any) {
+        const details = getErrorDetails(firstErr);
+        if (details.isQuota || firstErr.message === "API_TIMEOUT") {
+          console.log("Hybrid Generation: Hitting quota with grounding, falling back to non-grounded generation...");
+          response = await apiRetry(() => ai.models.generateContent({
+            model: modelSettings.text,
+            contents: basePromptStr + "\n\n(FALLBACK: Extrae el contexto guiándote por la descripción del texto o enlaces si los conoces directamente.)",
+            config: { 
+              systemInstruction: `You are ${activePersona.name}.`,
+              maxOutputTokens: 16384
+            }
+          }), 1, 2000, 90000) as any;
+        } else {
+          throw firstErr;
         }
-      })) as any;
+      }
       
       const fullText = response.text || "";
       if (!fullText || fullText.length < 50) {
@@ -3147,7 +3168,7 @@ LENGUAJE: ${getLanguageName(language)}.`;
 
                   {renderNarrativeLengthSelector()}
                   
-                  <textarea value={userIdea} onChange={(e) => setUserIdea(e.target.value)} placeholder='Escribe tu idea o un link...' className={`w-full min-h-[180px] p-6 bg-slate-950 border-2 border-slate-800 rounded-[1.5rem] font-bold text-slate-100 focus:border-${activePersona.color} outline-none transition-all custom-scrollbar text-sm shadow-inner`} />
+                  <textarea value={userIdea} onChange={(e) => setUserIdea(e.target.value)} placeholder='Escribe tu idea o pega hasta 5 enlaces (cada uno en una línea)...' className={`w-full min-h-[180px] p-6 bg-slate-950 border-2 border-slate-800 rounded-[1.5rem] font-bold text-slate-100 focus:border-${activePersona.color} outline-none transition-all custom-scrollbar text-sm shadow-inner`} />
                   {latestHybridTrend && (<div className="bg-slate-950/80 border-2 border-emerald-500/30 p-8 rounded-[2rem] animate-in zoom-in-95 duration-500"><div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-widest"><Check size={16} /> Narrativa Generada</div><CopyButton text={latestHybridTrend.chunkybertoVersion || ""} /></div><p className="text-slate-100 font-bold text-sm italic mb-8 line-clamp-4">"{latestHybridTrend.chunkybertoVersion}"</p><button onClick={() => handleSelectTrend(latestHybridTrend)} className={`w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 rounded-xl font-black uppercase text-xs flex items-center justify-center gap-3 transition-all active:scale-95`}><Video size={18} /> IR AL ESTUDIO CINEMATOGRÁFICO</button></div>)}
                   <button onClick={handleGenerateFromIdea} disabled={isGeneratingIdea || !userIdea.trim()} className={`w-full py-6 bg-${activePersona.color} text-slate-950 rounded-2xl font-black uppercase text-base italic tracking-widest shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all disabled:opacity-30`}>{isGeneratingIdea ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} />}{isGeneratingIdea ? "CONSTRUYENDO NARRATIVA..." : "EJECUTAR BRIEF CREATIVO"}</button>
                 </div>
