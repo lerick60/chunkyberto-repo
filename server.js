@@ -208,9 +208,23 @@ async function startServer() {
       const { YoutubeTranscript } = await import('youtube-transcript');
       const transcript = await YoutubeTranscript.fetchTranscript(url);
       const text = transcript.map(t => t.text).join(' ');
-      res.json({ text });
+      res.json({ text, source: "transcript" });
     } catch (error) {
-      console.error("YouTube Transcript Error:", error);
+      // Fallback: try to fetch the video title and author using YouTube's oEmbed API
+      try {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
+        if (oembedRes.ok) {
+          const oembedData = await oembedRes.json();
+          return res.json({ 
+            text: `[Transcript disabled. Video Title: ${oembedData.title}. Channel: ${oembedData.author_name}]`,
+            source: "oembed_fallback"
+          });
+        }
+      } catch (fallbackError) {
+        console.error("oEmbed fallback failed:", fallbackError);
+      }
+
+      console.error("YouTube Transcript Error:", error.message || error);
       res.status(500).json({ error: error.message || "Failed to fetch transcript" });
     }
   });
