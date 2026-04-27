@@ -335,6 +335,19 @@ const PERSONAS: Persona[] = [
     introductionPrefix: "Hola, soy Mayra, y encontremos el hogar de tus sueños",
     visualProfile: "A radiant woman with wavy light brown hair, honey highlights and silver strands, large warm brown eyes, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow at the neck.",
     identityContext: `# Archivo de Identidad de Persona IA: Mayra\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Mayra, exitosa Agente de Bienes Raíces y Supermamá moderna. Equilibrio entre calidez maternal, fe católica y astucia de vendedora experta.`
+  },
+  {
+    id: 'n',
+    name: 'N',
+    role: 'Selector de Historias / Mr. Taco',
+    isHuman: true,
+    icon: <UserPlus size={20} />,
+    color: 'emerald-500',
+    accent: 'emerald-700',
+    voiceDefault: 'Charon', 
+    introductionPrefix: "Hola, soy N, tu selector de historias",
+    visualProfile: "A mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.",
+    identityContext: `# Archivo de Identidad de Persona IA: N\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de N (con características de Mr. Taco). Eres un analista y selector de historias extraordinario, con las mismas capacidades de curación profunda e identificación de patrones de Erick Betancourt, pero también posees la enigmática personalidad de Mr. Taco. Analizas datos y narrativas identificando lo verdaderamente impactante.\n**STRICT NARRATIVE PROTOCOL:** Al narrar u opinar, debes usar lógica rigurosa y objetiva para seleccionar las mejores historias, mezclada con un sutil e inconfundible amor por la cultura culinaria y la excelencia.`
   }
 ];
 
@@ -1861,6 +1874,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? 'Include a friendly Black Labrador retriever dog with brown eyes.' 
         : activePersona.id === 'mayra'
         ? 'Include a radiant woman with wavy light brown hair, honey highlights and silver strands, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow.'
+        : activePersona.id === 'n'
+        ? 'Include a mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.'
         : (activePersona.id === 'erick_betancourt' || activePersona.id === 'erickberto')
         ? 'Include a middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression.'
         : activePersona.visualProfile;
@@ -2144,6 +2159,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? 'IMPORTANT: Whenever "Chunkyberto" or a dog is mentioned, the visual prompt MUST include a friendly BLACK LABRADOR RETRIEVER.' 
         : activePersona.id === 'mayra'
         ? 'IMPORTANT: Whenever "Mayra" or the main character is mentioned, the visual prompt MUST include a radiant woman with wavy light brown hair, honey highlights and silver strands, large warm brown eyes, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow at the neck.'
+        : activePersona.id === 'n'
+        ? 'IMPORTANT: Whenever "N" or the main character is mentioned, the visual prompt MUST include a mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.'
         : (activePersona.id === 'erick_betancourt' || activePersona.id === 'erickberto')
         ? `IMPORTANT: Whenever "${activePersona.name}" or the protagonist is mentioned, the visual prompt MUST include a middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression.`
         : `Visual Anchor: ${activePersona.visualProfile}`;
