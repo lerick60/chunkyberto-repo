@@ -2019,8 +2019,28 @@ ${activePersona.introductionPrefix}
         ? "Mediano: 4300-14500 caracteres." 
         : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud, pero sin exceder los 20,000 caracteres.";
 
+      // Extract YouTube links and fetch transcripts
+      const youtubeLinks = userIdea.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/gi) || [];
+      let extraYoutubeContext = "";
+      
+      if (youtubeLinks.length > 0) {
+        setIsGeneratingIdea(true); // Ensure UI shows loading
+        const uniqueLinks = Array.from(new Set(youtubeLinks)); // limit to unique
+        for (const link of uniqueLinks.slice(0, 5)) { // max 5
+          try {
+            const res = await fetch(`/api/youtube/transcript?url=${encodeURIComponent(link)}`);
+            if (res.ok) {
+              const data = await res.json();
+              extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
+            }
+          } catch(e) {
+            console.error("Failed to fetch transcript for", link, e);
+          }
+        }
+      }
+
       let response: any;
-      const basePromptStr = `USER BRIEF: ${userIdea}
+      const basePromptStr = `USER BRIEF: ${userIdea}${extraYoutubeContext}
 
 STRICT NARRATION REQUEST:
 PERSONA TO ADOPT: ${activePersona.name}. 

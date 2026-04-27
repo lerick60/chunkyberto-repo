@@ -201,6 +201,20 @@ async function startServer() {
     }
   });
 
+  app.get("/api/youtube/transcript", async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "Missing url parameter" });
+    try {
+      const { YoutubeTranscript } = await import('youtube-transcript');
+      const transcript = await YoutubeTranscript.fetchTranscript(url);
+      const text = transcript.map(t => t.text).join(' ');
+      res.json({ text });
+    } catch (error) {
+      console.error("YouTube Transcript Error:", error);
+      res.status(500).json({ error: error.message || "Failed to fetch transcript" });
+    }
+  });
+
   const serveStatic = () => {
     app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
     app.use((req, res) => {
