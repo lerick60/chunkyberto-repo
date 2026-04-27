@@ -212,8 +212,9 @@ async function startServer() {
     } catch (error) {
       // Fallback: try to fetch the video title and author using YouTube's oEmbed API
       try {
-        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`);
-        if (oembedRes.ok) {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url.trim())}&format=json`);
+        const contentType = oembedRes.headers.get("content-type");
+        if (oembedRes.ok && contentType && contentType.includes("application/json")) {
           const oembedData = await oembedRes.json();
           return res.json({ 
             text: `[Transcript disabled. Video Title: ${oembedData.title}. Channel: ${oembedData.author_name}]`,

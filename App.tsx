@@ -2025,13 +2025,16 @@ ${activePersona.introductionPrefix}
       
       if (youtubeLinks.length > 0) {
         setIsGeneratingIdea(true); // Ensure UI shows loading
-        const uniqueLinks = Array.from(new Set(youtubeLinks)); // limit to unique
+        const uniqueLinks = Array.from(new Set(youtubeLinks.map(l => l.trim()))); // limit to unique and trim whitespace
         for (const link of uniqueLinks.slice(0, 5)) { // max 5
           try {
             const res = await fetch(`/api/youtube/transcript?url=${encodeURIComponent(link)}`);
-            if (res.ok) {
+            const contentType = res.headers.get("content-type");
+            if (res.ok && contentType && contentType.includes("application/json")) {
               const data = await res.json();
               extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
+            } else if (!res.ok) {
+              console.warn(`Transcript endpoint returned ${res.status} for ${link}`);
             }
           } catch(e) {
             console.error("Failed to fetch transcript for", link, e);
