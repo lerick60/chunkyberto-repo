@@ -1,6 +1,6 @@
 # Video Prompts Generation Rules
 When generating or modifying the video prompts functionality:
-1. All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+1. All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in the selected language (Spanish, English, or French). Spanish is the default.
 2. The narrator expressions must be written to be spoken by a male voice.
 3. DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
 4. The narrator expressions must be a maximum of 22 words long.

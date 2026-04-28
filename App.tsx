@@ -1293,6 +1293,12 @@ export const App: React.FC = () => {
     setTimeout(() => setNotification(null), 5000);
   };
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null); 
+  /**
+   * --- MULTILINGUAL NARRATIVE LOGIC ---
+   * This state controls the target language for all AI-generated content (stories, prompts, analysis).
+   * Selection is available in the top-right corner of the header.
+   * Default: Spanish ('es'). Options: Spanish, English, French.
+   */
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('chunky_language') as Language) || 'es');
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>(() => localStorage.getItem('chunky_persona') || PERSONAS[0].id);
   const [producingImages, setProducingImages] = useState(false);
@@ -2879,20 +2885,23 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
               <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Mi Canal</span>
             </a>
           )}
-          <div className="relative hidden sm:block">
-            <select 
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="appearance-none p-2.5 pl-9 pr-4 rounded-xl bg-slate-800 text-slate-400 border border-slate-700 hover:text-white transition-all font-black text-[9px] uppercase tracking-tighter cursor-pointer outline-none"
-              title="Idioma Global"
-            >
-              <option value="es">ESPAÑOL</option>
-              <option value="en">ENGLISH</option>
-              <option value="fr">FRANÇAIS</option>
-            </select>
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-              <Globe2 size={14} />
-            </div>
+          <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
+            {(['es', 'en', 'fr'] as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => {
+                  setLanguage(lang);
+                  localStorage.setItem('chunky_language', lang);
+                }}
+                className={`px-3 py-1.5 rounded-lg font-black text-[9px] transition-all uppercase tracking-tighter ${
+                  language === lang 
+                    ? `bg-${activePersona.color} text-slate-950 shadow-lg` 
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {lang === 'es' ? 'ES' : lang === 'en' ? 'EN' : 'FR'}
+              </button>
+            ))}
           </div>
           <button 
             onClick={() => setIsDraftsModalOpen(true)}
