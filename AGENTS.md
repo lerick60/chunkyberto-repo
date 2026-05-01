@@ -22,6 +22,11 @@ When generating or modifying the video prompts functionality:
 2. This category must strictly generate narratives about biographies of scientists, famous people, and famous politicians (both living and deceased).
 3. The generated biography must strictly reflect the unique literary style, personality, and point of view of the currently selected persona.
 
+# Products Review Category Rules
+1. The "Products Review" category is available for all personas.
+2. This category must explicitly scan the most recent product launches and the story should be generated based on the opinion of each persona about the pros and cons they see in a particular electronic product or gadget.
+3. The review must be narrated strictly reflecting the particular personality, point of view, and role of the currently active persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
