@@ -41,5 +41,12 @@ When generating or modifying the video prompts functionality:
    - Memorable climax and ending (twist, epiphany, or open ending).
    - Every scene must earn its place (relentless condensation, cause-and-effect logic).
 
+# Language Selector Rules
+1. The language selector is located in the top right corner of the header.
+2. It supports three languages: Spanish (ES), English (EN), and French (FR).
+3. The selected language is persisted in `localStorage` and used as the target language for all AI-generated content (stories, prompts, reviews, and narrations).
+4. Spanish ('es') is the default language.
+5. All UI labels for specific persona-narrative outputs must strictly respect the selected language.
+
 # Generative Models Rules
 1. The "Gratis" (free) mode must always include the latest free models. Currently: `veo-3.1-lite-generate-preview` for video logic and `gemini-3.1-flash-tts-preview` for TTS.

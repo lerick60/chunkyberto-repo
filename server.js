@@ -18,6 +18,10 @@ async function startServer() {
   app.use(express.json());
   app.use(cookieParser("chunkyberto-secret"));
 
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   function cleanSecret(val) {
     if (!val) return val;
     // Remove leading/trailing spaces and accidental surrounding quotes

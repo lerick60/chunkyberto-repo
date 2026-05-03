@@ -144,6 +144,25 @@ const SAFELIST_COLORS = [
   "bg-amber-900/20", "bg-blue-900/20", "bg-purple-900/20", "bg-indigo-900/20", "bg-pink-900/20", "bg-emerald-900/20", "bg-rose-900/20", "bg-fuchsia-900/20"
 ];
 
+// Safe environment variable access helper for Browser
+const getSafeApiKey = (): string => {
+  try {
+    // Priority order: 
+    // 1. Literal process.env (replaced by Vite define)
+    // 2. window.process.env (injected by server.js)
+    // 3. Fallback to empty string
+    return process.env.GEMINI_API_KEY || 
+           process.env.API_KEY || 
+           (window as any).process?.env?.GEMINI_API_KEY || 
+           (window as any).process?.env?.API_KEY || 
+           "";
+  } catch (e) {
+    return (window as any).process?.env?.GEMINI_API_KEY || 
+           (window as any).process?.env?.API_KEY || 
+           "";
+  }
+};
+
 // DIRECTRICES DE ARQUITECTURA DE CUENTO (ArquitecturaCuento.md)
 // Estas directrices se aplican obligatoriamente a las personas 'chunkyberto' y 'luna'.
 const STORY_GUIDELINES = `
@@ -841,7 +860,7 @@ export const YouTubeUploadModal: React.FC<{
     if (!trend) return;
     setUploadStatus('generating');
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const prompt = `Actúa como un experto en SEO de YouTube. Basado en esta historia: "${trend.chunkybertoVersion}", genera:
       1. Un título de video viral y clickbait (máximo 100 caracteres).
       2. Una descripción detallada y atractiva que incluya un resumen de la historia y llamados a la acción.
@@ -1634,7 +1653,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       let extraForensic = "";
       if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
       if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW dialogues. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1644,8 +1663,8 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         response = await apiRetry(() => ai.models.generateContent({ 
           model: modelSettings.text, 
           contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
-          config: { tools: [{ googleSearch: {} }] } 
-        }), 1, 3000, 90000) as any;
+          tools: [{ googleSearch: {} }]
+        } as any), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         if (details.isQuota || firstErr.message === "API_TIMEOUT") {
@@ -2316,7 +2335,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         const vidRes = await fetch(downloadLink, {
           method: 'GET',
           headers: {
-            'x-goog-api-key': ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "")
+            'x-goog-api-key': getSafeApiKey()
           }
         });
         if (!vidRes.ok) throw new Error(`Video download failed: ${vidRes.statusText}`);
