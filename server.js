@@ -22,6 +22,10 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  if (!process.env.GEMINI_API_KEY && !process.env.API_KEY) {
+    console.warn("⚠️  WARNING: GEMINI_API_KEY is not set in the environment. Users will need to provide it manually in the App Settings.");
+  }
+
   function cleanSecret(val) {
     if (!val) return val;
     // Remove leading/trailing spaces and accidental surrounding quotes

@@ -146,20 +146,23 @@ const SAFELIST_COLORS = [
 
 // Safe environment variable access helper for Browser
 const getSafeApiKey = (): string => {
+  // Priority: 
+  // 1. localStorage (manually set by user in Settings if not in AI Studio)
+  // 2. window.process.env (injected at runtime by server.js in production)
+  // 3. process.env (replaced by Vite define at build time)
+  // 4. Fallback to empty string
+  
+  const manualKey = localStorage.getItem('chunky_custom_api_key');
+  if (manualKey) return manualKey;
+
+  const win = window as any;
+  const runtimeKey = win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY;
+  if (runtimeKey) return runtimeKey;
+
   try {
-    // Priority order: 
-    // 1. Literal process.env (replaced by Vite define)
-    // 2. window.process.env (injected by server.js)
-    // 3. Fallback to empty string
-    return process.env.GEMINI_API_KEY || 
-           process.env.API_KEY || 
-           (window as any).process?.env?.GEMINI_API_KEY || 
-           (window as any).process?.env?.API_KEY || 
-           "";
+    return process.env.GEMINI_API_KEY || process.env.API_KEY || "";
   } catch (e) {
-    return (window as any).process?.env?.GEMINI_API_KEY || 
-           (window as any).process?.env?.API_KEY || 
-           "";
+    return "";
   }
 };
 
@@ -1102,8 +1105,13 @@ export const SettingsModal: React.FC<{
   activePersona: Persona;
   modelSettings: ModelSettings;
   setModelSettings: (settings: ModelSettings) => void;
-}> = ({ isOpen, onClose, ytSettings, onUpdateYtSettings, activePersona, modelSettings, setModelSettings }) => {
+  customApiKey: string;
+  setCustomApiKey: (key: string) => void;
+}> = ({ isOpen, onClose, ytSettings, onUpdateYtSettings, activePersona, modelSettings, setModelSettings, customApiKey, setCustomApiKey }) => {
   if (!isOpen) return null;
+
+  // @ts-ignore
+  const isAiStudio = !!window.aistudio?.hasSelectedApiKey;
 
   return (
     <div className="fixed inset-0 z-[400] bg-slate-950/90 backdrop-blur-2xl flex items-center justify-center p-6">
@@ -1118,6 +1126,29 @@ export const SettingsModal: React.FC<{
         </div>
 
         <div className="p-10 space-y-8 overflow-y-auto">
+          {/* API Key Section for external deployments */}
+          {!isAiStudio && (
+            <div className="space-y-4 p-6 bg-indigo-500/5 border border-indigo-500/20 rounded-3xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-indigo-400 font-black text-[10px] uppercase tracking-widest">
+                  <Key size={16} /> Gemini API Key
+                </div>
+              </div>
+              <div className="space-y-3">
+                <input 
+                  type="password"
+                  value={customApiKey}
+                  onChange={(e) => setCustomApiKey(e.target.value)}
+                  placeholder="Introduce tu Gemini API Key..."
+                  className="w-full px-5 py-4 bg-slate-950 border-2 border-slate-800 rounded-2xl text-white text-sm font-medium focus:border-indigo-500 outline-none transition-all"
+                />
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed">
+                  Usado para despliegues fuera de AI Studio (ej. GCP Cloud Run). Esta llave se guarda localmente en tu navegador.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-indigo-500 font-black text-[10px] uppercase tracking-widest">
@@ -1407,6 +1438,8 @@ export const App: React.FC = () => {
     return defaults;
   });
 
+  const [customApiKey, setCustomApiKey] = useState<string>(() => localStorage.getItem('chunky_custom_api_key') || "");
+
   const isFetchingTrendsRef = useRef(false);
   const hasInitialFetchedRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -1422,7 +1455,7 @@ export const App: React.FC = () => {
         setAppError(null); 
         hasInitialFetchedRef.current = false;
       } else {
-        alert("La configuración de la llave API solo está disponible cuando la aplicación se ejecuta dentro de la plataforma AI Studio. Si estás abriendo la URL directamente, por favor usa el enlace compartido oficial.");
+        setIsSettingsOpen(true);
       }
     } catch (err: any) {
       console.error("Error selecting API key:", err);
@@ -1502,13 +1535,22 @@ export const App: React.FC = () => {
     return audioContextRef.current;
   }, []);
 
-  const checkApiKeyStatus = useCallback(async () => { try {
+  const checkApiKeyStatus = useCallback(async () => {
+    try {
       // @ts-ignore
       if (window.aistudio?.hasSelectedApiKey) {
         // @ts-ignore
-        const selected = await window.aistudio.hasSelectedApiKey(); setHasApiKey(!!selected);
-      } else { setHasApiKey(true); }
-    } catch (e) { setHasApiKey(true); } }, []);
+        const selected = await window.aistudio.hasSelectedApiKey();
+        setHasApiKey(!!selected);
+      } else {
+        // If not in AI Studio, check if we have a key in env or localStorage
+        const key = getSafeApiKey();
+        setHasApiKey(!!key);
+      }
+    } catch (e) {
+      setHasApiKey(true);
+    }
+  }, []);
   
   useEffect(() => { checkApiKeyStatus(); }, [checkApiKeyStatus]);
 
@@ -1696,7 +1738,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
   const handleGenerateVideoPrompts = async (trend: Trend) => {
     setGeneratingVideoPromptsId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
       
       const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
@@ -1752,7 +1794,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
   const handleGenerateImagePrompts = async (trend: Trend) => {
     setGeneratingImagePromptsId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
       
       const activeCharacters = customCharacters.filter((c): c is CustomCharacter => c !== null && !!c.base64);
@@ -1809,7 +1851,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
   const handleRewrite = async (trend: Trend) => {
     setRewritingId(trend.id); setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -1894,7 +1936,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setGeneratingThumbnail(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const visualAnchor = activePersona.id === 'luna' 
         ? 'Include an elegant Siamese cat with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -1950,7 +1992,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (type === 'advance') setIsAdvancing(true);
     setAppError(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const lang = getLanguageName(language);
       let prompt = "";
       if (type === 'analysis') {
@@ -1998,7 +2040,7 @@ IDIOMA: ${lang}`;
     if (!userIdea.trim()) return;
     setIsGeneratingIdea(true); setAppError(null); setLatestHybridTrend(null);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
@@ -2149,7 +2191,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     if (!text || text.trim().length === 0) return null;
     
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
@@ -2202,7 +2244,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     setProducingImages(true); setAppError(null);
     setSelectedTrend(prev => (prev ? { ...prev, storyboard: [] } : null));
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const visualAnchorContext = activePersona.id === 'luna' 
         ? 'IMPORTANT: Whenever "Luna" or a cat is mentioned, the visual prompt MUST include an elegant SIAMESE CAT with sapphire blue eyes.' 
         : activePersona.id === 'chunkyberto' 
@@ -2276,7 +2318,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     };
     updateStoryboardState(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frame.prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }), 3, 5000, 45000) as any;
       const imageData = res.candidates?.[0]?.content?.parts.find((p: any) => p.inlineData)?.inlineData?.data;
       if (imageData) {
@@ -2297,7 +2339,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     };
     updateStoryboardState(true, false);
     try {
-      const ai = new GoogleGenAI({ apiKey: ((window as any).process?.env?.GEMINI_API_KEY || (window as any).process?.env?.API_KEY || "") });
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       
       const config: any = { numberOfVideos: 1, resolution: '720p', aspectRatio: videoDim };
       const promptText = `${visualStyle} film: ${frame.originalIdea}.`;
@@ -2965,6 +3007,12 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         activePersona={activePersona}
         modelSettings={modelSettings}
         setModelSettings={setModelSettings}
+        customApiKey={customApiKey}
+        setCustomApiKey={(val) => {
+          setCustomApiKey(val);
+          localStorage.setItem('chunky_custom_api_key', val);
+          checkApiKeyStatus();
+        }}
       />
 
       <main className="max-w-7xl mx-auto px-4 pt-10">
