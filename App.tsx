@@ -289,6 +289,7 @@ interface DetailedError {
   stack?: string;
   docsLink?: string;
   isQuota: boolean;
+  isInternal?: boolean;
   raw?: any;
 }
 
@@ -578,17 +579,18 @@ function getErrorDetails(err: any): DetailedError {
   }
   
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
-  const isInternal = String(code) === "500" || String(status).includes("INTERNAL");
+  const isInternal = String(code) === "500" || String(code) === "503" || String(status).includes("INTERNAL") || String(status).includes("UNAVAILABLE") || message.toLowerCase().includes("timed out");
   
   if (isQuota) {
     docsLink = "https://ai.google.dev/gemini-api/docs/rate-limits";
     message = "Límite de cuota excedido (429). Por favor espera un momento antes de reintentar.";
   } else if (isInternal) {
     docsLink = "https://ai.google.dev/gemini-api/docs/troubleshooting";
-    message = "Error interno del servidor (500). Reintentando automáticamente...";
+    message = `Error interno del servidor (${code || "500/503"}). Reintentando automáticamente...`;
   }
+
   
-  return { message: String(message), code: String(code), status: String(status), stack: String(stack), docsLink, isQuota, raw };
+  return { message: String(message), code: String(code), status: String(status), stack: String(stack), docsLink, isQuota, isInternal, raw };
 }
 
 async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 5000, timeoutMs = 60000): Promise<T> {
@@ -601,13 +603,13 @@ async function apiRetry<T>(fn: () => Promise<T>, maxRetries = 5, baseDelay = 500
       ]);
     } catch (err: any) {
       const details = getErrorDetails(err);
-      const isInternal = String(details.code) === "500" || String(details.status).includes("INTERNAL") || err.message === "API_TIMEOUT";
+      const isInternal = String(details.code) === "500" || String(details.code) === "503" || String(details.status).includes("INTERNAL") || String(details.status).includes("UNAVAILABLE") || err.message === "API_TIMEOUT" || String(details.message).toLowerCase().includes("timed out");
       
       if ((details.isQuota || isInternal) && attempt < maxRetries) {
         attempt++;
         // Exponential backoff with jitter, capped at 30 seconds
         const delay = Math.min(30000, (baseDelay * Math.pow(2, attempt - 1)) + (Math.random() * 2000));
-        console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${err.message === "API_TIMEOUT" ? "Timeout" : details.status}`);
+        console.log(`API Retry attempt ${attempt}/${maxRetries} after ${Math.round(delay)}ms due to ${err.message === "API_TIMEOUT" ? "Timeout" : (details.status || details.code || "Internal")}`);
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
@@ -1709,8 +1711,8 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         } as any), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT") {
-          console.log("Trend Fetch: Hitting quota with grounding, falling back to non-grounded generation...");
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal) {
+          console.log("Trend Fetch: Hitting quota/error with grounding, falling back to non-grounded generation...");
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
@@ -2150,8 +2152,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         }), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT") {
-          console.log("Hybrid Generation: Hitting quota with grounding, falling back to non-grounded generation...");
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal) {
+          console.log("Hybrid Generation: Hitting quota/error with grounding, falling back to non-grounded generation...");
           response = await apiRetry(() => ai.models.generateContent({
             model: modelSettings.text,
             contents: basePromptStr + "\n\n(FALLBACK: Extrae el contexto guiándote por la descripción del texto o enlaces si los conoces directamente.)",
@@ -2208,7 +2210,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             } 
           } 
         },
-      }), 4, 4000, 30000) as any; // Increased base delay to 4s and timeout to 30s to avoid rate limits
+      }), 6, 5000, 60000) as any; // Increased base delay to 5s, timeout to 60s, max 6 retries
       
       const audioPart = res.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData);
       const base64Audio = audioPart?.inlineData?.data;
@@ -2232,7 +2234,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     } catch (e) { 
       console.error("TTS Error (V47.2.2):", e); 
       const details = getErrorDetails(e);
-      if (!details.isQuota && String(details.code) !== "500" || playOutLoud) {
+      if ((!details.isQuota && !details.isInternal) || playOutLoud) {
         setAppError(details);
       }
       throw e; // Throw the error so the caller knows it failed
