@@ -2607,6 +2607,73 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
           audioSource.start(sceneStartTime); 
         }
 
+        // --- SUBTITLE PROGRESSIVE LAYOUT CALCULATION ---
+        interface SubtitleLine {
+           words: string[];
+           lineWidth: number;
+        }
+        interface SubtitlePage {
+           lines: SubtitleLine[];
+           totalWordsBefore: number;
+           totalWordsInPage: number;
+        }
+        const pages: SubtitlePage[] = [];
+        let totalWords = 0;
+        let speechDuration = audioBuffer ? audioBuffer.duration : segmentDuration;
+        
+        if (frame.narrationText) {
+            const text = frame.narrationText.replace(/^\(Voz masculina\):\s*/i, '').trim();
+            const fontSize = isPortrait ? 28 : 36;
+            canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
+            const words = text.split(/\s+/).filter(w => w.length > 0);
+            totalWords = words.length;
+            
+            let currentLines: SubtitleLine[] = [];
+            let currentLineWords: string[] = [];
+            let wordsProcessed = 0;
+            const maxWidth = canvas.width * 0.85;
+
+            for (let n = 0; n < words.length; n++) {
+              const nextLine = [...currentLineWords, words[n]].join(' ');
+              const metrics = canvasCtx.measureText(nextLine);
+              if (metrics.width > maxWidth && currentLineWords.length > 0) {
+                 const joinedLine = currentLineWords.join(' ');
+                 currentLines.push({ 
+                    words: currentLineWords,
+                    lineWidth: canvasCtx.measureText(joinedLine).width
+                 });
+                 wordsProcessed += currentLineWords.length;
+                 
+                 if (currentLines.length === 2) {
+                    pages.push({
+                       lines: currentLines,
+                       totalWordsBefore: wordsProcessed - currentLines.reduce((acc, l) => acc + l.words.length, 0),
+                       totalWordsInPage: currentLines.reduce((acc, l) => acc + l.words.length, 0),
+                    });
+                    currentLines = [];
+                 }
+                 currentLineWords = [words[n]];
+              } else {
+                 currentLineWords.push(words[n]);
+              }
+            }
+            if (currentLineWords.length > 0) {
+               const joinedLine = currentLineWords.join(' ');
+               currentLines.push({ 
+                  words: currentLineWords,
+                  lineWidth: canvasCtx.measureText(joinedLine).width
+               });
+               wordsProcessed += currentLineWords.length;
+            }
+            if (currentLines.length > 0) {
+               pages.push({
+                   lines: currentLines,
+                   totalWordsBefore: wordsProcessed - currentLines.reduce((acc, l) => acc + l.words.length, 0),
+                   totalWordsInPage: currentLines.reduce((acc, l) => acc + l.words.length, 0),
+               });
+            }
+        }
+
         let lastProgressUpdate = 0;
         while (ctx.currentTime < sceneStartTime + segmentDuration) {
           const nowMs = Date.now();
@@ -2665,46 +2732,58 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
           canvasCtx.drawImage(sourceElement, (canvas.width - nW) / 2 + offX, (canvas.height - nH) / 2 + offY, nW, nH);
           canvasCtx.globalAlpha = 1.0;
 
-          // Dibujar subtítulos superpuestos
-          if (frame.narrationText) {
-            const text = frame.narrationText.replace(/^\(Voz masculina\):\s*/i, '');
-            const fontSize = isPortrait ? 28 : 36;
-            canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
-            canvasCtx.textAlign = 'center';
-            canvasCtx.textBaseline = 'bottom';
-            
-            const words = text.split(' ');
-            let line = '';
-            const lines = [];
-            const maxWidth = canvas.width * 0.85;
-            
-            for (let n = 0; n < words.length; n++) {
-              const testLine = line + words[n] + ' ';
-              const metrics = canvasCtx.measureText(testLine);
-              if (metrics.width > maxWidth && n > 0) {
-                lines.push(line);
-                line = words[n] + ' ';
-              } else {
-                line = testLine;
-              }
-            }
-            lines.push(line);
-            
-            const lineHeight = fontSize * 1.3;
-            const startY = canvas.height - (isPortrait ? 60 : 40) - (lines.length - 1) * lineHeight;
-            
-            for (let k = 0; k < lines.length; k++) {
-              const y = startY + k * lineHeight;
-              
-              // Borde del texto para legibilidad
-              canvasCtx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-              canvasCtx.lineWidth = fontSize * 0.2;
-              canvasCtx.lineJoin = 'round';
-              canvasCtx.strokeText(lines[k], canvas.width / 2, y);
-              
-              // Relleno del texto
-              canvasCtx.fillStyle = '#FFFFFF';
-              canvasCtx.fillText(lines[k], canvas.width / 2, y);
+          // Dibujar subtítulos superpuestos (Progresivos sincronizados con la voz)
+          if (pages.length > 0) {
+            let speechProgress = elapsed / speechDuration;
+            // Desaparecer después del audio (más un margen de 0.5s para no cortarlo brusco si lee rápido)
+            if (elapsed <= speechDuration + 0.5) {
+                // Multiplicador 1.05 para compensar la pausa final de audio y mostrar todas las palabras un poco antes
+                const currentWordTarget = Math.floor((speechProgress * totalWords) * 1.05); 
+                const visibleWordsCount = Math.min(totalWords, Math.max(0, currentWordTarget));
+
+                let activePage: SubtitlePage | null = null;
+                for (const page of pages) {
+                   if (visibleWordsCount >= page.totalWordsBefore && 
+                       visibleWordsCount <= page.totalWordsBefore + page.totalWordsInPage) {
+                       activePage = page;
+                       break;
+                   }
+                }
+                if (!activePage && pages.length > 0 && visibleWordsCount >= totalWords) {
+                   activePage = pages[pages.length - 1]; 
+                }
+
+                if (activePage) {
+                   const wordsVisibleInPage = visibleWordsCount - activePage.totalWordsBefore;
+                   const fontSize = isPortrait ? 28 : 36;
+                   const lineHeight = fontSize * 1.3;
+                   const startY = canvas.height - (isPortrait ? 60 : 40) - (activePage.lines.length - 1) * lineHeight;
+
+                   canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
+                   canvasCtx.textAlign = 'left';
+                   canvasCtx.textBaseline = 'bottom';
+                   
+                   let wordsAllocated = 0;
+                   for (let k = 0; k < activePage.lines.length; k++) {
+                      const lineInfo = activePage.lines[k];
+                      let wordsToShowInLine = Math.min(lineInfo.words.length, wordsVisibleInPage - wordsAllocated);
+                      if (wordsToShowInLine <= 0) break; // Todavía no toca esta línea
+
+                      const lineWordsToDraw = lineInfo.words.slice(0, wordsToShowInLine).join(' ');
+                      const startX = canvas.width / 2 - lineInfo.lineWidth / 2;
+                      const y = startY + k * lineHeight;
+
+                      canvasCtx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+                      canvasCtx.lineWidth = fontSize * 0.2;
+                      canvasCtx.lineJoin = 'round';
+                      canvasCtx.strokeText(lineWordsToDraw, startX, y);
+                      
+                      canvasCtx.fillStyle = '#FFFFFF';
+                      canvasCtx.fillText(lineWordsToDraw, startX, y);
+
+                      wordsAllocated += wordsToShowInLine;
+                   }
+                }
             }
           }
 
