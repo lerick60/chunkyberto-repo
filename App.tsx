@@ -246,10 +246,10 @@ interface VoiceOption {
 }
 
 const MODELS = {
-  TEXT: 'gemini-3-flash-preview',       
-  IMAGE: 'gemini-2.5-flash-image',     
-  VIDEO: 'veo-3.1-lite-generate-preview', 
-  TTS: 'gemini-3.1-flash-tts-preview'   
+  TEXT: 'gemini-1.5-flash',       
+  IMAGE: 'gemini-1.5-flash',     
+  VIDEO: 'gemini-1.5-flash', 
+  TTS: 'gemini-1.5-flash'   
 };
 
 const AVAILABLE_VOICES: VoiceOption[] = [
@@ -393,40 +393,40 @@ const MODEL_TIERS = {
     label: 'Gratis',
     description: 'Solo modelos generativos gratis.',
     models: {
-      text: 'gemini-3-flash-preview',
-      image: 'gemini-2.5-flash-image',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash',
+      image: 'gemini-1.5-flash',
+      video: 'gemini-1.5-flash',
+      tts: 'gemini-1.5-flash'
     }
   },
   economical: {
     label: 'Económico',
     description: 'Modelos generativos más económicos posibles.',
     models: {
-      text: 'gemini-3.1-flash-lite-preview',
-      image: 'gemini-2.5-flash-image',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash-8b',
+      image: 'gemini-1.5-flash-8b',
+      video: 'gemini-1.5-flash-8b',
+      tts: 'gemini-1.5-flash-8b'
     }
   },
   normal: {
     label: 'Normal',
     description: 'Modelos generativos normales.',
     models: {
-      text: 'gemini-3-flash-preview',
-      image: 'gemini-2.5-flash-image',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash',
+      image: 'gemini-1.5-flash',
+      video: 'gemini-1.5-flash',
+      tts: 'gemini-1.5-flash'
     }
   },
   high_quality: {
     label: 'Alta Calidad',
     description: 'Modelos generativos de más alta calidad.',
     models: {
-      text: 'gemini-3.1-pro-preview',
-      image: 'gemini-3.1-flash-image-preview',
-      video: 'veo-3.1-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-2.0-flash',
+      image: 'gemini-2.0-flash',
+      video: 'gemini-2.0-flash',
+      tts: 'gemini-2.0-flash'
     }
   }
 };
