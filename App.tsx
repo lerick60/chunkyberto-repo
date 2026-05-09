@@ -146,21 +146,20 @@ const SAFELIST_COLORS = [
 
 // Safe environment variable access helper for Browser
 const getSafeApiKey = (): string => {
-  // Priority: 
-  // 1. localStorage (manually set by user in Settings if not in AI Studio)
-  // 2. window.process.env (injected at runtime by server.js in production)
-  // 3. process.env (replaced by Vite define at build time)
-  // 4. Fallback to empty string
-  
-  const manualKey = localStorage.getItem('chunky_custom_api_key');
+  const clean = (val: any): string => {
+    if (!val || typeof val !== 'string') return '';
+    return val.trim().replace(/^["']|["']$/g, '');
+  };
+
+  const manualKey = clean(localStorage.getItem('chunky_custom_api_key'));
   if (manualKey) return manualKey;
 
   const win = window as any;
-  const runtimeKey = win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY;
+  const runtimeKey = clean(win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY);
   if (runtimeKey) return runtimeKey;
 
   try {
-    return process.env.GEMINI_API_KEY || process.env.API_KEY || "";
+    return clean(process.env.GEMINI_API_KEY || process.env.API_KEY || "");
   } catch (e) {
     return "";
   }
@@ -247,7 +246,7 @@ interface VoiceOption {
 }
 
 const MODELS = {
-  TEXT: 'gemini-3-flash-preview',       
+  TEXT: 'gemini-flash-latest',       
   IMAGE: 'gemini-2.5-flash-image',     
   VIDEO: 'veo-3.1-lite-generate-preview', 
   TTS: 'gemini-3.1-flash-tts-preview'   
@@ -572,10 +571,16 @@ function getErrorDetails(err: any): DetailedError {
     } catch (e) {}
   }
 
-  if (message.includes("Forbidden") || message.includes("API key not valid") || message.includes("API_KEY_INVALID")) {
-    message = "Error de Autenticación (Forbidden). Si estás ejecutando esto en GCP (Cloud Run), asegúrate de haber configurado la variable de entorno GEMINI_API_KEY en la configuración de tu servicio en Cloud Run.";
+  if (String(code) === "403" || String(status) === "FORBIDDEN" || message.includes("Forbidden") || message.includes("API key not valid") || message.includes("API_KEY_INVALID") || message.includes("Key not found") || message.includes("invalid-api-key") || message.includes("API key not Found")) {
+    const isAiStudioEnv = !!(window as any).aistudio?.hasSelectedApiKey;
+    if (isAiStudioEnv) {
+      message = "Error de Autenticación (Forbidden). Por favor, selecciona una API Key válida en el menú superior de AI Studio.";
+    } else {
+      message = "Error de Autenticación (403/Forbidden). Si usas GCP, configura GEMINI_API_KEY en Cloud Run o ingresa una llave válida en 'Ajustes del Studio' (icono de engranaje). Asegúrate de que la llave no tenga espacios adicionales.";
+    }
     status = "FORBIDDEN";
     code = "403";
+    docsLink = "https://aistudio.google.com/app/apikey";
   }
   
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
@@ -1733,7 +1738,17 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         else { const colonIndex = block.indexOf(':'); if (colonIndex !== -1) { title = block.substring(0, colonIndex).replace(/^\d+[\.\)\:]\s*/, '').replace(/\*\*/g, '').trim(); summary = block.substring(colonIndex + 1).trim(); } else { title = "Historia " + idx; summary = block; } }
         if (title && summary) newTrends.push({ id: `t-${idx}-${Date.now()}`, title, originalSummary: summary, url: '', source: "Forensic News Scan", isMasterSummary: isRecapBlock });
       });
-      setTrends(newTrends.slice(0, 16)); hasInitialFetchedRef.current = true;
+      const developerStory: Trend = {
+        id: 'featured-story',
+        title: 'EL ENCUENTRO CON LAS SOMBRAS',
+        originalSummary: 'Chunkyberto y Erick enfrentan sombras misteriosas y perros feroces en una mañana inolvidable que desafía la realidad.',
+        url: '',
+        source: 'Historia Destacada',
+        isMasterSummary: false,
+        chunkybertoVersion: `Era una mañana fresca y neblinosa. Chunkyberto y Erick caminaban cuando una sombra oscura comenzó a perseguirlos. Pronto apareció otra y los rodearon. Salieron corriendo esquivando las sombras hasta llegar a una iglesia que les dio seguridad. Al intentar regresar a casa, dos pastores alemanes furiosos les cerraron el paso. Erick agarró un palo y protegió a su amigo, dándole un golpe al perro que los asustó, permitiéndoles escapar de regreso a casa... un día cualquiera.`
+      };
+      setTrends([developerStory, ...newTrends.slice(0, 15)]);
+      hasInitialFetchedRef.current = true;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
   }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles]); 
 

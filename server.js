@@ -245,10 +245,11 @@ async function startServer() {
         let html = fs.readFileSync(path.resolve(__dirname, "dist", "index.html"), "utf-8");
         
         const envScript = `<script>
-          window.process = window.process || { env: {} };
-          window.process.env.GEMINI_API_KEY = ${JSON.stringify(process.env.GEMINI_API_KEY || '')};
-          window.process.env.API_KEY = ${JSON.stringify(process.env.API_KEY || '')};
-          window.process.env.APP_URL = ${JSON.stringify(process.env.APP_URL || '')};
+          window.process = window.process || {};
+          window.process.env = window.process.env || {};
+          window.process.env.GEMINI_API_KEY = ${JSON.stringify(cleanSecret(process.env.GEMINI_API_KEY) || '')};
+          window.process.env.API_KEY = ${JSON.stringify(cleanSecret(process.env.API_KEY) || '')};
+          window.process.env.APP_URL = ${JSON.stringify(cleanSecret(process.env.APP_URL) || '')};
         </script>`;
         
         html = html.replace('</head>', `${envScript}</head>`);
