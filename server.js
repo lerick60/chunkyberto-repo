@@ -247,9 +247,12 @@ async function startServer() {
         const envScript = `<script>
           window.process = window.process || {};
           window.process.env = window.process.env || {};
-          window.process.env.GEMINI_API_KEY = ${JSON.stringify(cleanSecret(process.env.GEMINI_API_KEY) || '')};
-          window.process.env.API_KEY = ${JSON.stringify(cleanSecret(process.env.API_KEY) || '')};
+          const geminiKey = ${JSON.stringify(cleanSecret(process.env.GEMINI_API_KEY) || cleanSecret(process.env.API_KEY) || '')};
+          window.process.env.GEMINI_API_KEY = geminiKey;
+          window.process.env.API_KEY = geminiKey;
+          window.GEMINI_API_KEY = geminiKey;
           window.process.env.APP_URL = ${JSON.stringify(cleanSecret(process.env.APP_URL) || '')};
+          console.log("[Runtime] Key detected:", geminiKey ? "Yes (starts with " + geminiKey.substring(0, 3) + ")" : "No");
         </script>`;
         
         html = html.replace('</head>', `${envScript}</head>`);

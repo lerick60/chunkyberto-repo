@@ -155,7 +155,7 @@ const getSafeApiKey = (): string => {
   if (manualKey) return manualKey;
 
   const win = window as any;
-  const runtimeKey = clean(win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY);
+  const runtimeKey = clean(win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY || win.GEMINI_API_KEY);
   if (runtimeKey) return runtimeKey;
 
   try {
@@ -571,12 +571,15 @@ function getErrorDetails(err: any): DetailedError {
     } catch (e) {}
   }
 
-  if (String(code) === "403" || String(status) === "FORBIDDEN" || message.includes("Forbidden") || message.includes("API key not valid") || message.includes("API_KEY_INVALID") || message.includes("Key not found") || message.includes("invalid-api-key") || message.includes("API key not Found")) {
+  if (String(code) === "403" || String(status) === "FORBIDDEN" || message.includes("Forbidden") || message.includes("API key not valid") || message.includes("API_KEY_INVALID") || message.includes("Key not found") || message.includes("invalid-api-key") || message.includes("API key not Found") || message.includes("API_KEY_EXTRACT_FAILED")) {
     const isAiStudioEnv = !!(window as any).aistudio?.hasSelectedApiKey;
+    const currentKey = getSafeApiKey();
+    const keyInfo = currentKey ? `(Key found: ${currentKey.substring(0, 3)}...${currentKey.substring(currentKey.length - 3)})` : "(Key NOT found in any source)";
+
     if (isAiStudioEnv) {
-      message = "Error de Autenticación (Forbidden). Por favor, selecciona una API Key válida en el menú superior de AI Studio.";
+      message = `Error de Autenticación (Forbidden). Por favor, selecciona una API Key válida en el menú superior de AI Studio. ${keyInfo}`;
     } else {
-      message = "Error de Autenticación (403/Forbidden). Si usas GCP, configura GEMINI_API_KEY en Cloud Run o ingresa una llave válida en 'Ajustes del Studio' (icono de engranaje). Asegúrate de que la llave no tenga espacios adicionales.";
+      message = `Error de Autenticación (403/Forbidden). Si usas GCP, configura GEMINI_API_KEY en Cloud Run o ingresa una llave válida en 'Ajustes del Studio' (icono de engranaje). Asegúrate de que la llave no tenga espacios adicionales. ${keyInfo}`;
     }
     status = "FORBIDDEN";
     code = "403";
@@ -1140,15 +1143,23 @@ export const SettingsModal: React.FC<{
                 <div className="flex items-center gap-2 text-indigo-400 font-black text-[10px] uppercase tracking-widest">
                   <Key size={16} /> Gemini API Key
                 </div>
+                <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${getSafeApiKey() ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-500 border border-rose-500/30'}`}>
+                   {getSafeApiKey() ? 'CONECTADA' : 'FALTANTE'}
+                </span>
               </div>
               <div className="space-y-3">
                 <input 
                   type="password"
                   value={customApiKey}
                   onChange={(e) => setCustomApiKey(e.target.value)}
-                  placeholder="Introduce tu Gemini API Key..."
+                  placeholder={getSafeApiKey() ? "••••••••••••••••••••••••••••" : "Introduce tu Gemini API Key..."}
                   className="w-full px-5 py-4 bg-slate-950 border-2 border-slate-800 rounded-2xl text-white text-sm font-medium focus:border-indigo-500 outline-none transition-all"
                 />
+                {getSafeApiKey() && (
+                  <p className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">
+                    Activa: {getSafeApiKey().substring(0, 4)}...{getSafeApiKey().substring(getSafeApiKey().length - 4)}
+                  </p>
+                )}
                 <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider leading-relaxed">
                   Usado para despliegues fuera de AI Studio (ej. GCP Cloud Run). Esta llave se guarda localmente en tu navegador.
                 </p>
