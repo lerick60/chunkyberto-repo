@@ -246,7 +246,7 @@ interface VoiceOption {
 }
 
 const MODELS = {
-  TEXT: 'gemini-flash-latest',       
+  TEXT: 'gemini-3-flash-preview',       
   IMAGE: 'gemini-2.5-flash-image',     
   VIDEO: 'veo-3.1-lite-generate-preview', 
   TTS: 'gemini-3.1-flash-tts-preview'   
@@ -2560,6 +2560,8 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
       const canvasStream = canvas.captureStream(30);
       const combinedStream = new MediaStream([...canvasStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
       
+      await ctx.resume(); // Ensure context is running for clock advancement
+      
       // Prevent background throttling by playing a silent oscillator to the main output
       silentOsc = ctx.createOscillator();
       silentGain = ctx.createGain();
@@ -2673,8 +2675,8 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                  if (currentLines.length === 2) {
                     pages.push({
                        lines: currentLines,
-                       totalWordsBefore: wordsProcessed - currentLines.reduce((acc, l) => acc + l.words.length, 0),
-                       totalWordsInPage: currentLines.reduce((acc, l) => acc + l.words.length, 0),
+                       totalWordsBefore: wordsProcessed - currentLines.reduce((acc: number, l: any) => acc + l.words.length, 0),
+                       totalWordsInPage: currentLines.reduce((acc: number, l: any) => acc + l.words.length, 0),
                     });
                     currentLines = [];
                  }
@@ -2759,26 +2761,26 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
           canvasCtx.globalAlpha = 1.0;
 
           // Dibujar subtítulos superpuestos (Progresivos sincronizados con la voz)
+          // Regla: Aparecen poco a poco, máximo 2 líneas. Desaparecen al completarse la 2da línea.
           if (pages.length > 0) {
             let speechProgress = elapsed / speechDuration;
-            // Desaparecer después del audio (más un margen de 0.5s para no cortarlo brusco si lee rápido)
-            if (elapsed <= speechDuration + 0.5) {
-                // Multiplicador 1.05 para compensar la pausa final de audio y mostrar todas las palabras un poco antes
+            
+            if (elapsed <= speechDuration + 0.3) {
                 const currentWordTarget = Math.floor((speechProgress * totalWords) * 1.05); 
                 const visibleWordsCount = Math.min(totalWords, Math.max(0, currentWordTarget));
 
                 let activePage: SubtitlePage | null = null;
                 for (const page of pages) {
+                   // Cada página se muestra mientras las palabras visibles estén en su rango
                    if (visibleWordsCount >= page.totalWordsBefore && 
-                       visibleWordsCount <= page.totalWordsBefore + page.totalWordsInPage) {
+                       visibleWordsCount < page.totalWordsBefore + page.totalWordsInPage) {
                        activePage = page;
                        break;
                    }
                 }
-                if (!activePage && pages.length > 0 && visibleWordsCount >= totalWords) {
-                   activePage = pages[pages.length - 1]; 
-                }
-
+                
+                // REGLA: Desaparecer cuando se llena el 2do renglón (fin de página) 
+                // Si la última palabra de la página ya fue "leída", ocultamos hasta que empiece la siguiente o el siguiente audio.
                 if (activePage) {
                    const wordsVisibleInPage = visibleWordsCount - activePage.totalWordsBefore;
                    const fontSize = isPortrait ? 28 : 36;
