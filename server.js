@@ -238,6 +238,64 @@ async function startServer() {
     }
   });
 
+  app.get("/api/scrape", async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "Missing url parameter" });
+    try {
+      try {
+        const jinaResponse = await fetch(`https://r.jina.ai/${url}`, {
+          headers: { 'Accept': 'text/plain' }
+        });
+        if (jinaResponse.ok) {
+          let markdown = await jinaResponse.text();
+          if (markdown.length > 5000) markdown = markdown.substring(0, 5000) + '...';
+          return res.json({ title: "Extracted Content", description: "", body: markdown, source: url });
+        }
+      } catch (err) {
+        console.warn("Jina fetch failed, falling back to direct fetch", err.message);
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5'
+        }
+      });
+      if (!response.ok) {
+        return res.json({ 
+          title: "Acceso Denegado", 
+          description: `HTTP Error: ${response.status}`, 
+          body: `El contenido de este enlace no pudo ser extraído porque el sitio bloqueó el acceso o requiere inicio de sesión (Status ${response.status}). Informa al usuario que NO PUDISTE leer el enlace y pídele que copie y pegue el texto manualmente. NO inventes de qué trata el artículo.`, 
+          source: url 
+        });
+      }
+      const html = await response.text();
+      const cheerio = await import('cheerio');
+      const $ = cheerio.load(html);
+      
+      const title = $('title').text() || $('meta[property="og:title"]').attr('content') || '';
+      const ogDescription = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+      let bodyText = $('body').text().replace(/\s+/g, ' ').trim();
+      
+      if (/log in|iniciar sesión|forgot password/i.test(bodyText) && bodyText.length < 3000) {
+        bodyText = "El enlace requiere inicio de sesión y no se pudo leer el contenido. Avisa al usuario que no tienes contexto de este enlace y pídele que pegue el texto de la noticia directamente.";
+      } else if (bodyText.length > 5000) {
+        bodyText = bodyText.substring(0, 5000) + '...';
+      }
+
+      res.json({ title, description: ogDescription, body: bodyText, source: url });
+    } catch (error) {
+      console.error("Scrape Error:", error.message || error);
+      res.json({ 
+        title: "Error Técnico", 
+        description: "", 
+        body: `Hubo un error técnico leyendo el enlace: ${error.message}. Informa al usuario que no se pudo acceder.`, 
+        source: url 
+      });
+    }
+  });
+
   const serveStatic = () => {
     app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
     app.use((req, res) => {

@@ -246,10 +246,10 @@ interface VoiceOption {
 }
 
 const MODELS = {
-  TEXT: 'gemini-1.5-flash',       
-  IMAGE: 'gemini-1.5-flash',     
-  VIDEO: 'gemini-1.5-flash', 
-  TTS: 'gemini-1.5-flash'   
+  TEXT: 'gemini-3.1-flash-preview',       
+  IMAGE: 'gemini-3.1-flash-image-preview',     
+  VIDEO: 'veo-3.1-lite-generate-preview', 
+  TTS: 'gemini-3.1-flash-tts-preview'   
 };
 
 const AVAILABLE_VOICES: VoiceOption[] = [
@@ -393,40 +393,40 @@ const MODEL_TIERS = {
     label: 'Gratis',
     description: 'Solo modelos generativos gratis.',
     models: {
-      text: 'gemini-1.5-flash',
-      image: 'gemini-1.5-flash',
-      video: 'gemini-1.5-flash',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-3.1-flash-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   economical: {
     label: 'Económico',
     description: 'Modelos generativos más económicos posibles.',
     models: {
-      text: 'gemini-1.5-flash-8b',
-      image: 'gemini-1.5-flash-8b',
-      video: 'gemini-1.5-flash-8b',
-      tts: 'gemini-1.5-flash-8b'
+      text: 'gemini-3.1-flash-lite-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   normal: {
     label: 'Normal',
     description: 'Modelos generativos normales.',
     models: {
-      text: 'gemini-1.5-flash',
-      image: 'gemini-1.5-flash',
-      video: 'gemini-1.5-flash',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-3.1-flash-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   high_quality: {
     label: 'Alta Calidad',
     description: 'Modelos generativos de más alta calidad.',
     models: {
-      text: 'gemini-2.0-flash',
-      image: 'gemini-2.0-flash',
-      video: 'gemini-2.0-flash',
-      tts: 'gemini-2.0-flash'
+      text: 'gemini-3.1-pro-preview',
+      image: 'gemini-3.1-pro-image-preview',
+      video: 'veo-3.1-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   }
 };
@@ -2116,8 +2116,12 @@ ${activePersona.introductionPrefix}
         ? "Mediano: 4300-14500 caracteres." 
         : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado y extenso para cumplir con este requisito de longitud, pero sin exceder los 20,000 caracteres.";
 
-      // Extract YouTube links and fetch transcripts
-      const youtubeLinks = userIdea.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/gi) || [];
+      // Extract links and fetch content
+      const allLinks = userIdea.match(/https?:\/\/[^\s]+/gi) || [];
+      const youtubeLinksTemp = userIdea.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/gi) || [];
+      const youtubeLinks = [...youtubeLinksTemp, ...allLinks.filter(url => /(?:youtube\.com|youtu\.be)/i.test(url))];
+      const regularWebLinks = allLinks.filter(url => !/(?:youtube\.com|youtu\.be)/i.test(url));
+
       let extraYoutubeContext = "";
       
       if (youtubeLinks.length > 0) {
@@ -2135,6 +2139,25 @@ ${activePersona.introductionPrefix}
             }
           } catch(e) {
             console.error("Failed to fetch transcript for", link, e);
+          }
+        }
+      }
+
+      if (regularWebLinks.length > 0) {
+        setIsGeneratingIdea(true);
+        const uniqueRegLinks = Array.from(new Set(regularWebLinks.map(l => l.trim())));
+        for (const link of uniqueRegLinks.slice(0, 5)) {
+          try {
+            const res = await fetch(`/api/scrape?url=${encodeURIComponent(link)}`);
+            const contentType = res.headers.get("content-type");
+            if (res.ok && contentType && contentType.includes("application/json")) {
+              const data = await res.json();
+              extraYoutubeContext += `\n\n--- CONTENT FROM WEB LINK (${link}) ---\nTitle: ${data.title}\nDescription: ${data.description}\nContent Snippet: ${data.body}\n--- END OF WEB CONTENT ---`;
+            } else {
+              console.warn(`Scrape endpoint returned ${res.status} for ${link}`);
+            }
+          } catch(e) {
+            console.error("Failed to fetch scrape for", link, e);
           }
         }
       }
