@@ -2143,6 +2143,8 @@ ${activePersona.introductionPrefix}
         }
       }
 
+      let hasScrapeError = false;
+
       if (regularWebLinks.length > 0) {
         setIsGeneratingIdea(true);
         const uniqueRegLinks = Array.from(new Set(regularWebLinks.map(l => l.trim())));
@@ -2152,17 +2154,27 @@ ${activePersona.introductionPrefix}
             const contentType = res.headers.get("content-type");
             if (res.ok && contentType && contentType.includes("application/json")) {
               const data = await res.json();
-              extraYoutubeContext += `\n\n--- CONTENT FROM WEB LINK (${link}) ---\nTitle: ${data.title}\nDescription: ${data.description}\nContent Snippet: ${data.body}\n--- END OF WEB CONTENT ---`;
+              if (data.title === "Acceso Denegado" || data.title === "Error Técnico") {
+                hasScrapeError = true;
+                extraYoutubeContext += `\n\n--- CONTENT FROM WEB LINK (${link}) ---\nTitle: ${data.title}\nContent Snippet: ${data.body}\n--- END OF WEB CONTENT ---`;
+              } else {
+                extraYoutubeContext += `\n\n--- CONTENT FROM WEB LINK (${link}) ---\nTitle: ${data.title}\nDescription: ${data.description}\nContent Snippet: ${data.body}\n--- END OF WEB CONTENT ---`;
+              }
             } else {
               console.warn(`Scrape endpoint returned ${res.status} for ${link}`);
             }
-          } catch(e) {
+          } catch(e: any) {
             console.error("Failed to fetch scrape for", link, e);
           }
         }
       }
 
       let response: any;
+      let errorOverrideModifier = "";
+      if (hasScrapeError) {
+        errorOverrideModifier = "\n\nCRITICAL OVERRIDE: One or more links provided by the user could not be accessed due to a login wall (Facebook, Instagram) or technical error. INSTEAD of writing a full story, you MUST write a short, friendly message (2 paragraphs max) in your persona's voice explaining that you cannot read private social media links, and kindly ask the user to copy/paste the text directly. DO NOT WRITE A FULL NARRATIVE. DISREGARD THE LENGTH INSTRUCTION.";
+      }
+
       const basePromptStr = `USER BRIEF: ${userIdea}${extraYoutubeContext}
 
 STRICT NARRATION REQUEST:
@@ -2173,6 +2185,7 @@ Generate a complete, engaging cinematic narrative in ${languageText} based on th
 CRITICAL INSTRUCTION: If the user brief contains URLs (web pages or YouTube videos, each separated by a new line), you MUST use your search capabilities to extract the context from those sources (up to 5 links as requested) and use them collectively as the foundational inspiration for the story.
 EXTENSION TARGET: ${lengthInstruction}
 CRITICAL: If the target is "Largo", you MUST provide a very long and detailed narrative (at least 15,000 characters). Expand on every detail, scene, and dialogue.
+${errorOverrideModifier}
 
 MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
