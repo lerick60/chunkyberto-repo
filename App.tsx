@@ -1749,16 +1749,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         else { const colonIndex = block.indexOf(':'); if (colonIndex !== -1) { title = block.substring(0, colonIndex).replace(/^\d+[\.\)\:]\s*/, '').replace(/\*\*/g, '').trim(); summary = block.substring(colonIndex + 1).trim(); } else { title = "Historia " + idx; summary = block; } }
         if (title && summary) newTrends.push({ id: `t-${idx}-${Date.now()}`, title, originalSummary: summary, url: '', source: "Forensic News Scan", isMasterSummary: isRecapBlock });
       });
-      const developerStory: Trend = {
-        id: 'featured-story',
-        title: 'EL ENCUENTRO CON LAS SOMBRAS',
-        originalSummary: 'Chunkyberto y Erick enfrentan sombras misteriosas y perros feroces en una mañana inolvidable que desafía la realidad.',
-        url: '',
-        source: 'Historia Destacada',
-        isMasterSummary: false,
-        chunkybertoVersion: `Era una mañana fresca y neblinosa. Chunkyberto y Erick caminaban cuando una sombra oscura comenzó a perseguirlos. Pronto apareció otra y los rodearon. Salieron corriendo esquivando las sombras hasta llegar a una iglesia que les dio seguridad. Al intentar regresar a casa, dos pastores alemanes furiosos les cerraron el paso. Erick agarró un palo y protegió a su amigo, dándole un golpe al perro que los asustó, permitiéndoles escapar de regreso a casa... un día cualquiera.`
-      };
-      setTrends([developerStory, ...newTrends.slice(0, 15)]);
+      setTrends(newTrends.slice(0, 15));
       hasInitialFetchedRef.current = true;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
   }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles]); 
