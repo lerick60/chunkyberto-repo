@@ -19,7 +19,7 @@ async function startServer() {
   app.use(cookieParser("chunkyberto-secret"));
 
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", key: process.env.GEMINI_API_KEY });
   });
 
   if (!process.env.GEMINI_API_KEY && !process.env.API_KEY) {
@@ -219,27 +219,10 @@ async function startServer() {
       res.json({ text, source: "transcript" });
     } catch (error) {
       console.warn("YouTube Transcript Not Available:", error.message || error);
-      
-      try {
-        const apiKey = req.headers['x-gemini-api-key'] || process.env.GEMINI_API_KEY;
-        const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey });
-        const response = await ai.models.generateContent({
-            model: 'models/gemini-2.5-flash',
-            contents: `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${url}`
-        });
-        
-        return res.json({
-            text: response.text,
-            source: "gemini_fallback"
-        });
-      } catch (geminiError) {
-        console.error("Gemini Fallback Error:", geminiError.message || geminiError);
-        res.json({ 
-          text: `Gemini Fallback Error: ${geminiError.message || geminiError}`, 
-          source: "error" 
-        });
-      }
+      res.json({ 
+        error: "YOUTUBE_TRANSCRIPT_FAILED",
+        url: url
+      });
     }
   });
 

@@ -2166,10 +2166,26 @@ ${activePersona.introductionPrefix[language]}
             const contentType = res.headers.get("content-type");
             if (res.ok && contentType && contentType.includes("application/json")) {
               const data = await res.json();
-              if (data.source === "error" || data.source === "oembed_fallback") {
+              if (data.error === "YOUTUBE_TRANSCRIPT_FAILED") {
+                try {
+                  const { GoogleGenAI } = await import('@google/genai');
+                  const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
+                  const response = await ai.models.generateContent({
+                      model: 'models/gemini-2.5-flash',
+                      contents: `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${link}`
+                  });
+                  extraYoutubeContext += `\n\n--- AI EXTRACTED TRANSCRIPT FOR (${link}) ---\n${response.text}\n--- END OF TRANSCRIPT ---`;
+                } catch (geminiEx: any) {
+                  hasScrapeError = true;
+                  console.error("Gemini frontend fallback failed for transcript", geminiEx);
+                  extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n[Error: No subtitles available and AI fallback failed.]\n--- END OF TRANSCRIPT ---`;
+                }
+              } else if (data.source === "error" || data.source === "oembed_fallback") {
                 hasScrapeError = true;
+                extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
+              } else {
+                extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
               }
-              extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
             } else if (!res.ok) {
               console.warn(`Transcript endpoint returned ${res.status} for ${link}`);
             }
