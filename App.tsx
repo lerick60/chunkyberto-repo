@@ -1763,7 +1763,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         } as any), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal) {
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || String(details.code) === "403" || details.status === "FORBIDDEN") {
           console.log("Trend Fetch: Hitting quota/error with grounding, falling back to non-grounded generation...");
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
@@ -2173,21 +2173,29 @@ ${activePersona.introductionPrefix[language]}
                   
                   let promptContent = `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${link}`;
                   if (data.title || data.author) {
-                     promptContent = `Please provide a very detailed summary of the content of the following YouTube video: ${link}\n\nContext for accurate extraction:\nTitle: "${data.title}"\nChannel/Author: "${data.author}"\n\nPlease ensure your summary focuses specifically on the topics implied by the title and channel to avoid hallucinating unrelated information. If you cannot provide a detailed summary based on this context, clearly state that you are unable to retrieve it.`;
+                     promptContent = `Realiza un resumen detallado y preciso sobre el contenido de este video de YouTube: ${link}\n\nContexto para guiar tu búsqueda:\nTítulo del video: "${data.title}"\nCanal/Autor: "${data.author}"\n\nInstrucciones:\nPor favor utiliza tus herramientas de búsqueda en Google para encontrar de qué trata este video basándote en el título y autor, e informa sobre todos los puntos principales discutidos o la trama principal. Está prohibido alucinar temas que no correspondan.`;
                   }
                   
-                  const response = await ai.models.generateContent({
-                      model: 'models/gemini-2.5-flash',
-                      contents: promptContent,
-                      config: {
-                          tools: [{ googleSearch: {} }] // Adding googleSearch tool so Gemini can look it up correctly!
-                      }
-                  });
-                  extraYoutubeContext += `\n\n--- AI EXTRACTED TRANSCRIPT FOR (${link}) ---\n${response.text}\n--- END OF TRANSCRIPT ---`;
+                  let response;
+                  try {
+                    response = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: promptContent,
+                        config: {
+                            tools: [{ googleSearch: {} }]
+                        }
+                    });
+                  } catch (groundingErr: any) {
+                    response = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: promptContent + "\n\nNota: Has fallado en buscar en la web, así que por favor basa tu resumen estrictamente en los metadatos provistos."
+                    });
+                  }
+                  extraYoutubeContext += `\n\n--- RESUMEN GENERADO POR IA DEL VIDEO (${link}) ---\nNota: Los subtitulos no estaban disponibles, este es un resumen extraído mediante búsqueda web del título y metadatos.\n${response.text}\n--- FIN DEL RESUMEN ---`;
                 } catch (geminiEx: any) {
                   hasScrapeError = true;
-                  console.error("Gemini frontend fallback failed for transcript", geminiEx);
-                  extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n[Error: No subtitles available and AI fallback failed.]\n--- END OF TRANSCRIPT ---`;
+                  console.warn("Retención temporal: La extracción del video no está disponible (modo protegido) y la alternativa de IA falló.", geminiEx.message || geminiEx);
+                  extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n[Error: No subtitles available for this video.]\n--- END OF TRANSCRIPT ---`;
                 }
               } else if (data.source === "error" || data.source === "oembed_fallback") {
                 hasScrapeError = true;
@@ -2273,7 +2281,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         }), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal) {
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || String(details.code) === "403" || details.status === "FORBIDDEN") {
           console.log("Hybrid Generation: Hitting quota/error with grounding, falling back to non-grounded generation...");
           response = await apiRetry(() => ai.models.generateContent({
             model: modelSettings.text,

@@ -31,7 +31,7 @@ When generating or modifying the video prompts functionality:
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
 3. When uploading a video or viewing the channel, the application must use the specific YouTube configuration of the currently active persona.
-4. If a YouTube video is provided as context but it does not have subtitles, the backend will automatically use Gemini 2.5 Flash as a fallback to extract the full spoken transcript of the video based exclusively on the URL.
+4. If a YouTube video is provided as context but it does not have subtitles, the backend will report an error rather than attempting to hallucinate the content since the model cannot natively watch YouTube videos over URL.
 5. Furthermore, whenever a YouTube video transcript is provided to the Persona for content generation, the Persona must explicitly give their critical opinion about the topic discussed and the presenters/persons in the video, integrating it naturally into the narrative.
 
 # Narrative Hook Rules
