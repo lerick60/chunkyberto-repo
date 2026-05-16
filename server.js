@@ -221,7 +221,7 @@ async function startServer() {
       console.warn("YouTube Transcript Not Available:", error.message || error);
       
       try {
-        const { GoogleGenAI } = require('@google/genai');
+        const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const response = await ai.models.generateContent({
             model: 'models/gemini-2.5-flash',
