@@ -31,6 +31,8 @@ When generating or modifying the video prompts functionality:
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
 3. When uploading a video or viewing the channel, the application must use the specific YouTube configuration of the currently active persona.
+4. If a YouTube video is provided as context but it does not have subtitles, the backend will automatically use Gemini 2.5 Flash as a fallback to extract the full spoken transcript of the video based exclusively on the URL.
+5. Furthermore, whenever a YouTube video transcript is provided to the Persona for content generation, the Persona must explicitly give their critical opinion about the topic discussed and the presenters/persons in the video, integrating it naturally into the narrative.
 
 # Narrative Hook Rules
 1. Short Narratives Hook: All narratives shorter than 10000 characters generated from internet seeds or user ideas MUST start with a masterful hook. This hook must not be a cheap trick, but promise intrigue, entertainment, and give the reader a real sense of the pleasures to expect. It must awaken urgency, pose questions, show intriguing contexts, reveal narrative tensions, and establish the tone from the very first line.

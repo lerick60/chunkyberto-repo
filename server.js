@@ -218,26 +218,27 @@ async function startServer() {
       const text = transcript.map(t => t.text).join(' ');
       res.json({ text, source: "transcript" });
     } catch (error) {
-      // Fallback: try to fetch the video title and author using YouTube's oEmbed API
-      try {
-        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url.trim())}&format=json`);
-        const contentType = oembedRes.headers.get("content-type");
-        if (oembedRes.ok && contentType && contentType.includes("application/json")) {
-          const oembedData = await oembedRes.json();
-          return res.json({ 
-            text: `El video titulado "${oembedData.title}" por "${oembedData.author_name}" no tiene subtítulos habilitados. Informa al usuario que no pudiste extraer el contenido del video.`,
-            source: "oembed_fallback"
-          });
-        }
-      } catch (fallbackError) {
-        console.error("oEmbed fallback failed:", fallbackError);
-      }
-
       console.warn("YouTube Transcript Not Available:", error.message || error);
-      res.json({ 
-        text: `El video de YouTube no tiene subtítulos habilitados o es inaccesible. Informa al usuario que no pudiste leer el enlace.`, 
-        source: "error" 
-      });
+      
+      try {
+        const { GoogleGenAI } = require('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+            model: 'models/gemini-2.5-flash',
+            contents: `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${url}`
+        });
+        
+        return res.json({
+            text: response.text,
+            source: "gemini_fallback"
+        });
+      } catch (geminiError) {
+        console.error("Gemini Fallback Error:", geminiError.message || geminiError);
+        res.json({ 
+          text: `El video de YouTube no tiene subtítulos habilitados o es inaccesible. Informa al usuario que no pudiste leer el enlace.`, 
+          source: "error" 
+        });
+      }
     }
   });
 

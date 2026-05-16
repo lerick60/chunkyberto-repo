@@ -2212,7 +2212,7 @@ PERSONA TO ADOPT: ${activePersona.name}.
 FULL IDENTITY SOURCE: ${activePersona.identityContext} 
 
 Generate a complete, engaging cinematic narrative in ${languageText} based on the user brief.
-CRITICAL INSTRUCTION: If the user brief contains URLs (web pages or YouTube videos, each separated by a new line), you MUST use your search capabilities to extract the context from those sources (up to 5 links as requested) and use them collectively as the foundational inspiration for the story.
+CRITICAL INSTRUCTION: If the user brief contains URLs (web pages or YouTube videos, each separated by a new line), we have already extracted their content and transcripts and included them in the USER BRIEF above. You MUST use them collectively as the foundational inspiration for the story. YOUTUBE OPINION RULE: If a YouTube video transcript is provided, you MUST explicitly give your detailed opinion on the topic being discussed and on the people presenting it, integrating this critique organically into your narrative seamlessly reflecting your Persona's unique mindset.
 EXTENSION TARGET: ${lengthInstruction}
 CRITICAL: If the target is "Largo", you MUST provide a very long and detailed narrative (at least 15,000 characters). Expand on every detail, scene, and dialogue.
 ${errorOverrideModifier}
