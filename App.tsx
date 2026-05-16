@@ -2170,9 +2170,18 @@ ${activePersona.introductionPrefix[language]}
                 try {
                   const { GoogleGenAI } = await import('@google/genai');
                   const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
+                  
+                  let promptContent = `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${link}`;
+                  if (data.title || data.author) {
+                     promptContent = `Please provide a very detailed summary of the content of the following YouTube video: ${link}\n\nContext for accurate extraction:\nTitle: "${data.title}"\nChannel/Author: "${data.author}"\n\nPlease ensure your summary focuses specifically on the topics implied by the title and channel to avoid hallucinating unrelated information. If you cannot provide a detailed summary based on this context, clearly state that you are unable to retrieve it.`;
+                  }
+                  
                   const response = await ai.models.generateContent({
                       model: 'models/gemini-2.5-flash',
-                      contents: `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${link}`
+                      contents: promptContent,
+                      config: {
+                          tools: [{ googleSearch: {} }] // Adding googleSearch tool so Gemini can look it up correctly!
+                      }
                   });
                   extraYoutubeContext += `\n\n--- AI EXTRACTED TRANSCRIPT FOR (${link}) ---\n${response.text}\n--- END OF TRANSCRIPT ---`;
                 } catch (geminiEx: any) {

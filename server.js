@@ -219,9 +219,25 @@ async function startServer() {
       res.json({ text, source: "transcript" });
     } catch (error) {
       console.warn("YouTube Transcript Not Available:", error.message || error);
+      
+      let title = "";
+      let author_name = "";
+      try {
+        const oembedRes = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url.trim())}&format=json`);
+        if (oembedRes.ok) {
+           const data = await oembedRes.json();
+           title = data.title;
+           author_name = data.author_name;
+        }
+      } catch (oErr) {
+        console.warn("oEmbed fetch failed", oErr);
+      }
+      
       res.json({ 
         error: "YOUTUBE_TRANSCRIPT_FAILED",
-        url: url
+        url: url,
+        title: title,
+        author: author_name
       });
     }
   });
