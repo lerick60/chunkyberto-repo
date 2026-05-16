@@ -225,7 +225,7 @@ async function startServer() {
         if (oembedRes.ok && contentType && contentType.includes("application/json")) {
           const oembedData = await oembedRes.json();
           return res.json({ 
-            text: `[Transcript disabled. Video Title: ${oembedData.title}. Channel: ${oembedData.author_name}]`,
+            text: `El video titulado "${oembedData.title}" por "${oembedData.author_name}" no tiene subtítulos habilitados. Informa al usuario que no pudiste extraer el contenido del video.`,
             source: "oembed_fallback"
           });
         }
@@ -233,8 +233,11 @@ async function startServer() {
         console.error("oEmbed fallback failed:", fallbackError);
       }
 
-      console.error("YouTube Transcript Error:", error.message || error);
-      res.status(500).json({ error: error.message || "Failed to fetch transcript" });
+      console.warn("YouTube Transcript Not Available:", error.message || error);
+      res.json({ 
+        text: `El video de YouTube no tiene subtítulos habilitados o es inaccesible. Informa al usuario que no pudiste leer el enlace.`, 
+        source: "error" 
+      });
     }
   });
 

@@ -2115,6 +2115,8 @@ ${activePersona.introductionPrefix}
 
       let extraYoutubeContext = "";
       
+      let hasScrapeError = false;
+
       if (youtubeLinks.length > 0) {
         setIsGeneratingIdea(true); // Ensure UI shows loading
         const uniqueLinks = Array.from(new Set(youtubeLinks.map(l => l.trim()))); // limit to unique and trim whitespace
@@ -2124,6 +2126,9 @@ ${activePersona.introductionPrefix}
             const contentType = res.headers.get("content-type");
             if (res.ok && contentType && contentType.includes("application/json")) {
               const data = await res.json();
+              if (data.source === "error" || data.source === "oembed_fallback") {
+                hasScrapeError = true;
+              }
               extraYoutubeContext += `\n\n--- TRANSCRIPT FROM YOUTUBE VIDEO (${link}) ---\n${data.text}\n--- END OF TRANSCRIPT ---`;
             } else if (!res.ok) {
               console.warn(`Transcript endpoint returned ${res.status} for ${link}`);
@@ -2133,8 +2138,6 @@ ${activePersona.introductionPrefix}
           }
         }
       }
-
-      let hasScrapeError = false;
 
       if (regularWebLinks.length > 0) {
         setIsGeneratingIdea(true);
@@ -2163,7 +2166,7 @@ ${activePersona.introductionPrefix}
       let response: any;
       let errorOverrideModifier = "";
       if (hasScrapeError) {
-        errorOverrideModifier = "\n\nCRITICAL OVERRIDE: One or more links provided by the user could not be accessed due to a login wall (Facebook, Instagram) or technical error. INSTEAD of writing a full story, you MUST write a short, friendly message (2 paragraphs max) in your persona's voice explaining that you cannot read private social media links, and kindly ask the user to copy/paste the text directly. DO NOT WRITE A FULL NARRATIVE. DISREGARD THE LENGTH INSTRUCTION.";
+        errorOverrideModifier = "\n\nCRITICAL OVERRIDE: One or more links provided by the user could not be accessed due to a login wall (Facebook, Instagram), disabled YouTube subtitles, or technical error. INSTEAD of writing a full story, you MUST write a short, friendly message (2 paragraphs max) in your persona's voice explaining that you cannot read private social media links or videos without subtitles, and kindly ask the user to copy/paste the text directly or explain it. DO NOT WRITE A FULL NARRATIVE. DISREGARD THE LENGTH INSTRUCTION.";
       }
 
       const basePromptStr = `USER BRIEF: ${userIdea}${extraYoutubeContext}
