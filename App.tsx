@@ -2158,7 +2158,11 @@ ${activePersona.introductionPrefix[language]}
         const uniqueLinks = Array.from(new Set(youtubeLinks.map(l => l.trim()))); // limit to unique and trim whitespace
         for (const link of uniqueLinks.slice(0, 5)) { // max 5
           try {
-            const res = await fetch(`/api/youtube/transcript?url=${encodeURIComponent(link)}`);
+            const res = await fetch(`/api/youtube/transcript?url=${encodeURIComponent(link)}`, {
+              headers: {
+                'x-gemini-api-key': getSafeApiKey() || ''
+              }
+            });
             const contentType = res.headers.get("content-type");
             if (res.ok && contentType && contentType.includes("application/json")) {
               const data = await res.json();

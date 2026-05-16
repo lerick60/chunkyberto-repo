@@ -221,8 +221,9 @@ async function startServer() {
       console.warn("YouTube Transcript Not Available:", error.message || error);
       
       try {
+        const apiKey = req.headers['x-gemini-api-key'] || process.env.GEMINI_API_KEY;
         const { GoogleGenAI } = await import('@google/genai');
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
             model: 'models/gemini-2.5-flash',
             contents: `Please extract the full spoken transcript of this video. If it's too long, provide a very detailed summary of what is said: ${url}`
@@ -235,7 +236,7 @@ async function startServer() {
       } catch (geminiError) {
         console.error("Gemini Fallback Error:", geminiError.message || geminiError);
         res.json({ 
-          text: `El video de YouTube no tiene subtítulos habilitados o es inaccesible. Informa al usuario que no pudiste leer el enlace.`, 
+          text: `Gemini Fallback Error: ${geminiError.message || geminiError}`, 
           source: "error" 
         });
       }
