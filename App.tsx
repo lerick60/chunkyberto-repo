@@ -1763,7 +1763,8 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         } as any), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || String(details.code) === "403" || details.status === "FORBIDDEN") {
+        const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch) {
           console.log("Trend Fetch: Hitting quota/error with grounding, falling back to non-grounded generation...");
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
@@ -2281,7 +2282,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         }), 1, 3000, 90000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || String(details.code) === "403" || details.status === "FORBIDDEN") {
+        const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch) {
           console.log("Hybrid Generation: Hitting quota/error with grounding, falling back to non-grounded generation...");
           response = await apiRetry(() => ai.models.generateContent({
             model: modelSettings.text,
