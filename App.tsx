@@ -109,7 +109,8 @@ import {
   Telescope,
   LayoutGrid,
   CheckCircle,
-  UserPlus
+  UserPlus,
+  Trash2
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -152,7 +153,7 @@ const getSafeApiKey = (): string => {
   };
 
   const manualKey = clean(localStorage.getItem('chunky_custom_api_key'));
-  if (manualKey) return manualKey;
+  if (manualKey && manualKey !== "MY_API_KEY" && !manualKey.includes("...")) return manualKey;
 
   const win = window as any;
   const runtimeKey = clean(win.process?.env?.GEMINI_API_KEY || win.process?.env?.API_KEY || win.GEMINI_API_KEY);
@@ -1184,13 +1185,26 @@ export const SettingsModal: React.FC<{
                 </span>
               </div>
               <div className="space-y-3">
-                <input 
-                  type="password"
-                  value={customApiKey}
-                  onChange={(e) => setCustomApiKey(e.target.value)}
-                  placeholder={getSafeApiKey() ? "••••••••••••••••••••••••••••" : "Introduce tu Gemini API Key..."}
-                  className="w-full px-5 py-4 bg-slate-950 border-2 border-slate-800 rounded-2xl text-white text-sm font-medium focus:border-indigo-500 outline-none transition-all"
-                />
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="password"
+                    value={customApiKey}
+                    onChange={(e) => setCustomApiKey(e.target.value)}
+                    placeholder={getSafeApiKey() ? "••••••••••••••••••••••••••••" : "Introduce tu Gemini API Key..."}
+                    className="w-full px-5 py-4 bg-slate-950 border-2 border-slate-800 rounded-2xl text-white text-sm font-medium focus:border-indigo-500 outline-none transition-all"
+                  />
+                  {customApiKey && (
+                    <button 
+                      onClick={() => {
+                        setCustomApiKey("");
+                        localStorage.removeItem('chunky_custom_api_key');
+                      }}
+                      className="p-4 bg-slate-800 text-slate-400 hover:text-white rounded-2xl transition-colors shrink-0"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                </div>
                 {getSafeApiKey() && (
                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">
                     Activa: {getSafeApiKey().substring(0, 4)}...{getSafeApiKey().substring(getSafeApiKey().length - 4)}
