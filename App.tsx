@@ -433,40 +433,40 @@ const MODEL_TIERS = {
     label: 'Gratis',
     description: 'Solo modelos generativos gratis.',
     models: {
-      text: 'gemini-3.1-flash-preview',
-      image: 'gemini-3.1-flash-image-preview',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash',
+      image: 'gemini-1.5-flash', // Still flash for text, but fallback
+      video: 'veo-1.0-lite-preview',
+      tts: 'gemini-1.5-flash'
     }
   },
   economical: {
     label: 'Económico',
     description: 'Modelos generativos más económicos posibles.',
     models: {
-      text: 'gemini-3.1-flash-lite-preview',
-      image: 'gemini-3.1-flash-image-preview',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash',
+      image: 'gemini-1.5-flash',
+      video: 'veo-1.0-lite-preview',
+      tts: 'gemini-1.5-flash'
     }
   },
   normal: {
     label: 'Normal',
     description: 'Modelos generativos normales.',
     models: {
-      text: 'gemini-3.1-flash-preview',
-      image: 'gemini-3.1-flash-image-preview',
-      video: 'veo-3.1-lite-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-flash',
+      image: 'gemini-1.5-flash',
+      video: 'veo-1.0-lite-preview',
+      tts: 'gemini-1.5-flash'
     }
   },
   high_quality: {
     label: 'Alta Calidad',
     description: 'Modelos generativos de más alta calidad.',
     models: {
-      text: 'gemini-3.1-pro-preview',
-      image: 'gemini-3.1-pro-image-preview',
-      video: 'veo-3.1-generate-preview',
-      tts: 'gemini-3.1-flash-tts-preview'
+      text: 'gemini-1.5-pro',
+      image: 'gemini-1.5-pro',
+      video: 'veo-1.0-preview',
+      tts: 'gemini-1.5-flash'
     }
   }
 };
@@ -627,14 +627,14 @@ function getErrorDetails(err: any): DetailedError {
   }
   
   const isQuota = String(message).toUpperCase().includes("QUOTA") || String(message).toUpperCase().includes("429") || String(code) === "429" || String(status).includes("RESOURCE_EXHAUSTED");
-  const isInternal = String(code) === "500" || String(code) === "503" || String(status).includes("INTERNAL") || String(status).includes("UNAVAILABLE") || message.toLowerCase().includes("timed out");
+  const isInternal = String(code) === "500" || String(code) === "502" || String(code) === "503" || String(code) === "504" || String(status).includes("INTERNAL") || String(status).includes("UNAVAILABLE") || message.toLowerCase().includes("timed out") || message.toLowerCase().includes("bad gateway") || message.toLowerCase().includes("gateway timeout");
   
   if (isQuota) {
     docsLink = "https://ai.google.dev/gemini-api/docs/rate-limits";
     message = "Límite de cuota excedido (429). Por favor espera un momento antes de reintentar.";
   } else if (isInternal) {
     docsLink = "https://ai.google.dev/gemini-api/docs/troubleshooting";
-    message = `Error interno del servidor (${code || "500/503"}). Reintentando automáticamente...`;
+    message = `Error de Red o Servidor (${code || "50X"}). Esto suele ser un tiempo de espera agotado (Timeout) o un error temporal de la infraestructura. Reintentando automáticamente...`;
   }
 
   
@@ -1787,7 +1787,9 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch) {
+        const isGatewayError = String(details.code) === "502" || String(details.code) === "504" || details.message.includes("502") || details.message.includes("504");
+        
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch || isGatewayError) {
           console.log("Trend Fetch: Hitting quota/error with grounding, falling back to non-grounded generation...");
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
@@ -2306,7 +2308,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
-        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch) {
+        const isGatewayError = String(details.code) === "502" || String(details.code) === "504" || details.message.includes("502") || details.message.includes("504");
+        if (details.isQuota || firstErr.message === "API_TIMEOUT" || details.isInternal || isForbiddenSearch || isGatewayError) {
           console.log("Hybrid Generation: Hitting quota/error with grounding, falling back to non-grounded generation...");
           response = await apiRetry(() => ai.models.generateContent({
             model: modelSettings.text,
@@ -3475,6 +3478,15 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                             <CopyButton text={masterRecapTrend.interview} />
                           </div>
                           <p className="text-xs text-slate-300 italic line-clamp-6">{masterRecapTrend.interview}</p>
+                        </div>
+                      )}
+                      {masterRecapTrend.advance && (
+                        <div className="bg-fuchsia-900/20 border border-fuchsia-500/30 p-6 rounded-2xl md:col-span-2">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[9px] font-black text-fuchsia-400 uppercase tracking-widest flex items-center gap-2"><FastForward size={14}/> Avance de Historia</span>
+                            <CopyButton text={masterRecapTrend.advance} />
+                          </div>
+                          <p className="text-xs text-slate-300 italic">{masterRecapTrend.advance}</p>
                         </div>
                       )}
                     </div>
