@@ -110,7 +110,9 @@ import {
   LayoutGrid,
   CheckCircle,
   UserPlus,
-  Trash2
+  Trash2,
+  MapPin,
+  Flag
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -228,7 +230,8 @@ type Category =
   | 'ai_mystery_horror' | 'ai_sci_fi' | 'ai_fables' | 'ai_galactic' | 'ai_labrador_mischief' | 'ai_romantic_drama'
   | 'ai_beauty_tips' | 'ai_nutrition' | 'ai_real_estate_sales' | 'ai_home_remedies' | 'ai_catholic_events' | 'news_real_estate'
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
-  | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review';
+  | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
+  | 'news_world' | 'news_mexico' | 'news_tijuana';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1751,6 +1754,12 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea 10 narraciones biográficas sobre científicos, personajes famosos y políticos famosos (pueden ser personas vivas o muertas). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Debes mencionar el nombre de la persona cuya biografía se está redactando al menos una vez en cada narración.`;
     } else if (category === 'products_review') {
       categoryPrompt = `Escanea los lanzamientos de productos más recientes y crea 10 reseñas sobre productos o gadgets electrónicos en particular. La historia debe generarse en base a la opinión de ${activePersona.name} sobre las bondades y problemas que vé en ese producto o gadget. CRÍTICO: La reseña DEBE ser narrada reflejando estrictamente la personalidad particular, el punto de vista y el rol de ${activePersona.name}.`;
+    } else if (category === 'news_world') {
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo actualmente en TODO EL MUNDO. Identifica 10 historias trending globales.`;
+    } else if (category === 'news_mexico') {
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo actualmente en MÉXICO (Nacionales). Identifica 10 historias trending de México.`;
+    } else if (category === 'news_tijuana') {
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo actualmente específicamente en TIJUANA, Baja California, México. Identifica 10 historias trending de Tijuana.`;
     }
 
     return `${categoryPrompt}
@@ -3061,6 +3070,9 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'ai_exoplanets_creation', label: 'Creación IA - Exoplanetas', icon: <Sparkles size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
     { id: 'biographies', label: 'Biografías Famosas', icon: <BookOpen size={14} />, exclusive: ['chunkyberto', 'luna', 'erick_betancourt', 'erickberto', 'mayra', 'n'] },
     { id: 'products_review', label: 'Products Review', icon: <Smartphone size={14} /> },
+    { id: 'news_world', label: 'Noticias del Mundo', icon: <Globe size={14} /> },
+    { id: 'news_mexico', label: 'Noticias de México', icon: <Flag size={14} /> },
+    { id: 'news_tijuana', label: 'Noticias de Tijuana', icon: <MapPin size={14} /> },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
