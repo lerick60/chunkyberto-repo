@@ -112,7 +112,11 @@ import {
   UserPlus,
   Trash2,
   MapPin,
-  Flag
+  Flag,
+  CircuitBoard,
+  Microscope,
+  Plug,
+  Upload
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -231,7 +235,8 @@ type Category =
   | 'ai_beauty_tips' | 'ai_nutrition' | 'ai_real_estate_sales' | 'ai_home_remedies' | 'ai_catholic_events' | 'news_real_estate'
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
-  | 'news_world' | 'news_mexico' | 'news_tijuana';
+  | 'news_world' | 'news_mexico' | 'news_tijuana'
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1760,6 +1765,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en MÉXICO (Nacionales). Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de México recientes.`;
     } else if (category === 'news_tijuana') {
       categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo específicamente en TIJUANA, Baja California, México. Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de Tijuana recientes.`;
+    } else if (category === 'basic_electronics') {
+      categoryPrompt = `Crea 10 lecciones o explicaciones fascinantes sobre conceptos de Electrónica Básica. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'electronic_circuits') {
+      categoryPrompt = `Crea 10 explicaciones detalladas y análisis sobre diversos Circuitos Electrónicos (osciladores, amplificadores, filtros, etc.). La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'special_circuits_analysis') {
+      categoryPrompt = `Crea 10 análisis técnicos profundos sobre Circuitos Electrónicos Especiales, de RF, sistemas de alta frecuencia, etc. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'forensic_electronics') {
+      categoryPrompt = `Crea 10 casos o narraciones fascinantes sobre Electrónica Forense. Explica los métodos de investigación y los fallos encontrados. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -3016,6 +3029,60 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setIsZipping(false); }
   };
 
+  const uploadNarracionesRef = useRef<HTMLInputElement>(null);
+
+  const handleDownloadNarraciones = async () => {
+    if (!trends || trends.length === 0) return;
+    try {
+      setIsZipping(true);
+      const zip = new JSZip();
+      
+      const trendsJSON = JSON.stringify(trends, null, 2);
+      zip.file(`narraciones.json`, trendsJSON);
+      
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = `narraciones_${timestamp}.zip`;
+      link.click();
+    } catch (error) {
+      console.error("Error zipping narraciones:", error);
+    } finally {
+      setIsZipping(false);
+    }
+  };
+
+  const handleLoadNarraciones = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setIsZipping(true);
+      const zip = new JSZip();
+      const loadedZip = await zip.loadAsync(file);
+      const jsonFile = loadedZip.file('narraciones.json');
+      
+      if (jsonFile) {
+        const jsonContent = await jsonFile.async('string');
+        const parsedTrends = JSON.parse(jsonContent);
+        setTrends(parsedTrends);
+      } else {
+        alert("Archivo inválido. No se encontró narraciones.json");
+      }
+    } catch (error) {
+      console.error("Error unzipping narraciones:", error);
+      alert("Error al cargar las narraciones.");
+    } finally {
+      setIsZipping(false);
+      if (uploadNarracionesRef.current) {
+        uploadNarracionesRef.current.value = '';
+      }
+    }
+  };
+
   const visualStyles: ImageStyle[] = [
     'Cinematic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Sketch', 
     '3D Render', 'Neo-Noir', 'Photorealistic', 'CGI', 'Epic Fantasy',
@@ -3076,6 +3143,10 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'news_world', label: 'Noticias del Mundo', icon: <Globe size={14} /> },
     { id: 'news_mexico', label: 'Noticias de México', icon: <Flag size={14} /> },
     { id: 'news_tijuana', label: 'Noticias de Tijuana', icon: <MapPin size={14} /> },
+    { id: 'basic_electronics', label: 'Electrónica Básica', icon: <Cpu size={14} />, exclusive: 'erick_betancourt' },
+    { id: 'electronic_circuits', label: 'Circuitos Electrónicos', icon: <CircuitBoard size={14} />, exclusive: 'erick_betancourt' },
+    { id: 'special_circuits_analysis', label: 'Análisis de Circuitos Especiales', icon: <Microscope size={14} />, exclusive: 'erick_betancourt' },
+    { id: 'forensic_electronics', label: 'Electrónica Forense', icon: <Plug size={14} />, exclusive: 'erick_betancourt' },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
@@ -3192,6 +3263,26 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
               <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Mi Canal</span>
             </a>
           )}
+          <button 
+            onClick={handleDownloadNarraciones}
+            className={`p-2.5 rounded-xl bg-emerald-600/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-600/20 transition-all flex items-center gap-2 disabled:opacity-50`}
+            disabled={!trends || trends.length === 0}
+            title="Descargar Narraciones"
+          >
+            <Download size={18} />
+            <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Descargar Narraciones</span>
+          </button>
+          <label className="p-2.5 rounded-xl bg-blue-600/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600/20 transition-all flex items-center gap-2 cursor-pointer" title="Cargar Narraciones">
+            <Upload size={18} />
+            <span className="hidden lg:inline text-[9px] font-black uppercase tracking-tighter">Cargar Narraciones</span>
+            <input 
+              type="file" 
+              accept=".zip" 
+              ref={uploadNarracionesRef} 
+              onChange={handleLoadNarraciones} 
+              className="hidden" 
+            />
+          </label>
           <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700">
             {(['es', 'en', 'fr'] as Language[]).map((lang) => (
               <button
