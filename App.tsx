@@ -431,42 +431,42 @@ interface ModelSettings {
 const MODEL_TIERS = {
   free: {
     label: 'Gratis',
-    description: 'Solo modelos generativos gratis.',
+    description: 'Modelos generativos gratis. Ideal para pruebas rápidas. (Categoría sugerida para Gemini 5 Flash).',
     models: {
-      text: 'gemini-1.5-flash',
-      image: 'gemini-1.5-flash', // Still flash for text, but fallback
-      video: 'veo-1.0-lite-preview',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-5.0-flash-preview',
+      image: 'gemini-3.1-flash-image-preview', 
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   economical: {
     label: 'Económico',
-    description: 'Modelos generativos más económicos posibles.',
+    description: 'Modelos generativos de bajo costo. Ideal para procesar altos volúmenes de datos con Gemini 5 Flash Lite/Flash.',
     models: {
-      text: 'gemini-1.5-flash',
-      image: 'gemini-1.5-flash',
-      video: 'veo-1.0-lite-preview',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-5.0-flash-lite-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   normal: {
     label: 'Normal',
-    description: 'Modelos generativos normales.',
+    description: 'Equilibrio perfecto entre costo y calidad. Aquí cabría por defecto el nuevo modelo Gemini 5 Flash para narrativa principal.',
     models: {
-      text: 'gemini-1.5-flash',
-      image: 'gemini-1.5-flash',
-      video: 'veo-1.0-lite-preview',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-5.0-flash-preview',
+      image: 'gemini-3.1-flash-image-preview',
+      video: 'veo-3.1-lite-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   high_quality: {
     label: 'Alta Calidad',
-    description: 'Modelos generativos de más alta calidad.',
+    description: 'Modelos generativos de máxima calidad y razonamiento profundo (Gemini Pro).',
     models: {
-      text: 'gemini-1.5-pro',
-      image: 'gemini-1.5-pro',
-      video: 'veo-1.0-preview',
-      tts: 'gemini-1.5-flash'
+      text: 'gemini-3.1-pro-preview',
+      image: 'gemini-3.1-pro-image-preview',
+      video: 'veo-3.1-generate-preview',
+      tts: 'gemini-3.1-flash-tts-preview'
     }
   }
 };
