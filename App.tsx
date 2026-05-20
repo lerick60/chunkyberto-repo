@@ -1755,11 +1755,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     } else if (category === 'products_review') {
       categoryPrompt = `Escanea los lanzamientos de productos más recientes y crea 10 reseñas sobre productos o gadgets electrónicos en particular. La historia debe generarse en base a la opinión de ${activePersona.name} sobre las bondades y problemas que vé en ese producto o gadget. CRÍTICO: La reseña DEBE ser narrada reflejando estrictamente la personalidad particular, el punto de vista y el rol de ${activePersona.name}.`;
     } else if (category === 'news_world') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo actualmente en TODO EL MUNDO. Identifica 10 historias trending globales.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en TODO EL MUNDO. Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending globales recientes.`;
     } else if (category === 'news_mexico') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo actualmente en MÉXICO (Nacionales). Identifica 10 historias trending de México.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en MÉXICO (Nacionales). Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de México recientes.`;
     } else if (category === 'news_tijuana') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo actualmente específicamente en TIJUANA, Baja California, México. Identifica 10 historias trending de Tijuana.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo específicamente en TIJUANA, Baja California, México. Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de Tijuana recientes.`;
     }
 
     return `${categoryPrompt}
