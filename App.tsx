@@ -116,7 +116,9 @@ import {
   CircuitBoard,
   Microscope,
   Plug,
-  Upload
+  Upload,
+  TrendingUp,
+  PiggyBank
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -236,7 +238,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1773,6 +1775,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea 10 análisis técnicos profundos sobre Circuitos Electrónicos Especiales, de RF, sistemas de alta frecuencia, etc. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'forensic_electronics') {
       categoryPrompt = `Crea 10 casos o narraciones fascinantes sobre Electrónica Forense. Explica los métodos de investigación y los fallos encontrados. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'financial_analysis') {
+      categoryPrompt = `Busca empresas públicas o privadas recientes que tengan datos conocidos o relevantes y realiza 10 análisis financieros profundos. Analiza sus ingresos, márgenes, salud financiera y proyecciones. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'case_studies') {
+      categoryPrompt = `Selecciona 10 Casos de Estudio del mundo real sobre empresas u organizaciones (pueden ser de cualquier tipo). Asegúrate de incluir casos verdaderamente exitosos y también casos de fracaso absolutos. Explica las razones detrás del éxito o fracaso. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'basic_finance') {
+      categoryPrompt = `Crea 10 explicaciones claras y sencillas sobre Finanzas Básicas. Debes incluir explicaciones sobre ratios o radios financieros, conceptos básicos de micro y macroeconomía, así como explicaciones de términos e instrumentos financieros aplicados a la economía del hogar. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'cinema_analysis') {
+      categoryPrompt = `Crea 10 análisis extensos sobre películas: 5 reseñas sobre películas recientes y 5 reseñas sobre películas más viejitas o clásicas. Las películas seleccionadas deben tratar temas que se adapten a la personalidad de ${activePersona.name} o que probablemente le pudieran gustar. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -3147,6 +3157,10 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'electronic_circuits', label: 'Circuitos Electrónicos', icon: <CircuitBoard size={14} />, exclusive: 'erick_betancourt' },
     { id: 'special_circuits_analysis', label: 'Análisis de Circuitos Especiales', icon: <Microscope size={14} />, exclusive: 'erick_betancourt' },
     { id: 'forensic_electronics', label: 'Electrónica Forense', icon: <Plug size={14} />, exclusive: 'erick_betancourt' },
+    { id: 'financial_analysis', label: 'Análisis Financiero', icon: <TrendingUp size={14} /> },
+    { id: 'case_studies', label: 'Casos de Estudio', icon: <Briefcase size={14} /> },
+    { id: 'basic_finance', label: 'Finanzas Básicas', icon: <PiggyBank size={14} /> },
+    { id: 'cinema_analysis', label: 'Análisis del Cine', icon: <Clapperboard size={14} /> },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {

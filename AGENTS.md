@@ -27,6 +27,18 @@ When generating or modifying the video prompts functionality:
 2. This category must explicitly scan the most recent product launches and the story should be generated based on the opinion of each persona about the pros and cons they see in a particular electronic product or gadget.
 3. The review must be narrated strictly reflecting the particular personality, point of view, and role of the currently active persona.
 
+# Financial and Business Categories Rules
+1. "Análisis Financiero" (financial_analysis): Available to all personas. Generates profound financial analysis of public/private companies based on known data (revenues, margins, health, projections).
+2. "Casos de Estudio" (case_studies): Available to all personas. Selects real-world business case studies, explicitly including both total successes and absolute failures, explaining the reasons.
+3. "Finanzas Básicas" (basic_finance): Available to all personas. Provides simple explanations of financial ratios, micro and macro economic concepts, and financial instruments applied to home economy.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
+# Cinema Analysis Category Rules
+1. "Análisis del Cine" (cinema_analysis): Available to all personas. 
+2. This category must include analysis of 5 recent movies and 5 older/classic movies. 
+3. The selected movies must be chosen to fit the personality and tastes of the currently active persona.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
