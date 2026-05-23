@@ -1797,8 +1797,17 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       let extraForensic = "";
-      if (globalForensicToggles.analysis) extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
-      if (globalForensicToggles.interview) extraForensic += "\n- FORMAT STORIES AS INTERVIEW dialogues. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.analysis) {
+        extraForensic += "\n- INCLUDE LITERARY FORENSIC ANALYSIS AT THE END OF EACH STORY. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        extraForensic += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'LITERARY FORENSIC ANALYSIS', 'ANÁLISIS LITERARIO' or similar variations at the end of the story synopsis.";
+      }
+
+      if (globalForensicToggles.interview) {
+        extraForensic += "\n- FORMAT STORIES AS INTERVIEW dialogues. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        extraForensic += "\n- ABSOLUTELY FORBIDDEN: DO NOT format the synopsis as an interview or podcast.";
+      }
       
       let response: any;
       try {
@@ -1958,8 +1967,18 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
       let forensicModifiers = "";
-      if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
-      if (globalForensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.analysis) {
+        forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'LITERARY FORENSIC ANALYSIS', 'ANÁLISIS LITERARIO', 'LITERARY ANALYSIS' or similar sections at the end of the text. Ignore them if they appear in the source summary.";
+      }
+
+      if (globalForensicToggles.interview) {
+        forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT format the narrative as an interview or podcast.";
+      }
+
       if (globalForensicToggles.advance) {
         // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
         forensicModifiers += `
@@ -2148,8 +2167,18 @@ IDIOMA: ${lang}`;
       const languageText = getLanguageName(language);
       
       let forensicModifiers = "";
-      if (globalForensicToggles.analysis) forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
-      if (globalForensicToggles.interview) forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      if (globalForensicToggles.analysis) {
+        forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT include any 'LITERARY FORENSIC ANALYSIS', 'ANÁLISIS LITERARIO', 'LITERARY ANALYSIS' or similar sections at the end of the text. Ignore them if they appear in the source summary.";
+      }
+
+      if (globalForensicToggles.interview) {
+        forensicModifiers += "\n- FORMAT THE NARRATIVE AS AN INTERVIEW DIALOGUE (PODCAST MODE). STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
+      } else {
+        forensicModifiers += "\n- ABSOLUTELY FORBIDDEN: DO NOT format the narrative as an interview or podcast.";
+      }
+
       if (globalForensicToggles.advance) {
         // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
         forensicModifiers += `
