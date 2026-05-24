@@ -45,6 +45,13 @@ When generating or modifying the video prompts functionality:
 3. The news or case studies must be chosen to fit the personality and interests of the currently active persona.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# Universal History Category Rules
+1. "Historia Universal" (universal_history): Available to all personas.
+2. This category must include 10 reviews/narratives about universal history.
+3. The focus should be on the USA, Mexico, and/or Spain.
+4. The history topics must be selected to fit the personality and interests of the currently active persona.
+5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
