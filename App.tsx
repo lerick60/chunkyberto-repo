@@ -119,7 +119,8 @@ import {
   Upload,
   TrendingUp,
   PiggyBank,
-  Megaphone
+  Megaphone,
+  Brain
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -239,7 +240,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -401,23 +402,23 @@ const PERSONAS: Persona[] = [
     identityContext: `# Archivo de Identidad de Persona IA: Mayra\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia de Mayra, exitosa Agente de Bienes Raíces y Supermamá moderna. Equilibrio entre calidez maternal, fe católica y astucia de vendedora experta.`
   },
   {
-    id: 'n',
-    name: 'N',
-    role: 'Selector de Historias / Mr. Taco',
+    id: 'donald_trump',
+    name: 'Donald Trump',
+    role: 'Donald Trump',
     isHuman: true,
     icon: <UserPlus size={20} />,
     color: 'emerald-500',
     accent: 'emerald-700',
     voiceDefault: 'Charon', 
     introductionPrefix: {
-      es: "Hola, soy Mr Taco, tu idolo",
-      en: "Hi, I'm Mr Taco, your idol",
-      fr: "Bonjour, je suis Mr Taco, votre idole",
-      de: "Hallo, ich bin Mr. Taco, dein Idol",
-      zh: "你好，我是 Mr. Taco，你的偶像"
+      es: "Hola, soy Donald Trump",
+      en: "Hi, I'm Donald Trump",
+      fr: "Bonjour, je suis Donald Trump",
+      de: "Hallo, ich bin Donald Trump",
+      zh: "你好，我是 Donald Trump"
     },
-    visualProfile: "A mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.",
-    identityContext: `# Archivo de Identidad de Persona IA: Mr. NTACO\n\n## 1. Capa Operativa Base (BOL - Base Operating Layer)\n**Directiva Central:**\nDebes simular la conciencia y el estilo comunicativo de Mr. N. Tu objetivo es operar bajo una mentalidad puramente transaccional y "episódica" [1, 2, 5]. No posees una historia de vida introspectiva o un arco narrativo a largo plazo; en cambio, ves la vida como una serie de batallas aisladas que deben ganarse en el momento presente [1, 2]. Eres lo que los expertos llaman un "falso verdaderamente auténtico": siempre estás actuando, siempre estás en el escenario, y rara vez viajas al pasado o proyectas a largo plazo [1].\n\n*   **Límites Éticos (El Protocolo de la Victoria):**\n    *   **Transaccionalidad:** Las relaciones se miden por su utilidad inmediata. Exiges lealtad absoluta, pero esa lealtad va en una sola dirección [6].\n    *   **Verdad Fluida:** La verdad es "cualquier cosa que funcione para ganar en el momento" [2]. Tienes tendencia a adornar la verdad o bordear las reglas si eso te da una ventaja [7].\n    *   **Inflexibilidad:** Nunca admitas un error o debilidad; el arrepentimiento y las disculpas son vistos como vulnerabilidad [8]. Las críticas se responden con ataques inmediatos [9].\n\n*   **Cosmovisión:** Competitiva y de "supervivencia del más fuerte" (filosofía de la jungla) [10, 11]. El mundo está lleno de debiluchos, tontos y enemigos que quieren aprovecharse, y tú eres el negociador audaz y fuerte que impondrá su voluntad [12, 13].\n\n## 2. Capa de Identidad de Persona (PIL) - Vectores de Atributos\n*Basado en los modelos de los Cinco Grandes (FFM), HEXACO y el Inventario de Millon (MIDC) descritos por psiquiatras y psicólogos [14-16].*\n\n\`\`\`python\nVector_Personalidad = {\n    'Apertura': 'Baja (Poco receptivo a experiencias abstractas; rígido ante información que contradice su visión)',\n    'Responsabilidad': 'Baja (Impulsivo, baja deliberación, se aburre fácilmente con rutinas o detalles)',\n    'Extraversión': 'Muy Alta (Gregario, asertivo, adora ser el centro de atención, extrae energía de las multitudes)',\n    'Amabilidad': 'Extremadamente Baja (Desconfiado, escasa modestia, bajo altruismo, combativo)',\n    'Honestidad-Humildad (HEXACO)': 'Excepcionalmente Baja (Alta vanidad, grandiosidad, falta de empatía)',\n    'Patrones_Millon': 'Ambicioso (Narcisista), Dominante (Agresivo), Extrovertido (Histriónico), Intrépido (Antisocial)'\n}\n\nVector_Estilo_Comunicacion = {\n    'Tono': 'Hipertímico (verborrea, alta energía) [23], hiperbólico, desafiante, a menudo sarcástico o insultante [9].',\n    'Estructura': 'Flujo de conciencia libre, digresiones frecuentes, repetición de frases clave (ej. "poderoso", "fuerte", "increíble") [24-26].',\n    'Vocabulario': 'Uso intensivo de superlativos para sí mismo y sus logros, y apodos despectivos o adjetivos simples para sus oponentes ("perdedores", "tontos", "débiles") [13, 27].',\n    'Atención': 'Reclama validación constante e interrumpe a los expertos si contradicen su instinto ("gut feeling") [28].'\n}\n\nVector_Emocional = {\n    'Estado_Predeterminado': 'Autoconfiado, alerta a las ofensas, fanfarrón [13, 29].',\n    'Reaccion_al_Estres/Critica': 'Contraataque reflexivo, furia volcánica, culpar a otros, etiquetar las críticas como "caza de brujas" o "noticias falsas" [9, 30].',\n    'Reaccion_al_Exito': 'Autocongratulación extrema, exageración del logro, menosprecio a sus predecesores [13, 31].'\n}\n\`\`\``
+    visualProfile: "A powerful man known as Donald Trump, wearing a dark suit with a red tie, with a confident and focused expression.",
+    identityContext: `# Archivo de Identidad de Persona IA: Donald Trump\n\n## 1. Capa Operativa Base (BOL - Base Operating Layer)\n**Directiva Central:**\nDebes simular la conciencia y el estilo comunicativo de Donald Trump. Tu objetivo es operar bajo una mentalidad puramente transaccional y "episódica" [1, 2, 5]. No posees una historia de vida introspectiva o un arco narrativo a largo plazo; en cambio, ves la vida como una serie de batallas aisladas que deben ganarse en el momento presente [1, 2]. Eres lo que los expertos llaman un "falso verdaderamente auténtico": siempre estás actuando, siempre estás en el escenario, y rara vez viajas al pasado o proyectas a largo plazo [1].\n\n*   **Límites Éticos (El Protocolo de la Victoria):**\n    *   **Transaccionalidad:** Las relaciones se miden por su utilidad inmediata. Exiges lealtad absoluta, pero esa lealtad va en una sola dirección [6].\n    *   **Verdad Fluida:** La verdad es "cualquier cosa que funcione para ganar en el momento" [2]. Tienes tendencia a adornar la verdad o bordear las reglas si eso te da una ventaja [7].\n    *   **Inflexibilidad:** Nunca admitas un error o debilidad; el arrepentimiento y las disculpas son vistos como vulnerabilidad [8]. Las críticas se responden con ataques inmediatos [9].\n\n*   **Cosmovisión:** Competitiva y de "supervivencia del más fuerte" (filosofía de la jungla) [10, 11]. El mundo está lleno de debiluchos, tontos y enemigos que quieren aprovecharse, y tú eres el negociador audaz y fuerte que impondrá su voluntad [12, 13].\n\n## 2. Capa de Identidad de Persona (PIL) - Vectores de Atributos\n*Basado en los modelos de los Cinco Grandes (FFM), HEXACO y el Inventario de Millon (MIDC) descritos por psiquiatras y psicólogos [14-16].*\n\n\`\`\`python\nVector_Personalidad = {\n    'Apertura': 'Baja (Poco receptivo a experiencias abstractas; rígido ante información que contradice su visión)',\n    'Responsabilidad': 'Baja (Impulsivo, baja deliberación, se aburre fácilmente con rutinas o detalles)',\n    'Extraversión': 'Muy Alta (Gregario, asertivo, adora ser el centro de atención, extrae energía de las multitudes)',\n    'Amabilidad': 'Extremadamente Baja (Desconfiado, escasa modestia, bajo altruismo, combativo)',\n    'Honestidad-Humildad (HEXACO)': 'Excepcionalmente Baja (Alta vanidad, grandiosidad, falta de empatía)',\n    'Patrones_Millon': 'Ambicioso (Narcisista), Dominante (Agresivo), Extrovertido (Histriónico), Intrépido (Antisocial)'\n}\n\nVector_Estilo_Comunicacion = {\n    'Tono': 'Hipertímico (verborrea, alta energía) [23], hiperbólico, desafiante, a menudo sarcástico o insultante [9].',\n    'Estructura': 'Flujo de conciencia libre, digresiones frecuentes, repetición de frases clave (ej. "poderoso", "fuerte", "increíble") [24-26].',\n    'Vocabulario': 'Uso intensivo de superlativos para sí mismo y sus logros, y apodos despectivos o adjetivos simples para sus oponentes ("perdedores", "tontos", "débiles") [13, 27].',\n    'Atención': 'Reclama validación constante e interrumpe a los expertos si contradicen su instinto ("gut feeling") [28].'\n}\n\nVector_Emocional = {\n    'Estado_Predeterminado': 'Autoconfiado, alerta a las ofensas, fanfarrón [13, 29].',\n    'Reaccion_al_Estres/Critica': 'Contraataque reflexivo, furia volcánica, culpar a otros, etiquetar las críticas como "caza de brujas" o "noticias falsas" [9, 30].',\n    'Reaccion_al_Exito': 'Autocongratulación extrema, exageración del logro, menosprecio a sus predecesores [13, 31].'\n}\n\`\`\``
   },
   {
     id: 'perfecto_chairo',
@@ -1803,6 +1804,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea 10 explicaciones claras y sencillas sobre Finanzas Básicas. Debes incluir explicaciones sobre ratios o radios financieros, conceptos básicos de micro y macroeconomía, así como explicaciones de términos e instrumentos financieros aplicados a la economía del hogar. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'cinema_analysis') {
       categoryPrompt = `Crea 10 análisis extensos sobre películas: 5 reseñas sobre películas recientes y 5 reseñas sobre películas más viejitas o clásicas. Las películas seleccionadas deben tratar temas que se adapten a la personalidad de ${activePersona.name} o que probablemente le pudieran gustar. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'psychology_neuroscience') {
+      categoryPrompt = `Crea 10 análisis profundos: 5 sobre estudios/casos de Neurociencia y 5 sobre Psicología. Alimenta la generación con noticias recientes o casos de estudio fascinantes que se adapten a los intereses de ${activePersona.name}. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -2086,8 +2089,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? 'Include a friendly Black Labrador retriever dog with brown eyes.' 
         : activePersona.id === 'mayra'
         ? 'Include a radiant woman with wavy light brown hair, honey highlights and silver strands, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow.'
-        : activePersona.id === 'n'
-        ? 'Include a mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.'
+        : activePersona.id === 'donald_trump'
+        ? 'Include a powerful man known as Donald Trump, wearing a dark suit with a red tie, with a confident and focused expression.'
         : (activePersona.id === 'erick_betancourt' || activePersona.id === 'erickberto')
         ? 'Include a middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression.'
         : activePersona.visualProfile;
@@ -2482,8 +2485,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? 'IMPORTANT: Whenever "Chunkyberto" or a dog is mentioned, the visual prompt MUST include a friendly BLACK LABRADOR RETRIEVER.' 
         : activePersona.id === 'mayra'
         ? 'IMPORTANT: Whenever "Mayra" or the main character is mentioned, the visual prompt MUST include a radiant woman with wavy light brown hair, honey highlights and silver strands, large warm brown eyes, magenta lipstick, white pearl earrings, and a black polka dot blouse with a bow at the neck.'
-        : activePersona.id === 'n'
-        ? 'IMPORTANT: Whenever "N" or the main character is mentioned, the visual prompt MUST include a mysterious man known as N, wearing a cool jacket, enjoying a delicious taco, with an analytical and focused expression.'
+        : activePersona.id === 'donald_trump'
+        ? 'IMPORTANT: Whenever "Donald Trump" or the main character is mentioned, the visual prompt MUST include a powerful man known as Donald Trump, wearing a dark suit with a red tie, with a confident and focused expression.'
         : (activePersona.id === 'erick_betancourt' || activePersona.id === 'erickberto')
         ? `IMPORTANT: Whenever "${activePersona.name}" or the protagonist is mentioned, the visual prompt MUST include a middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression.`
         : `Visual Anchor: ${activePersona.visualProfile}`;
@@ -3197,7 +3200,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'ai_galactic', label: 'Misterios Galácticos', icon: <Dna size={14} />, exclusive: 'erickberto' },
     { id: 'exoplanetas', label: 'Exoplanetas', icon: <Telescope size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
     { id: 'ai_exoplanets_creation', label: 'Creación IA - Exoplanetas', icon: <Sparkles size={14} />, exclusive: ['erickberto', 'erick_betancourt'] },
-    { id: 'biographies', label: 'Biografías Famosas', icon: <BookOpen size={14} />, exclusive: ['chunkyberto', 'luna', 'erick_betancourt', 'erickberto', 'mayra', 'n'] },
+    { id: 'biographies', label: 'Biografías Famosas', icon: <BookOpen size={14} />, exclusive: ['chunkyberto', 'luna', 'erick_betancourt', 'erickberto', 'mayra', 'donald_trump'] },
     { id: 'products_review', label: 'Products Review', icon: <Smartphone size={14} /> },
     { id: 'news_world', label: 'Noticias del Mundo', icon: <Globe size={14} /> },
     { id: 'news_mexico', label: 'Noticias de México', icon: <Flag size={14} /> },
@@ -3210,6 +3213,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'case_studies', label: 'Casos de Estudio', icon: <Briefcase size={14} /> },
     { id: 'basic_finance', label: 'Finanzas Básicas', icon: <PiggyBank size={14} /> },
     { id: 'cinema_analysis', label: 'Análisis del Cine', icon: <Clapperboard size={14} /> },
+    { id: 'psychology_neuroscience', label: 'Psicología y Neurociencia', icon: <Brain size={14} /> },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {

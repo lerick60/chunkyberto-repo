@@ -39,6 +39,12 @@ When generating or modifying the video prompts functionality:
 3. The selected movies must be chosen to fit the personality and tastes of the currently active persona.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# Psychology and Neuroscience Category Rules
+1. "Psicología y Neurociencia" (psychology_neuroscience): Available to all personas.
+2. This category must include analysis of 5 studies/cases about Neuroscience and 5 studies/cases about Psychology.
+3. The news or case studies must be chosen to fit the personality and interests of the currently active persona.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.
