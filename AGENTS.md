@@ -52,6 +52,19 @@ When generating or modifying the video prompts functionality:
 4. The history topics must be selected to fit the personality and interests of the currently active persona.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# World News Category Rules
+1. The "Noticias del Mundo" (news_world) category must fetch 10 news stories globally.
+2. The "Noticias de México" (news_mexico) category must fetch 10 news stories nationally in Mexico.
+3. The "Noticias de Tijuana" (news_tijuana) category must fetch 10 local news stories in Tijuana.
+4. For all news categories (world, mexico, tijuana), the first 7 stories MUST be very recent (from today or the last week).
+5. For all news categories (world, mexico, tijuana), the last 3 stories MUST be older stories (from a month ago or older).
+
+# Urban Legends Category Rules
+1. "Leyendas Urbanas" (urban_legends): Available to all personas.
+2. This category must include 10 urban legends from all over the world.
+3. The narrator must tell the legend and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.

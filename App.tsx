@@ -240,7 +240,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1783,11 +1783,11 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     } else if (category === 'products_review') {
       categoryPrompt = `Escanea los lanzamientos de productos más recientes y crea 10 reseñas sobre productos o gadgets electrónicos en particular. La historia debe generarse en base a la opinión de ${activePersona.name} sobre las bondades y problemas que vé en ese producto o gadget. CRÍTICO: La reseña DEBE ser narrada reflejando estrictamente la personalidad particular, el punto de vista y el rol de ${activePersona.name}.`;
     } else if (category === 'news_world') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en TODO EL MUNDO. Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending globales recientes.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en TODO EL MUNDO. Identifica 10 historias trending globales. CRÍTICO: Las primeras 7 historias DEBEN ser noticias RECIENTES (del día de hoy o máximo de la última semana), y las últimas 3 historias DEBEN ser noticias más antiguas (de hace un mes o más tiempo).`;
     } else if (category === 'news_mexico') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en MÉXICO (Nacionales). Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de México recientes.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes e impactantes que están ocurriendo en MÉXICO (Nacionales). Identifica 10 historias trending de México. CRÍTICO: Las primeras 7 historias DEBEN ser noticias RECIENTES (del día de hoy o máximo de la última semana), y las últimas 3 historias DEBEN ser noticias más antiguas (de hace un mes o más tiempo).`;
     } else if (category === 'news_tijuana') {
-      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo específicamente en TIJUANA, Baja California, México. Es muy importante que sean noticias RECIENTES (del día de hoy o máximo de la última semana). Identifica 10 historias trending de Tijuana recientes.`;
+      categoryPrompt = `Escanea y busca los eventos, noticias y sucesos más relevantes, locales e impactantes que están ocurriendo específicamente en TIJUANA, Baja California, México. Identifica 10 historias trending de Tijuana. CRÍTICO: Las primeras 7 historias DEBEN ser noticias RECIENTES (del día de hoy o máximo de la última semana), y las últimas 3 historias DEBEN ser noticias más antiguas (de hace un mes o más tiempo).`;
     } else if (category === 'basic_electronics') {
       categoryPrompt = `Crea 10 lecciones o explicaciones fascinantes sobre conceptos de Electrónica Básica. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'electronic_circuits') {
@@ -1808,6 +1808,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea 10 análisis profundos: 5 sobre estudios/casos de Neurociencia y 5 sobre Psicología. Alimenta la generación con noticias recientes o casos de estudio fascinantes que se adapten a los intereses de ${activePersona.name}. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'universal_history') {
       categoryPrompt = `Crea 10 reseñas o narraciones fascinantes sobre Historia Universal. Procura que las historias estén relacionadas con Estados Unidos, México o España. Estas historias deben seleccionarse de manera que se adapten a la personalidad o que le pudieran gustar a ${activePersona.name}. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'urban_legends') {
+      categoryPrompt = `Busca y selecciona 10 leyendas urbanas fascinantes de todo el mundo. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Durante la narración de cada leyenda urbana, el personaje ${activePersona.name} DEBE hacer pausas periódicas para pensar y expresar explícitamente cómo habría reaccionado él o ella estando en esa misma situación.`;
     }
 
     return `${categoryPrompt}
@@ -3217,6 +3219,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'cinema_analysis', label: 'Análisis del Cine', icon: <Clapperboard size={14} /> },
     { id: 'psychology_neuroscience', label: 'Psicología y Neurociencia', icon: <Brain size={14} /> },
     { id: 'universal_history', label: 'Historia Universal', icon: <HistoryIcon size={14} /> },
+    { id: 'urban_legends', label: 'Leyendas Urbanas', icon: <Skull size={14} /> },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
