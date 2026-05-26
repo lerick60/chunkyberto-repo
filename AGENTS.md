@@ -65,6 +65,13 @@ When generating or modifying the video prompts functionality:
 3. The narrator must tell the legend and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# Unsolved Mysteries Category Rules
+1. "Misterios Sin Resolver" (unsolved_mysteries): Available to all personas.
+2. This category must scan and select 10 famous unsolved mysteries from all over the world.
+3. The narrator must tell the story and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
+4. At the end of each mystery narration, the narrator MUST provide their own particular theory, viewpoint, or opinion on what could solve the mystery or how it might be resolved.
+5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.

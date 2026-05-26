@@ -120,7 +120,8 @@ import {
   TrendingUp,
   PiggyBank,
   Megaphone,
-  Brain
+  Brain,
+  HelpCircle
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -240,7 +241,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1810,6 +1811,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea 10 reseñas o narraciones fascinantes sobre Historia Universal. Procura que las historias estén relacionadas con Estados Unidos, México o España. Estas historias deben seleccionarse de manera que se adapten a la personalidad o que le pudieran gustar a ${activePersona.name}. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'urban_legends') {
       categoryPrompt = `Busca y selecciona 10 leyendas urbanas fascinantes de todo el mundo. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Durante la narración de cada leyenda urbana, el personaje ${activePersona.name} DEBE hacer pausas periódicas para pensar y expresar explícitamente cómo habría reaccionado él o ella estando en esa misma situación.`;
+    } else if (category === 'unsolved_mysteries') {
+      categoryPrompt = `Busca y selecciona 10 misterios sin resolver fascinantes de todo el mundo. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Durante la narración de cada misterio, el personaje ${activePersona.name} DEBE hacer pausas periódicas para pensar y expresar explícitamente cómo habría reaccionado él o ella de haber estado en esa situación. Asimismo, al final de la narración, el narrador DEBE emitir su propia opinión o teoría particular sobre qué o cómo podría resolverse dicho misterio.`;
     }
 
     return `${categoryPrompt}
@@ -3220,6 +3223,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'psychology_neuroscience', label: 'Psicología y Neurociencia', icon: <Brain size={14} /> },
     { id: 'universal_history', label: 'Historia Universal', icon: <HistoryIcon size={14} /> },
     { id: 'urban_legends', label: 'Leyendas Urbanas', icon: <Skull size={14} /> },
+    { id: 'unsolved_mysteries', label: 'Misterios Sin Resolver', icon: <HelpCircle size={14} /> },
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
