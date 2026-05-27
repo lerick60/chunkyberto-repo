@@ -52,6 +52,14 @@ When generating or modifying the video prompts functionality:
 4. The history topics must be selected to fit the personality and interests of the currently active persona.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# Alternative History Category Rules
+1. "Historia Universal Alternativa" (alternative_history): Available to all personas.
+2. This category must scan and select 10 famous human histories.
+3. The narrator must tell the real history and then consider 2 alternative scenarios of what would have happened if the events were different.
+4. Periodically within the narrative, the persona must express how they would have reacted if they had participated in that history.
+5. At the end, the narrator must give their opinion on whether they liked the actual events more than the alternative ones or vice versa.
+6. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # World News Category Rules
 1. The "Noticias del Mundo" (news_world) category must fetch 10 news stories globally.
 2. The "Noticias de México" (news_mexico) category must fetch 10 news stories nationally in Mexico.
@@ -71,6 +79,12 @@ When generating or modifying the video prompts functionality:
 3. The narrator must tell the story and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
 4. At the end of each mystery narration, the narrator MUST provide their own particular theory, viewpoint, or opinion on what could solve the mystery or how it might be resolved.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
+# AI and Robotics News Category Rules
+1. "Noticias IA y Robótica" (ai_robotics_news): Available to all personas.
+2. This category must scan for the most recent news and advancements in Artificial Intelligence, Robotics, and how far Generative AI is.
+3. The narrator must tell the news story and, periodically during the narration, explicitly state what they like and what scares them about that particular news or advancement.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
