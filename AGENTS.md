@@ -86,6 +86,12 @@ When generating or modifying the video prompts functionality:
 3. The narrator must tell the news story and, periodically during the narration, explicitly state what they like and what scares them about that particular news or advancement.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# AI Hardware Base Category Rules
+1. "Hardware Base de Inteligencia Artificial" (ai_hardware_base): Available to all personas.
+2. This category must scan for the most recent news and advancements in the hardware on which AI is based (processors, GPUs, TPUs, specialized semiconductors, neuromorphic chips, etc.).
+3. The narrator must tell the story and, periodically during the narration, explicitly state what they like and what scares them about that particular hardware news or advancement.
+4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
 # YouTube Integration Rules
 1. Each persona has its own independent YouTube channel configuration.
 2. The YouTube settings (URL and connection status) are stored per persona in the application's settings.

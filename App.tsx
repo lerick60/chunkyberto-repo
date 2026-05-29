@@ -242,7 +242,7 @@ type Category =
   | 'ai_beauty_tips' | 'ai_nutrition' | 'ai_real_estate_sales' | 'ai_home_remedies' | 'ai_catholic_events' | 'news_real_estate'
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
-  | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news'
+  | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
   | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
@@ -1819,6 +1819,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Busca y selecciona 10 misterios sin resolver fascinantes de todo el mundo. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Durante la narración de cada misterio, el personaje ${activePersona.name} DEBE hacer pausas periódicas para pensar y expresar explícitamente cómo habría reaccionado él o ella de haber estado en esa situación. Asimismo, al final de la narración, el narrador DEBE emitir su propia opinión o teoría particular sobre qué o cómo podría resolverse dicho misterio.`;
     } else if (category === 'ai_robotics_news') {
       categoryPrompt = `Escanea noticias sobre los avances más recientes de la Inteligencia Artificial, Robótica y sobre qué tan lejos está la Inteligencia Artificial Generativa. Identifica 10 noticias o avances fascinantes. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Periódicamente dentro de la narración de cada noticia o avance, el personaje ${activePersona.name} DEBE decirnos qué le gusta y qué le da miedo ante esa noticia o avance.`;
+    } else if (category === 'ai_hardware_base') {
+      categoryPrompt = `Escanea noticias sobre los avances más recientes en el hardware sobre el cual se fundamenta y en el que se basa la Inteligencia Artificial (procesadores, GPUs, TPUs, semiconductores especializados, chips neuromórficos, etc.). Identifica 10 noticias o desarrollos clave de hardware de IA. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Periódicamente dentro de la narración de cada avance, el personaje ${activePersona.name} DEBE expresar explícitamente qué cosas le gustan y qué cosas le asustan o le dan miedo ante dicho avance de hardware.`;
     }
 
     return `${categoryPrompt}
@@ -3217,6 +3219,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'products_review', label: 'Products Review', icon: <Smartphone size={14} /> },
     { id: 'news_world', label: 'Noticias del Mundo', icon: <Globe size={14} /> },
     { id: 'ai_robotics_news', label: 'Noticias IA y Robótica', icon: <Bot size={14} /> },
+    { id: 'ai_hardware_base', label: 'Hardware Base de IA', icon: <Cpu size={14} /> },
     { id: 'news_mexico', label: 'Noticias de México', icon: <Flag size={14} /> },
     { id: 'news_tijuana', label: 'Noticias de Tijuana', icon: <MapPin size={14} /> },
     { id: 'basic_electronics', label: 'Electrónica Básica', icon: <Cpu size={14} />, exclusive: 'erick_betancourt' },
