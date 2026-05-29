@@ -29,7 +29,7 @@ When generating or modifying the video prompts functionality:
 
 # Financial and Business Categories Rules
 1. "Análisis Financiero" (financial_analysis): Available to all personas. Generates profound financial analysis of public/private companies based on known data (revenues, margins, health, projections).
-2. "Casos de Estudio" (case_studies): Available to all personas. Selects real-world business case studies, explicitly including both total successes and absolute failures, explaining the reasons.
+2. "Casos de Estudio" (case_studies): Available to all personas. Selects real-world business case studies, explicitly including both total successes and absolute failures, explaining the reasons. CRITICAL: The selection of case studies must prioritize variety, explicitly avoiding commonly repeated cases to ensure consecutive generations yield completely different sets of case studies.
 3. "Finanzas Básicas" (basic_finance): Available to all personas. Provides simple explanations of financial ratios, micro and macro economic concepts, and financial instruments applied to home economy.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
