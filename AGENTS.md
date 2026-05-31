@@ -5,8 +5,9 @@ When generating or modifying the video prompts functionality:
 3. DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
 4. The narrator expressions must be a maximum of 22 words long.
 5. The narrator expression must be appended immediately following the visual description on the next line, WITHOUT a blank line in between. The narrator expression MUST start exactly with the prefix "(Voz masculina): ". Separate each complete block (visual prompt + narrator expression) with at least one blank line.
-6. If the user uploads a reference image of "Erick" in the settings, this image MUST be used as an ingredient (context) during the generation of video prompts, and as a reference image (`referenceImages`) during the actual video generation process (`generateVideos`) whenever "Erick" is mentioned in the prompt.
-7. Secondary Characters Consistency: Any secondary character identified in the story MUST be assigned a highly detailed, consistent visual description (clothing, hair, specific physical traits) that is repeated across ALL frames they appear in, to guarantee visual continuity between AI-generated images/videos.
+6. The user can toggle a setting ("Sin Narrador") to suppress the narrator expressions entirely during prompt generation. When active, only visual descriptions are generated.
+7. If the user uploads a reference image of "Erick" in the settings, this image MUST be used as an ingredient (context) during the generation of video prompts, and as a reference image (`referenceImages`) during the actual video generation process (`generateVideos`) whenever "Erick" is mentioned in the prompt.
+8. Secondary Characters Consistency: Any secondary character identified in the story MUST be assigned a highly detailed, consistent visual description (clothing, hair, specific physical traits) that is repeated across ALL frames they appear in, to guarantee visual continuity between AI-generated images/videos.
 
 # Hybrid Creative Composer Rules
 1. Multi-source Inspiration: The Hybrid Creative Composer supports ingesting up to 5 web or YouTube links simultaneously and will use them as foundational knowledge to compose the narrative.
@@ -51,6 +52,15 @@ When generating or modifying the video prompts functionality:
 3. The focus should be on the USA, Mexico, and/or Spain.
 4. The history topics must be selected to fit the personality and interests of the currently active persona.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
+# Comic's History Category Rules
+1. "Historia de Comic's" (comic_history): Available to all personas.
+2. This category must include up to 10 stories of between 2500 and 4000 words.
+3. The AI must create stories in a comic book format featuring the currently active persona as the main character.
+4. Each story MUST present a memorable villain.
+5. The narrative must have rapid development leading up to a climax, which MUST feature a massive battle against the villain.
+6. The characters (including the main persona) MUST possess mutant-like superpowers and use them epicly in their fights.
+7. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # Alternative History Category Rules
 1. "Historia Universal Alternativa" (alternative_history): Available to all personas.

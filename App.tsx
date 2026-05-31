@@ -123,7 +123,8 @@ import {
   Brain,
   HelpCircle,
   GitBranch,
-  Bot
+  Bot,
+  MicOff
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -243,7 +244,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1435,6 +1436,7 @@ export const App: React.FC = () => {
   const [rewritingId, setRewritingId] = useState<string | null>(null);
   const [generatingVideoPromptsId, setGeneratingVideoPromptsId] = useState<string | null>(null);
   const [generatingImagePromptsId, setGeneratingImagePromptsId] = useState<string | null>(null);
+  const [suppressNarratorText, setSuppressNarratorText] = useState(false);
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
   const [category, setCategory] = useState<Category>('animal_news');
   const [appError, setAppError] = useState<DetailedError | null>(null);
@@ -1821,6 +1823,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Escanea noticias sobre los avances más recientes de la Inteligencia Artificial, Robótica y sobre qué tan lejos está la Inteligencia Artificial Generativa. Identifica 10 noticias o avances fascinantes. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Periódicamente dentro de la narración de cada noticia o avance, el personaje ${activePersona.name} DEBE decirnos qué le gusta y qué le da miedo ante esa noticia o avance.`;
     } else if (category === 'ai_hardware_base') {
       categoryPrompt = `Escanea noticias sobre los avances más recientes en el hardware sobre el cual se fundamenta y en el que se basa la Inteligencia Artificial (procesadores, GPUs, TPUs, semiconductores especializados, chips neuromórficos, etc.). Identifica 10 noticias o desarrollos clave de hardware de IA. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}. CRÍTICO: Periódicamente dentro de la narración de cada avance, el personaje ${activePersona.name} DEBE expresar explícitamente qué cosas le gustan y qué cosas le asustan o le dan miedo ante dicho avance de hardware.`;
+    } else if (category === 'comic_history') {
+      categoryPrompt = `Crea 10 historias súper creativas de entre 2500 y 4000 palabras en formato de cómic, conteniendo como personaje principal a ${activePersona.name}. Cada historia DEBE presentar un villano memorable, tener un desarrollo rápido hasta llegar al clímax y contener una gran batalla contra el villano como parte central de este clímax. Además, los personajes (incluido el protagonista ${activePersona.name}) DEBEN tener superpoderes tipo mutantes y usarlos de manera épica en sus batallas. La narración DEBE reflejar el estilo particular y la personalidad de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -1897,6 +1901,19 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the video generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
+      const narratorInstruction1 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+      const narratorInstruction2 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+      const narratorBlankLineRule = suppressNarratorText
+        ? 'Separate each visual prompt with at least one blank line.'
+        : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
+      const labelRule = suppressNarratorText
+        ? 'CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "(Voz masculina): ", etc. ONLY output the descriptive visual text.'
+        : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
+
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
         
 Narrative:
@@ -1904,12 +1921,12 @@ ${trend.chunkybertoVersion}
 
 Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
-2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
-3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
-4. Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.
+2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
+3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. ${narratorInstruction2}
+4. ${narratorBlankLineRule}
 5. Target language for the prompts: Spanish (Español).
 6. Do not include any conversational filler, just the prompts.
-7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
+7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
 10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
@@ -1953,6 +1970,20 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
+      const narratorInstruction1 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+      const narratorInstruction2 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+      const narratorBlankLineRule = suppressNarratorText
+        ? 'Separate each visual prompt with at least one blank line.'
+        : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
+
+      const labelRule = suppressNarratorText
+        ? 'CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "(Voz masculina): ", etc. ONLY output the descriptive visual text.'
+        : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
+
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
         
 Narrative:
@@ -1960,12 +1991,12 @@ ${trend.chunkybertoVersion}
 
 Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
-2. For Section 1, generate a highly descriptive image prompt (visuals, lighting, camera angles, action). Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
-3. For Section 2, generate another highly descriptive image prompt for the remaining sentences. Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".
-4. Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.
+2. For Section 1, generate a highly descriptive image prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
+3. For Section 2, generate another highly descriptive image prompt for the remaining sentences. ${narratorInstruction2}
+4. ${narratorBlankLineRule}
 5. Target language for the prompts: Spanish (Español).
 6. Do not include any conversational filler, just the prompts.
-7. CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.
+7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
 10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
@@ -3235,6 +3266,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'alternative_history', label: 'Historia Alter.', icon: <GitBranch size={14} /> },
     { id: 'urban_legends', label: 'Leyendas Urbanas', icon: <Skull size={14} /> },
     { id: 'unsolved_mysteries', label: 'Misterios Sin Resolver', icon: <HelpCircle size={14} /> },
+    { id: 'comic_history', label: 'Historia de Comic\'s', icon: <Zap size={14} /> }
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
   const renderForensicToolkit = (targetTrend?: Trend, isGlobal?: boolean) => {
@@ -3633,7 +3665,28 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
               </div>
               {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)}  />}
               <div className="flex flex-col gap-6 items-center text-center"><h2 className="text-4xl xs:text-5xl font-black italic text-white leading-none tracking-tighter uppercase">Studio de <span className={`text-${activePersona.color}`}>{activePersona.name}.</span></h2></div>
-              <div className="flex flex-col sm:flex-row items-center gap-4"><div className="flex-1 relative w-full"><select value={category} onChange={(e) => { setCategory(e.target.value as Category); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full px-8 py-5 bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{categoryOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label.toUpperCase()}</option>)}</select></div></div>
+              <div className="flex flex-col gap-4">
+                <div className="relative w-full">
+                  <select value={category} onChange={(e) => { setCategory(e.target.value as Category); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full px-8 py-5 bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{categoryOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label.toUpperCase()}</option>)}</select>
+                </div>
+                <div className="flex justify-start px-2">
+                  <label className="flex items-center cursor-pointer gap-3 group">
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only" 
+                        checked={suppressNarratorText} 
+                        onChange={() => setSuppressNarratorText(!suppressNarratorText)} 
+                      />
+                      <div className={`block w-12 h-6 rounded-full transition-colors duration-300 ${suppressNarratorText ? `bg-${activePersona.color}` : 'bg-slate-800 border-2 border-slate-700'}`}></div>
+                      <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${suppressNarratorText ? 'transform translate-x-6' : ''}`}></div>
+                    </div>
+                    <span className={`text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] transition-colors ${suppressNarratorText ? `text-${activePersona.color}` : 'text-slate-500 group-hover:text-slate-400'}`}>
+                      Desactivar "Voz..." en prompts
+                    </span>
+                  </label>
+                </div>
+              </div>
               <div className="space-y-6">
                 {masterRecapTrend && (
                   <div className="animate-in fade-in slide-in-from-top-4 duration-700">
