@@ -36,26 +36,26 @@ When generating or modifying the video prompts functionality:
 
 # Cinema Analysis Category Rules
 1. "Análisis del Cine" (cinema_analysis): Available to all personas. 
-2. This category must include analysis of 5 recent movies and 5 older/classic movies. 
+2. This category must include analysis of a balanced mix of recent movies and older/classic movies (amount scaling with selected length). 
 3. The selected movies must be chosen to fit the personality and tastes of the currently active persona.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # Psychology and Neuroscience Category Rules
 1. "Psicología y Neurociencia" (psychology_neuroscience): Available to all personas.
-2. This category must include analysis of 5 studies/cases about Neuroscience and 5 studies/cases about Psychology.
+2. This category must include analysis of studies/cases about Neuroscience and Psychology (amount scaling with selected length).
 3. The news or case studies must be chosen to fit the personality and interests of the currently active persona.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # Universal History Category Rules
 1. "Historia Universal" (universal_history): Available to all personas.
-2. This category must include 10 reviews/narratives about universal history.
+2. This category must include reviews/narratives about universal history (amount scaling with selected length).
 3. The focus should be on the USA, Mexico, and/or Spain.
 4. The history topics must be selected to fit the personality and interests of the currently active persona.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # Comic's History Category Rules
 1. "Historia de Comic's" (comic_history): Available to all personas.
-2. This category must include up to 10 stories of between 2500 and 4000 words.
+2. This category must include stories of between 2500 and 4000 words (amount scaling with selected length).
 3. The AI must create stories in a comic book format featuring the currently active persona as the main character.
 4. Each story MUST present a memorable villain.
 5. The narrative must have rapid development leading up to a climax, which MUST feature a massive battle against the villain.
@@ -64,28 +64,28 @@ When generating or modifying the video prompts functionality:
 
 # Alternative History Category Rules
 1. "Historia Universal Alternativa" (alternative_history): Available to all personas.
-2. This category must scan and select 10 famous human histories.
+2. This category must scan and select famous human histories (amount scaling with selected length).
 3. The narrator must tell the real history and then consider 2 alternative scenarios of what would have happened if the events were different.
 4. Periodically within the narrative, the persona must express how they would have reacted if they had participated in that history.
 5. At the end, the narrator must give their opinion on whether they liked the actual events more than the alternative ones or vice versa.
 6. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # World News Category Rules
-1. The "Noticias del Mundo" (news_world) category must fetch 10 news stories globally.
-2. The "Noticias de México" (news_mexico) category must fetch 10 news stories nationally in Mexico.
-3. The "Noticias de Tijuana" (news_tijuana) category must fetch 10 local news stories in Tijuana.
-4. For all news categories (world, mexico, tijuana), the first 7 stories MUST be very recent (from today or the last week).
-5. For all news categories (world, mexico, tijuana), the last 3 stories MUST be older stories (from a month ago or older).
+1. The "Noticias del Mundo" (news_world) category must fetch news stories globally.
+2. The "Noticias de México" (news_mexico) category must fetch news stories nationally in Mexico.
+3. The "Noticias de Tijuana" (news_tijuana) category must fetch local news stories in Tijuana.
+4. For all news categories (world, mexico, tijuana), 70% of the stories MUST be very recent (from today or the last week).
+5. For all news categories (world, mexico, tijuana), 30% of the stories MUST be older stories (from a month ago or older).
 
 # Urban Legends Category Rules
 1. "Leyendas Urbanas" (urban_legends): Available to all personas.
-2. This category must include 10 urban legends from all over the world.
+2. This category must include urban legends from all over the world (amount scaling with selected length).
 3. The narrator must tell the legend and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
 4. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
 # Unsolved Mysteries Category Rules
 1. "Misterios Sin Resolver" (unsolved_mysteries): Available to all personas.
-2. This category must scan and select 10 famous unsolved mysteries from all over the world.
+2. This category must scan and select famous unsolved mysteries from all over the world (amount scaling with selected length).
 3. The narrator must tell the story and, periodically during the narration, explicitly think and express how they themselves would have reacted if they were in that same situation.
 4. At the end of each mystery narration, the narrator MUST provide their own particular theory, viewpoint, or opinion on what could solve the mystery or how it might be resolved.
 5. All narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
