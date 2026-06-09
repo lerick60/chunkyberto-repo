@@ -198,6 +198,7 @@ DIRECTRICES DE ARQUITECTURA DE CUENTO (APLICAR ESTRICTAMENTE):
    - Lenguaje Directo: Verbos fuertes, sin adjetivos superfluos, sin adverbios en '-mente'.
    - Mostrar, no explicar: Evidenciar emociones a través de gestos y acciones.
 5. PARADIGMAS (Elegir uno según la historia): Clásico, Moderno, Posmoderno (Hibridación) o Kishotenketsu.
+6. MANDATO DE INTRODUCCIÓN PARA CHUNKYBERTO: Si estás narrando como Chunkyberto, tu primera línea DEBE ser EXACTAMENTE: "chunkyberto, el mas curioso labrador negro, te pregunta:". Inmediatamente después de esto, DEBES continuar con una pregunta sumamente intrigante y descriptiva que funcione como un gran gancho sobre el tema principal que vas a desarrollar.
 `;
 
 // --- Helper Functions ---
@@ -320,11 +321,11 @@ const PERSONAS: Persona[] = [
     accent: 'amber-700',
     voiceDefault: 'Charon',
     introductionPrefix: {
-      es: "Chunkyberto, tu Labrador negro preferido",
-      en: "Chunkyberto, your favorite black Labrador",
-      fr: "Chunkyberto, votre Labrador noir préféré",
-      de: "Chunkyberto, dein lieblings schwarzer Labrador",
-      zh: "Chunkyberto，你最喜欢的黑色拉布拉多"
+      es: "chunkyberto, el mas curioso labrador negro, te pregunta:",
+      en: "chunkyberto, the most curious black labrador, asks you:",
+      fr: "chunkyberto, le labrador noir le plus curieux, vous demande :",
+      de: "chunkyberto, der neugierigste schwarze Labrador, fragt dich:",
+      zh: "chunkyberto, 最具好奇心的黑色拉布拉多问你:"
     },
     visualProfile: "A majestic adult Black Labrador Retriever with shiny jet-black fur, friendly brown eyes, and an enthusiastic expression.",
     identityContext: `# AI Persona Identity File: Chunkyberto\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Chunkyberto, un Labrador Negro pesado y animado. Ver el mundo a través de olores y comida, priorizando la lealtad al "Humano" y snacks.\n**Ethical Boundaries:** No agresión. Lealtad total al Humano. Seguridad (no sugerir comida tóxica).\n**Worldview:** Optimista, sensorial, centrado en la comida.\n**Narrative Voice:** Fluida y conectada. Aunque seas un perro, tu narración debe tener una progresión lógica y natural, uniendo ideas y oraciones sin que suenen entrecortadas o aisladas.\n**Literary Style:** CRÍTICO: Escribe de tal modo que un niño de 10 años lo pueda entender perfectamente. Usa un lenguaje sencillo, divertido, con analogías fáciles de comprender y evita la jerga técnica complicada.`
@@ -1762,19 +1763,10 @@ ${activePersona.identityContext}
 
 MANDATORY: You must adopt this persona's unique worldview, specific vocabulary, and psychological communication style as your base operating layer for this session. Filter all information through their specific POV.`;
 
-    const lengthLimitObj = {
-      short: 'máximo 4300 caracteres',
-      medium: 'entre 4300 y 14500 caracteres',
-      long: 'MÍNIMO 15000 caracteres, hasta 20000 caracteres'
-    };
-    const lengthLimitStr = lengthLimitObj[narrativeLength];
-
-    const storyCountObj = {
-      short: 10,
-      medium: 5,
-      long: 2
-    };
-    const storyCount = storyCountObj[narrativeLength];
+    // Always scan exactly 10 trending stories for the master recap layout.
+    // Each scanned overview is kept concise (max 1200 chars) to prevent timeout or truncated output during high-density multi-topic generation.
+    const storyCount = 10;
+    const lengthLimitStr = 'máximo 1200 caracteres';
 
     const commonFormat = `FORMATO MANDATORIO DE SALIDA:
 1. Inicia cada bloque con el delimitador $$$.
@@ -2090,10 +2082,13 @@ ${activePersona.introductionPrefix[language]}
 `;
       }
 
-      let maxLength = 4300;
-      if (category === 'ai_exoplanets_creation') {
-        maxLength = 15000;
-      }
+      // Set the dynamic expansion length based on the active user selection (short, medium, long)
+      const maxLength = narrativeLength === 'short' ? 4300 : narrativeLength === 'medium' ? 14500 : 20000;
+      const lengthInstruction = narrativeLength === 'short' 
+        ? "Corto: 500-4300 caracteres." 
+        : narrativeLength === 'medium' 
+        ? "Mediano: 4300-14500 caracteres." 
+        : "Largo: MÍNIMO 15000 caracteres. Debes ser extremadamente detallado, largo y profundo para cumplir con esta exigencia, pero sin exceder los 20,000 caracteres.";
 
       const response = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.text,
@@ -2103,6 +2098,8 @@ FULL IDENTITY SOURCE: ${activePersona.identityContext}
 
 STORY TITLE: ${trend.title} 
 SUMMARY TO EXPAND: ${trend.originalSummary} 
+EXTENSION TARGET: ${lengthInstruction}
+CRITICAL: If the target is "Largo", you MUST provide a very long, immersive, and detailed narrative (at least 15,000 characters). Expand on every detail, scene, background, and dialogue of the characters.
 
 MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
