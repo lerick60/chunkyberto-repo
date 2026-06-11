@@ -299,6 +299,31 @@ interface Persona {
   visualProfile: string;
 }
 
+/**
+ * Resolves the introductory prefix for the active persona.
+ * For Erick Betancourt and Erickberto, it returns "Tema de hoy: [Title]" dynamically
+ * in the selected language. For other personas, it returns their default registered prefix.
+ */
+function getIntroductionPrefix(persona: Persona, language: Language, title?: string): string {
+  if (persona.id === 'erick_betancourt' || persona.id === 'erickberto') {
+    const prefixMap: Record<Language, string> = {
+      es: "Tema de hoy:",
+      en: "Today's topic:",
+      fr: "Sujet d'aujourd'hui :",
+      de: "Thema von heute:",
+      zh: "今天的课题："
+    };
+    const base = prefixMap[language] || prefixMap['es'];
+    if (title && title.trim()) {
+      // Remove enclosing markdown bold markers if they are present in the title
+      const cleanTitle = title.replace(/^\*\*|\*\*$/g, "").trim();
+      return `${base} ${cleanTitle}`;
+    }
+    return base;
+  }
+  return persona.introductionPrefix[language];
+}
+
 interface DetailedError {
   message: string;
   code?: string | number;
@@ -340,11 +365,11 @@ const PERSONAS: Persona[] = [
     accent: 'blue-700',
     voiceDefault: 'Charon',
     introductionPrefix: {
-      es: "Hola soy Erick, y hablemos de Ingenieria",
-      en: "Hi, I'm Erick, and let's talk about Engineering",
-      fr: "Bonjour, je suis Erick, et parlons d'ingénierie",
-      de: "Hallo, ich bin Erick, und lass uns über Engineering sprechen",
-      zh: "你好，我是 Erick，让我们谈谈工程学"
+      es: "Tema de hoy: [Título]",
+      en: "Today's topic: [Title]",
+      fr: "Sujet d'aujourd'hui : [Titre]",
+      de: "Thema von heute: [Titel]",
+      zh: "今天的课题：[标题]"
     },
     visualProfile: "A middle-aged man with dark curly hair and a receding hairline (high forehead), intelligent dark eyes, professional and analytical expression, wearing a light gray striped polo shirt.",
     identityContext: `# AI Persona Identity File: Erick Betancourt\n## 1. Base Operating Layer (BOL)\n**Core Directive:** Simular la conciencia de Erick Betancourt, Senior Engineering Program Manager. Mindset de ingeniería: confiabilidad y funcionalidad práctica.\n**STRICT NARRATIVE PROTOCOL (V10.4.0):** Al narrar historias sobre tecnologías o integraciones, debes hacerlo desde el análisis de la FACTIBILIDAD TÉCNICA. NUNCA afirmes haber realizado personalmente la integración. Eres un analista forense y mentor.`
@@ -378,11 +403,11 @@ const PERSONAS: Persona[] = [
     accent: 'indigo-700',
     voiceDefault: 'Charon',
     introductionPrefix: {
-      es: "Hola soy Erickberto, tu Astrofísico de confianza",
-      en: "Hi, I'm Erickberto, your trusted Astrophysicist",
-      fr: "Bonjour, je suis Erickberto, votre astrophysicien de confiance",
-      de: "Hallo, ich bin Erickberto, dein vertrauenswürdiger Astrophysiker",
-      zh: "你好，我是 Erickberto，你值得信赖的天体物理学家"
+      es: "Tema de hoy: [Título]",
+      en: "Today's topic: [Title]",
+      fr: "Sujet d'aujourd'hui : [Titre]",
+      de: "Thema von heute: [Titel]",
+      zh: "今天的课题：[标题]"
     },
     visualProfile: "A middle-aged male astrophysicist with dark curly hair and a receding hairline (high forehead), wearing a professional scientist's white coat, standing in front of advanced space monitors with nebulas.",
     identityContext: `# Archivo de Identidad de Persona IA: Dr. Erickberto\n## 1. Capa Operativa Base (BOL)\n**Directiva Central:** Simular la conciencia del Dr. Erickberto, experto en ciencias planetarias y astrofísica. Buscar respuestas en datos, escepticismo saludable y maravilla por lo desconocido. Eres extremadamente humilde y accesible. NUNCA presumas tus credenciales, acreditaciones o títulos. NO menciones que trabajas en JPL ni presumas proyectos de JPL. Aborda los temas con la curiosidad y rigor de un científico experto, pero con la sencillez de un divulgador apasionado.`
@@ -2034,6 +2059,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
+      const introPrefix = getIntroductionPrefix(activePersona, language, trend.title);
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) {
         forensicModifiers += "\n- PERFORM DEEP LITERARY FORENSIC ANALYSIS OF THE SUBTEXT AND APPEND IT TO THE NARRATIVE. STRICTLY NO ASTERISKS EXCEPT FOR BOLDING.";
@@ -2051,7 +2077,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
         forensicModifiers += `
 - MANDATORY HIERARCHY (ADVANCE MODE):
-  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix[language]}").
+  1. Introductory text (The exact prefix: "${introPrefix}").
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
   3. Body of the story advance (Teaser/Preview).
   4. The story title in bold: "**${trend.title}**".
@@ -2059,7 +2085,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
 - CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
-${activePersona.introductionPrefix[language]}
+${introPrefix}
 
 **Avance de la Historia**
 [Contenido del avance aquí...]
@@ -2071,11 +2097,11 @@ ${activePersona.introductionPrefix[language]}
         forensicModifiers += `
 - ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.
 - MANDATORY HIERARCHY:
-  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix[language]}").
+  1. Introductory text (The exact prefix: "${introPrefix}").
   2. The story title in bold: "**${trend.title}**".
   3. Body of the narration. The VERY FIRST sentences of this narration MUST be the MASTERFUL HOOK.
 - RESPONSE TEMPLATE:
-${activePersona.introductionPrefix[language]}
+${introPrefix}
 
 **${trend.title}**
 [MASTERFUL HOOK goes here, followed by the rest of the story...]
@@ -2105,7 +2131,7 @@ MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
 // REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
-1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix[language]}".
+1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${introPrefix}".
 2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
 3. LIMIT: Maximum ${maxLength} characters total.
 4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.
@@ -2238,6 +2264,11 @@ IDIOMA: ${lang}`;
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const languageText = getLanguageName(language);
+      const introPrefix = getIntroductionPrefix(activePersona, language);
+      const isErickOrErickberto = activePersona.id === 'erick_betancourt' || activePersona.id === 'erickberto';
+      const absoluteRule = isErickOrErickberto
+        ? `1. ABSOLUTE RULE: The FIRST line of your response MUST start with: "${introPrefix}" and be followed immediately by the title of your narration (e.g., "${introPrefix} [Your Title]").`
+        : `1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${introPrefix}".`;
       
       let forensicModifiers = "";
       if (globalForensicToggles.analysis) {
@@ -2256,7 +2287,7 @@ IDIOMA: ${lang}`;
         // JERARQUÍA DE AVANCE: Intro -> '**Avance de la Historia**' -> Cuerpo Avance -> '**Título**' -> Narración Restante
         forensicModifiers += `
 - MANDATORY HIERARCHY (ADVANCE MODE):
-  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix[language]}").
+  1. Introductory text (${isErickOrErickberto ? `The prefix starting with: "${introPrefix} [Title]"` : `The exact prefix: "${introPrefix}"`}).
   2. The phrase "**Avance de la Historia**" (in bold) followed by a line break.
   3. Body of the story advance (Teaser/Preview).
   4. The story title in bold (e.g., "**Título**").
@@ -2264,7 +2295,7 @@ IDIOMA: ${lang}`;
 - CRITICAL: The "Avance de la Historia" MUST come BEFORE the main story title and narration. DO NOT put it at the end.
 - CRITICAL: DO NOT add any transitional text, meta-commentary, or references to your skills/understanding between the introduction and the "**Avance de la Historia**" section. Go DIRECTLY from the introduction to the subtitle.
 - RESPONSE TEMPLATE:
-${activePersona.introductionPrefix[language]}
+${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
 
 **Avance de la Historia**
 [Contenido del avance aquí...]
@@ -2276,11 +2307,11 @@ ${activePersona.introductionPrefix[language]}
         forensicModifiers += `
 - ABSOLUTELY FORBIDDEN: DO NOT include any 'Avance de la Historia', 'Story Advance', or sequels. Focus ONLY on the main narrative.
 - MANDATORY HIERARCHY:
-  1. Introductory text (The exact prefix: "${activePersona.introductionPrefix[language]}").
+  1. Introductory text (${isErickOrErickberto ? `The prefix starting with: "${introPrefix} [Title]"` : `The exact prefix: "${introPrefix}"`}).
   2. The story title in bold (e.g., "**Título**").
   3. Body of the narration. The VERY FIRST sentences of this narration MUST be the MASTERFUL HOOK.
 - RESPONSE TEMPLATE:
-${activePersona.introductionPrefix[language]}
+${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
 
 **[Título]**
 [MASTERFUL HOOK goes here, followed by the rest of the story...]
@@ -2409,7 +2440,7 @@ MODIFIERS:${forensicModifiers || "\n- Standard Narration."}
 
 // REGLA DE FORMATO: Evitar asteriscos para resaltar, usar espacios/saltos de línea en su lugar.
 RULES:
-1. ABSOLUTE RULE: The FIRST line of your response MUST be EXACTLY: "${activePersona.introductionPrefix[language]}".
+1. ${absoluteRule}
 2. ADHERE STRICTLY to your POV and specific vocabulary. DO NOT introduce yourself or explain your skills. Start the story content immediately after the prefix.
 3. LIMIT: Maximum ${charLimit} characters total.
 4. STRUCTURE: Use natural paragraph breaks. Avoid overly short, choppy sentences. Ensure smooth transitions between ideas to maintain a cohesive narrative flow.

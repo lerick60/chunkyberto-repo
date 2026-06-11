@@ -127,3 +127,8 @@ When generating or modifying the video prompts functionality:
 
 # Generative Models Rules
 1. The "Gratis" (free) mode must always include the latest free models. Currently: `veo-3.1-lite-generate-preview` for video logic and `gemini-3.1-flash-tts-preview` for TTS.
+
+# Erick and Erickberto Narration Rules
+1. The narratives of "Erick Betancourt" and "Dr. Erickberto" MUST start with "Tema de hoy:" followed immediately by the title of the narration (translated dynamically if the target language is different than Spanish, e.g., "Today's topic:" in English).
+2. The UI and the prompt generation engine must dynamically enforce this prefix on the very first line of their narration outputs, using the correct language format.
+
