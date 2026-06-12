@@ -132,3 +132,13 @@ When generating or modifying the video prompts functionality:
 1. The narratives of "Erick Betancourt" and "Dr. Erickberto" MUST start with "Tema de hoy:" followed immediately by the title of the narration (translated dynamically if the target language is different than Spanish, e.g., "Today's topic:" in English).
 2. The UI and the prompt generation engine must dynamically enforce this prefix on the very first line of their narration outputs, using the correct language format.
 
+# World Cup Stories Category Rules
+1. "Historias de Mundiales de Soccer" (world_cup_stories): Available to all personas.
+2. This category must include up to 10 stories with lengths determined by the active settings (corto, mediano, largo).
+3. The stories MUST be about soccer teams that participated in a World Cup or emblematic/famous players that shined in a World Cup, spanning all World Cups up to 2026.
+4. From the very beginning of the story, the narrative MUST be very precise about which player, team, and specific World Cup the story is about.
+5. The stories must be inspiring, sad, surprising, or almost unknown. In each case, this specific emotional tone MUST be explicitly indicated in the narrative.
+6. The narrative must carry a strong hook at the beginning to invite reading the rest of the story.
+7. Periodically within the narrative, the persona MUST explicitly indicate their personal taste, pleasure, and love for the game of soccer.
+8. The stories MUST be created via Artificial Intelligence and all narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
