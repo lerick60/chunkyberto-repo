@@ -246,7 +246,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026';
 
 type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -1852,6 +1852,9 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea ${storyCount} historias súper creativas de entre 2500 y 4000 palabras en formato de cómic, conteniendo como personaje principal a ${activePersona.name}. Cada historia DEBE presentar un villano memorable, tener un desarrollo rápido hasta llegar al clímax y contener una gran batalla contra el villano como parte central de este clímax. Además, los personajes (incluido el protagonista ${activePersona.name}) DEBEN tener superpoderes tipo mutantes y usarlos de manera épica en sus batallas. La narración DEBE reflejar el estilo particular y la personalidad de ${activePersona.name}.`;
     } else if (category === 'world_cup_stories') {
       categoryPrompt = `Busca y selecciona ${storyCount} historias sobre equipos de futbol soccer que participaron en algún Mundial, o sobre jugadores emblemáticos que brillaron o fueron famosos en algún certamen mundialista. Abarca todos los mundiales hasta el Mundial de 2026. CRÍTICO: La historia DEBE ser muy precisa desde el principio sobre qué jugador, equipo y sobre qué mundial específico es la narración. Las historias deben ser variadas: inspiradoras, tristes, sorprendentes o casi no conocidas, y en cada caso DEBE indicarse en la narración el tono de la historia. CRÍTICO: Cada una de las historias DEBE contar con un importante gancho al inicio que invite a seguir leyendo. A lo largo de la narración, el narrador (${activePersona.name}) DEBE indicar, de manera natural, su placer y gusto personal por el juego del soccer. La narración DEBE ser creada vía Inteligencia Artificial y reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+    } else if (category === 'world_cup_predictions_2026') {
+      const todayDate = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      categoryPrompt = `Basado en la fecha actual de hoy (${todayDate}), determina y selecciona los siguientes ${storyCount} partidos próximos a jugarse en el Mundial de Soccer 2026. Realiza un análisis técnico para cada equipo participante sobre su tipo de juego y la habilidad de sus jugadores. En base a la comparación de sus fortalezas y debilidades, haz una predicción sobre qué equipo ganará el enfrentamiento. CRÍTICO: Al inicio de la historia, DEBES indicar de forma muy precisa qué equipo piensas que ganará y de cuánto será el marcador exacto. Después, desarrolla el análisis de las fortalezas y debilidades de cada equipo participante, explica tus razonamientos de por qué elegiste al ganador y justifica detalladamente el resultado final del marcador predicho. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     return `${categoryPrompt}
@@ -3305,6 +3308,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'urban_legends', label: 'Leyendas Urbanas', icon: <Skull size={14} /> },
     { id: 'unsolved_mysteries', label: 'Misterios Sin Resolver', icon: <HelpCircle size={14} /> },
     { id: 'world_cup_stories', label: 'Historias de Mundiales de Soccer', icon: <Trophy size={14} /> },
+    { id: 'world_cup_predictions_2026', label: 'Análisis Predictivo de partidos del Mundial 2026', icon: <BarChart3 size={14} /> },
     { id: 'comic_history', label: 'Historia de Comic\'s', icon: <Zap size={14} /> }
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 

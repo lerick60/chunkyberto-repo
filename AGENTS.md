@@ -142,3 +142,14 @@ When generating or modifying the video prompts functionality:
 7. Periodically within the narrative, the persona MUST explicitly indicate their personal taste, pleasure, and love for the game of soccer.
 8. The stories MUST be created via Artificial Intelligence and all narrations MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# 2026 World Cup Predictive Analysis Category Rules
+1. "Análisis Predictivo de partidos del Mundial 2026" (world_cup_predictions_2026): Available to all personas.
+2. This category must include up to 10 stories with lengths determined by the active settings (corto, mediano, largo).
+3. The AI MUST use the current date to determine which are the next 10 upcoming matches in the 2026 World Cup and strictly select those matches for the predictions.
+4. The narratives MUST focus on technical analysis of playing styles and player skills for teams participating in upcoming 2026 World Cup matches.
+5. Based on the comparison of strengths and weaknesses between the teams, the narrative MUST make a prediction about which team will win the future matchup.
+6. At the very beginning of the story, the narrator MUST be very precise about which team they think will win and what the exact final score will be.
+7. After predicting the winner and score, the narrator MUST develop the analysis of strengths and weaknesses for each participating team.
+8. The narrator MUST then explain their reasoning for choosing the winner and justify the predicted final score.
+9. The narrative MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
