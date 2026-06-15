@@ -265,8 +265,8 @@ interface VoiceOption {
 }
 
 const MODELS = {
-  TEXT: 'gemini-3.1-flash-preview',       
-  IMAGE: 'gemini-3.1-flash-image-preview',     
+  TEXT: 'gemini-3.5-flash',       
+  IMAGE: 'gemini-2.5-flash-image',     
   VIDEO: 'veo-3.1-lite-generate-preview', 
   TTS: 'gemini-3.1-flash-tts-preview'   
 };
@@ -490,40 +490,40 @@ interface ModelSettings {
 const MODEL_TIERS = {
   free: {
     label: 'Gratis',
-    description: 'Modelos generativos gratis. Ideal para pruebas rápidas. (Categoría sugerida para Gemini 5 Flash).',
+    description: 'Modelos generativos gratis. Ideal para pruebas rápidas con Gemini Flash.',
     models: {
-      text: 'gemini-5.0-flash-preview',
-      image: 'gemini-3.1-flash-image-preview', 
+      text: 'gemini-3.5-flash',
+      image: 'gemini-2.5-flash-image', 
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   economical: {
     label: 'Económico',
-    description: 'Modelos generativos de bajo costo. Ideal para procesar altos volúmenes de datos con Gemini 5 Flash Lite/Flash.',
+    description: 'Modelos generativos de bajo costo. Ideal para procesar altos volúmenes de datos con Gemini Flash Lite.',
     models: {
-      text: 'gemini-5.0-flash-lite-preview',
-      image: 'gemini-3.1-flash-image-preview',
+      text: 'gemini-3.1-flash-lite',
+      image: 'gemini-2.5-flash-image',
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   normal: {
     label: 'Normal',
-    description: 'Equilibrio perfecto entre costo y calidad. Aquí cabría por defecto el nuevo modelo Gemini 5 Flash para narrativa principal.',
+    description: 'Equilibrio perfecto entre costo y calidad con Gemini Flash para narrativa principal.',
     models: {
-      text: 'gemini-5.0-flash-preview',
-      image: 'gemini-3.1-flash-image-preview',
+      text: 'gemini-3.5-flash',
+      image: 'gemini-2.5-flash-image',
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   high_quality: {
     label: 'Alta Calidad',
-    description: 'Modelos generativos de máxima calidad y razonamiento profundo (Gemini Pro).',
+    description: 'Modelos generativos de máxima calidad y razonamiento profundo (Gemini Pro y Veo Pro).',
     models: {
       text: 'gemini-3.1-pro-preview',
-      image: 'gemini-3.1-pro-image-preview',
+      image: 'gemini-3.1-flash-image',
       video: 'veo-3.1-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
@@ -981,7 +981,7 @@ export const YouTubeUploadModal: React.FC<{
       Responde estrictamente en formato JSON con las llaves: "title", "description", "tags".`;
 
       const res = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-3.5-flash",
         contents: [{ parts: [{ text: prompt }] }],
         config: { responseMimeType: "application/json" }
       });
@@ -1492,7 +1492,7 @@ export const App: React.FC = () => {
   const [combinedVideoUrl, setCombinedVideoUrl] = useState<string | null>(null);
   const [combinedVideoMimeType, setCombinedVideoMimeType] = useState<string>('video/webm');
   const [isZipping, setIsZipping] = useState(false);
-  const [userIdea, setUserIdea] = useState("");
+  const [userIdea, setUserIdea] = useState("chunkyberto sale a caminar con erick por la mañana, una sombra oscura los persigue. aparece otra sombra, los rodean, chunkyberto y erick salen corriendo esquivando las sombras, que empiezan a seguirlos. llegan a una iglesia que les da un poco de seguridad. no hay rastro de las sombras, intentan regrsar a casa, y aparecen dos pastor aleman con un aspecto furioso. erick agrra un palo cerca y se mantiene entre los perros atacantes y chunkyberto. en una oportunidad, erick da un palazo q asusta a los perros y sale corriendo junto c chunkyberto de regreso a casa...un dia cualquiera.");
   const [isGeneratingIdea, setIsGeneratingIdea] = useState(false);
   const [latestHybridTrend, setLatestHybridTrend] = useState<Trend | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
