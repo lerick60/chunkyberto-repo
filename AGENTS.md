@@ -153,3 +153,21 @@ When generating or modifying the video prompts functionality:
 8. The narrator MUST then explain their reasoning for choosing the winner and justify the predicted final score.
 9. The narrative MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+# Scientific Discoveries Category Rules
+1. "Descubrimientos Científicos" (scientific_discoveries): Available to all personas.
+2. This category must include up to 10 stories with lengths determined by the active settings (corto, mediano, largo).
+3. The stories must be about analysis and explanations of scientific discoveries.
+4. At the beginning of the story, the narrator MUST briefly summarize the basic discovery.
+5. The narrator MUST then develop a detailed explanation of the key aspect or central element of the discovery.
+6. Based on the central discovery in question, the narrator MUST make a prediction about the impact it will have on some of its expected applications.
+7. The narrative MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
+# Movie Scripts Category Rules
+1. "Guiones de Películas" (movie_scripts): Available to all personas.
+2. This category must include up to 10 stories with lengths determined by the active settings (corto, mediano, largo: appropriate for a short film/scene, a medium-length feature, or a full feature, respectively).
+3. The stories must be movie scripts generated with AI.
+4. The hook at the beginning MUST be the absolute best possible to grab the audience's attention immediately.
+5. The script must have an appropriate structure for the requested length format.
+6. The scripts must vary in genre among horror, fiction, drama, action, and comedy.
+7. The narrative and script direction MUST strictly reflect the style, personality, and point of view of the currently selected persona.
+
