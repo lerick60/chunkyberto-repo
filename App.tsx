@@ -1668,11 +1668,23 @@ export const App: React.FC = () => {
 
   const checkApiKeyStatus = useCallback(async () => {
     try {
+      try {
+        const healthRes = await fetch('/api/health');
+        if (healthRes.ok) {
+          const data = await healthRes.json();
+          if (data && data.key) {
+            (window as any).GEMINI_API_KEY = data.key;
+          }
+        }
+      } catch (healthErr) {
+        console.warn("Could not load API key from /api/health:", healthErr);
+      }
+
       // @ts-ignore
       if (window.aistudio?.hasSelectedApiKey) {
         // @ts-ignore
         const selected = await window.aistudio.hasSelectedApiKey();
-        setHasApiKey(!!selected);
+        setHasApiKey(!!selected || !!getSafeApiKey());
       } else {
         // If not in AI Studio, check if we have a key in env or localStorage
         const key = getSafeApiKey();
