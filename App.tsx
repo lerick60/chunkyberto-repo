@@ -256,6 +256,16 @@ type MotionEffect = 'none' | 'zoom_in' | 'pan_right' | 'pan_left';
 type TransitionEffect = 'cut' | 'fade_black' | 'cross_dissolve';
 type YouTubePrivacy = 'public' | 'private' | 'unlisted';
 
+const GROUNDED_CATEGORIES: Category[] = [
+  'news_world',
+  'news_mexico',
+  'news_tijuana',
+  'ai_robotics_news',
+  'ai_hardware_base',
+  'financial_analysis',
+  'animal_news'
+];
+
 interface VoiceOption {
   id: string;
   name: string;
@@ -1902,12 +1912,13 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       }
       
       let response: any;
+      const needsSearch = GROUNDED_CATEGORIES.includes(category);
       try {
         response = await apiRetry(() => ai.models.generateContent({ 
           model: modelSettings.text, 
           contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
-          tools: [{ googleSearch: {} }]
-        } as any), 1, 3000, 90000) as any;
+          ...(needsSearch ? { tools: [{ googleSearch: {} }] } : {})
+        } as any), 1, 3000, 40000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
@@ -1919,7 +1930,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
             contents: generateDefaultPrompt() + extraForensic + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
-          }), 1, 2000, 90000) as any;
+          }), 1, 2000, 40000) as any;
         } else {
           throw firstErr;
         }
@@ -2477,16 +2488,17 @@ ${charLimit < 10000 ? '8. MASTERFUL HOOK (CRITICAL): Start the main narrative (i
 ${charLimit < 10000 ? '9. SHORT NARRATIVE ARCHITECTURE (CRITICAL): Sustain attention using precise narrative architecture. Incorporate as many of these elements as the length allows: 1) Unity of impression and single effect (constant tension, no filler). 2) Focused structure (single main conflict, few characters, single setting). 3) Inescapable central conflict (clear goal and obstacle). 4) Memorable climax and ending (twist, epiphany, or open ending). 5) Every scene must earn its place (relentless condensation, cause-and-effect logic).' : ''}
 ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GUIDELINES : ''}`;
 
+      const hasLinks = allLinks.length > 0;
       try {
         response = await apiRetry(() => ai.models.generateContent({
           model: modelSettings.text,
           contents: basePromptStr,
           config: { 
-            tools: [{ googleSearch: {} }], 
+            ...(hasLinks ? { tools: [{ googleSearch: {} }] } : {}),
             systemInstruction: `You are ${activePersona.name}.`,
             maxOutputTokens: 16384
           }
-        }), 1, 3000, 90000) as any;
+        }), 1, 3000, 40000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
@@ -2500,7 +2512,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
               systemInstruction: `You are ${activePersona.name}.`,
               maxOutputTokens: 16384
             }
-          }), 1, 2000, 90000) as any;
+          }), 1, 2000, 40000) as any;
         } else {
           throw firstErr;
         }
