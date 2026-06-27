@@ -19,7 +19,7 @@ async function startServer() {
   app.use(cookieParser("chunkyberto-secret"));
 
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", key: process.env.GEMINI_API_KEY });
+    res.json({ status: "ok", key: process.env.GEMINI_API_KEY || process.env.API_KEY });
   });
 
   if (!process.env.GEMINI_API_KEY && !process.env.API_KEY) {
