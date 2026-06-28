@@ -6,8 +6,8 @@ import { google } from "googleapis";
 import cookieParser from "cookie-parser";
 import multer from "multer";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const filename = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
+const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(filename);
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -171,7 +171,7 @@ async function startServer() {
       const youtube = google.youtube({ version: "v3", auth });
 
       // Write the buffer to a temp file for reliable streaming
-      tempPath = path.join(__dirname, `temp_upload_${personaId}_${Date.now()}.webm`);
+      tempPath = path.join(process.cwd(), `temp_upload_${personaId}_${Date.now()}.webm`);
       fs.writeFileSync(tempPath, videoFile.buffer);
 
       console.log(`Starting real YouTube upload for persona ${personaId}: ${title}`);
@@ -301,10 +301,11 @@ async function startServer() {
   });
 
   const serveStatic = () => {
-    app.use(express.static(path.resolve(__dirname, "dist"), { index: false }));
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath, { index: false }));
     app.use((req, res) => {
       try {
-        let html = fs.readFileSync(path.resolve(__dirname, "dist", "index.html"), "utf-8");
+        let html = fs.readFileSync(path.join(distPath, "index.html"), "utf-8");
         
         const envScript = `<script>
           window.process = window.process || {};
