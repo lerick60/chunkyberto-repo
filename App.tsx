@@ -1957,7 +1957,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           model: modelSettings.text, 
           contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
           ...(needsSearch ? { tools: [{ googleSearch: {} }] } : {})
-        } as any), 1, 3000, 40000) as any;
+        } as any), 1, 3000, 120000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
@@ -1969,7 +1969,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
             contents: generateDefaultPrompt() + extraForensic + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
-          }), 1, 2000, 40000) as any;
+          }), 1, 2000, 120000) as any;
         } else {
           throw firstErr;
         }
@@ -2537,7 +2537,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
             systemInstruction: `You are ${activePersona.name}.`,
             maxOutputTokens: 16384
           }
-        }), 1, 3000, 40000) as any;
+        }), 1, 3000, 120000) as any;
       } catch (firstErr: any) {
         const details = getErrorDetails(firstErr);
         const isForbiddenSearch = String(details.code) === "403" || details.status === "FORBIDDEN" || details.status === "PERMISSION_DENIED" || String(firstErr).toUpperCase().includes("PERMISSION");
@@ -2551,7 +2551,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
               systemInstruction: `You are ${activePersona.name}.`,
               maxOutputTokens: 16384
             }
-          }), 1, 2000, 40000) as any;
+          }), 1, 2000, 120000) as any;
         } else {
           throw firstErr;
         }
