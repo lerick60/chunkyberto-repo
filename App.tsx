@@ -1950,12 +1950,14 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         extraForensic += "\n- ABSOLUTELY FORBIDDEN: DO NOT format the synopsis as an interview or podcast.";
       }
       
+      const scanPhaseDirective = "\n\n⚠️ DIRECTIVA CRÍTICA DE ESCANEO (EVITAR TIMEOUT): Actualmente estás en la fase de ESCANEO/LISTADO DE TENDENCIAS. NO debes generar historias completas, capítulos largos, guiones completos, ni textos extensos de miles de palabras (incluso si la regla de la categoría solicita '2500 a 4000 palabras' o 'guiones'). En su lugar, debes generar ÚNICAMENTE sinopsis/resúmenes concisos de un MÁXIMO de 1200 caracteres para cada una de las 10 historias, siguiendo estrictamente el formato. Esto es obligatorio para evitar desbordar el búfer de salida y causar un timeout en la API.";
+
       let response: any;
       const needsSearch = GROUNDED_CATEGORIES.includes(category);
       try {
         response = await apiRetry(() => ai.models.generateContent({ 
           model: modelSettings.text, 
-          contents: generateDefaultPrompt() + extraForensic + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
+          contents: generateDefaultPrompt() + extraForensic + scanPhaseDirective + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
           ...(needsSearch ? { tools: [{ googleSearch: {} }] } : {})
         } as any), 1, 3000, 120000) as any;
       } catch (firstErr: any) {
@@ -1968,7 +1970,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
-            contents: generateDefaultPrompt() + extraForensic + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
+            contents: generateDefaultPrompt() + extraForensic + scanPhaseDirective + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
           }), 1, 2000, 120000) as any;
         } else {
           throw firstErr;
