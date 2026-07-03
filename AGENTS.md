@@ -171,3 +171,8 @@ When generating or modifying the video prompts functionality:
 6. The scripts must vary in genre among horror, fiction, drama, action, and comedy.
 7. The narrative and script direction MUST strictly reflect the style, personality, and point of view of the currently selected persona.
 
+
+# Trends Scanning Rules
+1. The user can fetch additional stories by clicking 'BUSCAR 10 HISTORIAS MÁS (DISTINTAS)'.
+2. When fetching more stories, the prompt MUST exclude the titles of the stories that were already generated in the current session to ensure the newly fetched stories are completely distinct.
+3. The new stories will be appended to the current list of stories in the UI.

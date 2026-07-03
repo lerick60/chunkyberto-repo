@@ -125,7 +125,8 @@ import {
   HelpCircle,
   GitBranch,
   Bot,
-  MicOff
+  MicOff,
+  Plus
 } from 'lucide-react';
 
 // Tailwind v4 safelist for dynamic persona colors
@@ -1842,7 +1843,7 @@ export const App: React.FC = () => {
 
   const getLanguageName = (lang: Language) => { const map = { es: 'Spanish', en: 'English', fr: 'French', de: 'German', zh: 'Mandarin' }; return map[lang]; };
 
-  const generateDefaultPrompt = useCallback(() => {
+  const generateDefaultPrompt = useCallback((excludedTitles?: string[]) => {
     const languageText = getLanguageName(language);
     let personaInstruction = `SYSTEM IDENTITY (STRICT ADHERENCE): You are ${activePersona.name}. 
 ADOPT THE FULL IDENTITY CONTEXT BELOW:
@@ -1926,13 +1927,18 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Crea ${storyCount} guiones de películas generados con IA con una ${lengthText}. Varía el género de los guiones entre horror, ficción, drama, acción y comedia. CRÍTICO: Asegúrate de que el gancho al principio sea el mejor posible para atrapar a la audiencia inmediatamente. El guion debe tener una estructura adecuada para su formato. La narración y dirección del guion DEBEN ser contadas y reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
-    return `${categoryPrompt}
+    let exclusionPrompt = "";
+    if (excludedTitles && excludedTitles.length > 0) {
+      exclusionPrompt = `\nCRÍTICO: NO generes ninguna historia sobre los siguientes temas o títulos que ya fueron encontrados anteriormente: ${excludedTitles.join(', ')}. DEBES encontrar y generar ${storyCount} historias COMPLETAMENTE NUEVAS Y DISTINTAS a estas.`;
+    }
+
+    return `${categoryPrompt}${exclusionPrompt}
 ${personaInstruction} 
 ${commonFormat} 
 LENGUAJE OBJETIVO: ${languageText}.`;
   }, [category, language, activePersona, globalForensicToggles, narrativeLength]); 
 
-  const fetchTrends = useCallback(async () => {
+  const fetchTrends = useCallback(async (append: boolean = false) => {
     if (isFetchingTrendsRef.current) return;
     isFetchingTrendsRef.current = true; setLoadingTrends(true); setAppError(null);
     try {
@@ -1952,12 +1958,17 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       
       const scanPhaseDirective = "\n\n⚠️ DIRECTIVA CRÍTICA DE ESCANEO (EVITAR TIMEOUT): Actualmente estás en la fase de ESCANEO/LISTADO DE TENDENCIAS. NO debes generar historias completas, capítulos largos, guiones completos, ni textos extensos de miles de palabras (incluso si la regla de la categoría solicita '2500 a 4000 palabras' o 'guiones'). En su lugar, debes generar ÚNICAMENTE sinopsis/resúmenes concisos de un MÁXIMO de 1200 caracteres para cada una de las 10 historias, siguiendo estrictamente el formato. Esto es obligatorio para evitar desbordar el búfer de salida y causar un timeout en la API.";
 
+      let excludedTitles: string[] = [];
+      if (append) {
+        excludedTitles = trends.filter(t => !t.isMasterSummary).map(t => t.title);
+      }
+
       let response: any;
       const needsSearch = GROUNDED_CATEGORIES.includes(category);
       try {
         response = await apiRetry(() => ai.models.generateContent({ 
           model: modelSettings.text, 
-          contents: generateDefaultPrompt() + extraForensic + scanPhaseDirective + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
+          contents: generateDefaultPrompt(excludedTitles) + extraForensic + scanPhaseDirective + "\nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP. NO INCLUYAS 'Avance de la Historia' en estos resúmenes.", 
           ...(needsSearch ? { tools: [{ googleSearch: {} }] } : {})
         } as any), 1, 3000, 120000) as any;
       } catch (firstErr: any) {
@@ -1970,7 +1981,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
           // Fallback: Try without googleSearch if grounded search fails
           response = await apiRetry(() => ai.models.generateContent({ 
             model: modelSettings.text, 
-            contents: generateDefaultPrompt() + extraForensic + scanPhaseDirective + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
+            contents: generateDefaultPrompt(excludedTitles) + extraForensic + scanPhaseDirective + "\n(FALLBACK: No uses herramientas de búsqueda, genera basado en tu conocimiento interno) \nIMPORTANTE: INICIA TU RESPUESTA DIRECTAMENTE CON $$$ MASTER RECAP.", 
           }), 1, 2000, 120000) as any;
         } else {
           throw firstErr;
@@ -1985,12 +1996,17 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         let title = ""; let summary = "";
         if (isRecapBlock) { title = "MASTER RECAP"; summary = block.replace(/^MASTER RECAP\s*:?\s*/i, '').trim(); }
         else { const colonIndex = block.indexOf(':'); if (colonIndex !== -1) { title = block.substring(0, colonIndex).replace(/^\d+[\.\)\:]\s*/, '').replace(/\*\*/g, '').trim(); summary = block.substring(colonIndex + 1).trim(); } else { title = "Historia " + idx; summary = block; } }
-        if (title && summary) newTrends.push({ id: `t-${idx}-${Date.now()}`, title, originalSummary: summary, url: '', source: "Forensic News Scan", isMasterSummary: isRecapBlock });
+        if (title && summary) newTrends.push({ id: `t-${Date.now()}-${idx}`, title, originalSummary: summary, url: '', source: "Forensic News Scan", isMasterSummary: isRecapBlock });
       });
-      setTrends(newTrends.slice(0, 15));
+      
+      if (append) {
+        setTrends(prev => [...prev, ...newTrends.slice(0, 15)]);
+      } else {
+        setTrends(newTrends.slice(0, 15));
+      }
       hasInitialFetchedRef.current = true;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
-  }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles]); 
+  }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles, trends]); 
 
   const handleGenerateVideoPrompts = async (trend: Trend) => {
     setGeneratingVideoPromptsId(trend.id); setAppError(null);
@@ -3882,7 +3898,19 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-20">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} language={language} persona={activePersona} />)}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} language={language} persona={activePersona} />)}</div>
+            {trends.length > 0 && (
+              <div className="flex justify-center mb-20">
+                <button 
+                  onClick={() => fetchTrends(true)} 
+                  disabled={loadingTrends} 
+                  className={`px-8 py-4 bg-slate-900 border-2 border-${activePersona.color} text-${activePersona.color} hover:bg-${activePersona.color} hover:text-slate-950 active:scale-95 rounded-2xl font-black uppercase text-sm shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50`}
+                >
+                  {loadingTrends ? <Loader2 className="animate-spin" size={20} /> : <Plus size={20} />}
+                  {loadingTrends ? "CARGANDO MÁS HISTORIAS..." : "BUSCAR 10 HISTORIAS MÁS (DISTINTAS)"}
+                </button>
+              </div>
+            )}
             <div className="max-w-4xl mx-auto mt-20 mb-40 animate-in fade-in slide-in-from-bottom-12 duration-1000">
               <div className={`bg-slate-900 border-4 border-${activePersona.color}/30 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group`}><div className={`absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700 text-${activePersona.color}`}><FlaskRound size={120} /></div>
                 <div className="relative z-10 space-y-8">
