@@ -317,6 +317,7 @@ interface Persona {
   identityContext: string;
   introductionPrefix: Record<Language, string>;
   visualProfile: string;
+  gender: 'M' | 'F';
 }
 
 /**
@@ -360,6 +361,7 @@ const PERSONAS: Persona[] = [
     id: 'chunkyberto',
     name: 'Chunkyberto',
     role: 'Labrador Negro / Narrador Animal',
+    gender: 'M',
     isHuman: false,
     icon: <Dog size={20} />,
     color: 'amber-500',
@@ -379,6 +381,7 @@ const PERSONAS: Persona[] = [
     id: 'erick_betancourt',
     name: 'Erick Betancourt',
     role: 'Senior Engineering Program Manager',
+    gender: 'M',
     isHuman: true,
     icon: <Briefcase size={20} />,
     color: 'blue-500',
@@ -398,6 +401,7 @@ const PERSONAS: Persona[] = [
     id: 'luna',
     name: 'Luna',
     role: 'Gata Sianesa / Crítica Sofisticada',
+    gender: 'F',
     isHuman: false,
     icon: <Cat size={20} />,
     color: 'purple-500',
@@ -417,6 +421,7 @@ const PERSONAS: Persona[] = [
     id: 'erickberto',
     name: 'Dr. Erickberto',
     role: 'Astrofísico y Científico Planetario',
+    gender: 'M',
     isHuman: true,
     icon: <Orbit size={20} />,
     color: 'indigo-500',
@@ -436,6 +441,7 @@ const PERSONAS: Persona[] = [
     id: 'mayra',
     name: 'Mayra',
     role: 'Bienes Raíces / Supermamá',
+    gender: 'F',
     isHuman: true,
     icon: <Heart size={20} />,
     color: 'pink-500',
@@ -455,6 +461,7 @@ const PERSONAS: Persona[] = [
     id: 'jacinto_barman',
     name: 'Jacinto Barman',
     role: 'Genio Forense / Héroe Altruista',
+    gender: 'M',
     isHuman: true,
     icon: <FlaskConical size={20} />,
     color: 'emerald-500',
@@ -474,6 +481,7 @@ const PERSONAS: Persona[] = [
     id: 'donald_trump',
     name: 'Donald Trump',
     role: 'Donald Trump',
+    gender: 'M',
     isHuman: true,
     icon: <UserPlus size={20} />,
     color: 'emerald-500',
@@ -493,6 +501,7 @@ const PERSONAS: Persona[] = [
     id: 'facunda_rico',
     name: 'Facunda Rico',
     role: 'Asesina Sagrada / Femme Fatale',
+    gender: 'F',
     isHuman: true,
     icon: <Wand2 size={20} />,
     color: 'pink-500',
@@ -512,6 +521,7 @@ const PERSONAS: Persona[] = [
     id: 'perfecto_chairo',
     name: 'Wendy Torres',
     role: 'El Perfecto Chairo / Activista',
+    gender: 'F',
     isHuman: true,
     icon: <Megaphone size={20} />,
     color: 'fuchsia-500',
@@ -2027,18 +2037,20 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the video generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
+      const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
       const labelRule = suppressNarratorText
-        ? 'CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "(Voz masculina): ", etc. ONLY output the descriptive visual text.'
-        : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
+        ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
+        : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
@@ -2056,7 +2068,7 @@ Rules for EACH paragraph:
 6. Do not include any conversational filler, just the prompts.
 7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
-9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
+9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
 10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
 ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
 
@@ -2098,19 +2110,20 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
+      const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : 'Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "(Voz masculina): ".';
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
-
       const labelRule = suppressNarratorText
-        ? 'CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "(Voz masculina): ", etc. ONLY output the descriptive visual text.'
-        : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
+        ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
+        : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
@@ -2128,7 +2141,7 @@ Rules for EACH paragraph:
 6. Do not include any conversational filler, just the prompts.
 7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
-9. CRITICAL: The narrator expressions must be written to be spoken by a male voice.
+9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
 10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
 ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
 
@@ -2683,6 +2696,8 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       const characterContext = activeCharacters.length > 0 
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
+      
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
 
       const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
@@ -2691,7 +2706,7 @@ ${visualAnchorContext}${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
 ${LOCATION_CONSISTENCY_RULE}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
-The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
+${suppressNarratorText ? 'The NARRATION TEXT must be empty or just say "none". Do NOT include any narrator expression or text.' : `The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "${voiceLabel} ".`}
 LENGUAJE: ${getLanguageName(language)}.
 CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the narrative. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.`;
 
@@ -3046,7 +3061,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         let speechDuration = audioBuffer ? audioBuffer.duration : segmentDuration;
         
         if (frame.narrationText) {
-            const text = frame.narrationText.replace(/^\(Voz masculina\):\s*/i, '').trim();
+            const text = frame.narrationText.replace(/^\(Voz (masculina|femenina)\):\s*/i, '').trim();
             const fontSize = isPortrait ? 28 : 36;
             canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
             const words = text.split(/\s+/).filter(w => w.length > 0);
