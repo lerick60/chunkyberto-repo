@@ -182,3 +182,8 @@ When generating or modifying the video prompts functionality:
 2. UNDER NO CIRCUMSTANCES should you use synonyms, abbreviations, or vague references (like 'dog', 'hound', 'the man', 'the woman', 'he', 'she').
 3. Always use the complete and consistent denomination to ensure that image and video generation engines recognize the exact same character in every scene.
 4. This rule applies to both exported prompts (Video Prompts and Image Prompts buttons) and internal Studio storyboard generation.
+-e 
+# Location Consistency Rules
+1. Whenever the story refers to a specific setting, location, or environment (e.g., a room, a building, a city, a landscape), you MUST assign it a fixed, highly detailed description and use EXACTLY the same description every time it appears in the prompts.
+2. Ensure architectural style, lighting, time of day, and key objects remain completely consistent across all frames taking place in that location to guarantee visual continuity.
+3. This rule applies to both exported prompts (Video Prompts and Image Prompts buttons) and internal Studio storyboard generation.

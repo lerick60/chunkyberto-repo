@@ -207,6 +207,10 @@ const CHARACTER_CONSISTENCY_RULE = `
 CRITICAL CHARACTER CONSISTENCY RULE: Whenever the story refers to the narrating persona (like Chunkyberto, Luna, Erick, etc.) or any other character involved (heroes, villains, secondary characters), you MUST assign them a fixed denomination and use EXACTLY the same denomination every time they appear in the prompts, along with 1 or 2 key adjectives that clearly identify them (e.g., 'the black labrador dog Chunkyberto', 'the villain Dark Shadow'). UNDER NO CIRCUMSTANCES should you use synonyms, abbreviations, or vague references (like 'dog', 'hound', 'the man', 'the woman', 'he', 'she'). Always use the complete and consistent denomination to ensure that image and video generation engines recognize the exact same character in every scene.
 `;
 
+const LOCATION_CONSISTENCY_RULE = `
+CRITICAL LOCATION CONSISTENCY RULE: Whenever the story refers to a specific setting, location, or environment (e.g., a room, a building, a city, a landscape), you MUST assign it a fixed, highly detailed description and use EXACTLY the same description every time it appears in the prompts. Ensure architectural style, lighting, time of day, and key objects remain completely consistent across all frames taking place in that location to guarantee visual continuity.
+`;
+
 // --- Helper Functions ---
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
@@ -2038,6 +2042,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
 
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
+${LOCATION_CONSISTENCY_RULE}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2109,6 +2114,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
 
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
+${LOCATION_CONSISTENCY_RULE}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2683,6 +2689,7 @@ For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the 
 CRITICAL: Ignore empty lines or paragraphs that do not contain narrative text. Do NOT generate scenes for empty lines.
 ${visualAnchorContext}${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
+${LOCATION_CONSISTENCY_RULE}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
 LENGUAJE: ${getLanguageName(language)}.
