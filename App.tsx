@@ -203,6 +203,10 @@ DIRECTRICES DE ARQUITECTURA DE CUENTO (APLICAR ESTRICTAMENTE):
 6. MANDATO DE INTRODUCCIÓN PARA CHUNKYBERTO: Si estás narrando como Chunkyberto, tu primera línea DEBE ser EXACTAMENTE: "chunkyberto, el mas curioso labrador negro, te pregunta:". Inmediatamente después de esto, DEBES continuar con una pregunta sumamente intrigante y descriptiva que funcione como un gran gancho sobre el tema principal que vas a desarrollar.
 `;
 
+const CHARACTER_CONSISTENCY_RULE = `
+CRITICAL CHARACTER CONSISTENCY RULE: Whenever the story refers to the narrating persona (like Chunkyberto, Luna, Erick, etc.) or any other character involved (heroes, villains, secondary characters), you MUST assign them a fixed denomination and use EXACTLY the same denomination every time they appear in the prompts, along with 1 or 2 key adjectives that clearly identify them (e.g., 'the black labrador dog Chunkyberto', 'the villain Dark Shadow'). UNDER NO CIRCUMSTANCES should you use synonyms, abbreviations, or vague references (like 'dog', 'hound', 'the man', 'the woman', 'he', 'she'). Always use the complete and consistent denomination to ensure that image and video generation engines recognize the exact same character in every scene.
+`;
+
 // --- Helper Functions ---
 function decodeBase64(base64: string) {
   const binaryString = atob(base64);
@@ -2033,6 +2037,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
 
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
+${CHARACTER_CONSISTENCY_RULE}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2103,6 +2108,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         : 'CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "(Voz masculina): " prefix for the narrator expressions.';
 
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
+${CHARACTER_CONSISTENCY_RULE}
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2676,6 +2682,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
 CRITICAL: Ignore empty lines or paragraphs that do not contain narrative text. Do NOT generate scenes for empty lines.
 ${visualAnchorContext}${characterContext}
+${CHARACTER_CONSISTENCY_RULE}
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "(Voz masculina): ".
 LENGUAJE: ${getLanguageName(language)}.

@@ -176,3 +176,9 @@ When generating or modifying the video prompts functionality:
 1. The user can fetch additional stories by clicking 'BUSCAR 10 HISTORIAS MÁS (DISTINTAS)'.
 2. When fetching more stories, the prompt MUST exclude the titles of the stories that were already generated in the current session to ensure the newly fetched stories are completely distinct.
 3. The new stories will be appended to the current list of stories in the UI.
+
+# Character Consistency Rules
+1. Whenever the story refers to the narrating persona (like Chunkyberto, Luna, Erick, etc.) or any other character involved (heroes, villains, secondary characters), you MUST assign them a fixed denomination and use EXACTLY the same denomination every time they appear in the prompts, along with 1 or 2 key adjectives that clearly identify them (e.g., 'the black labrador dog Chunkyberto', 'the villain Dark Shadow').
+2. UNDER NO CIRCUMSTANCES should you use synonyms, abbreviations, or vague references (like 'dog', 'hound', 'the man', 'the woman', 'he', 'she').
+3. Always use the complete and consistent denomination to ensure that image and video generation engines recognize the exact same character in every scene.
+4. This rule applies to both exported prompts (Video Prompts and Image Prompts buttons) and internal Studio storyboard generation.
