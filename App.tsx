@@ -257,7 +257,7 @@ type Category =
   | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
   | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026' | 'scientific_discoveries' | 'movie_scripts';
 
-type ImageStyle = 'Cinematic' | 'Anime' | 'Cyberpunk' | 'Oil Painting' | 'Sketch' | '3D Render' | 'Neo-Noir' | 'Photorealistic' | 'CGI' | 'Epic Fantasy' | 'Watercolor' | 'Pop Art' | 'Steampunk' | 'Minimalist' | 'Pixel Art' | 'Vintage Photography' | 'Origami' | 'Claymation' | 'Gothic' | 'Synthwave' | 'Comic Book' | 'Surrealism' | 'Horror/Terror' | 'Futuristic' | 'Star Wars' | 'Pixar';
+type ImageStyle = string;
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
 type NarrativeLength = 'short' | 'medium' | 'long';
 type TtsStyle = 'standard' | 'playful' | 'documentary';
@@ -2055,6 +2055,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
 ${LOCATION_CONSISTENCY_RULE}
+CRITICAL STYLE RULE: All generated video prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2128,6 +2129,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
       const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
 ${LOCATION_CONSISTENCY_RULE}
+CRITICAL STYLE RULE: All generated image prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
         
 Narrative:
 ${trend.chunkybertoVersion}
@@ -2705,6 +2707,7 @@ CRITICAL: Ignore empty lines or paragraphs that do not contain narrative text. D
 ${visualAnchorContext}${characterContext}
 ${CHARACTER_CONSISTENCY_RULE}
 ${LOCATION_CONSISTENCY_RULE}
+CRITICAL STYLE RULE: All generated IMAGE PROMPTs MUST explicitly include the instruction to use the "${visualStyle}" visual style.
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
 ${suppressNarratorText ? 'The NARRATION TEXT must be empty or just say "none". Do NOT include any narrator expression or text.' : `The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "${voiceLabel} ".`}
 LENGUAJE: ${getLanguageName(language)}.
@@ -3351,11 +3354,11 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
   };
 
   const visualStyles: ImageStyle[] = [
-    'Cinematic', 'Anime', 'Cyberpunk', 'Oil Painting', 'Sketch', 
-    '3D Render', 'Neo-Noir', 'Photorealistic', 'CGI', 'Epic Fantasy',
-    'Watercolor', 'Pop Art', 'Steampunk', 'Minimalist', 'Pixel Art',
-    'Vintage Photography', 'Origami', 'Claymation', 'Gothic', 'Synthwave',
-    'Comic Book', 'Surrealism', 'Horror/Terror', 'Futuristic', 'Star Wars', 'Pixar'
+    'Cinematic', 'Comic Book', 'Horror/Terror', 'Anime', 'Cyberpunk', 
+    '3D Render', 'Photorealistic', 'Watercolor', 'Pixel Art', 'Vintage Photography',
+    'Neo-Noir', 'Pop Art', 'Steampunk', 'Minimalist', 'Origami', 'Claymation',
+    'Gothic', 'Synthwave', 'Epic Fantasy', 'Surrealism', 'Futuristic', 'Star Wars', 'Pixar',
+    'Oil Painting', 'Sketch', 'CGI'
   ];
   const dimensions: VideoDimension[] = ['16:9', '9:16', '1:1', '4:3', '3:4'];
   const motionOptions: {id: MotionEffect, label: string}[] = [
@@ -3690,7 +3693,8 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                        <p className="text-slate-400 text-sm font-medium italic">"Arte de portada optimizado para YouTube utilizando el perfil visual de {activePersona.name}."</p>
                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                          <div className="relative w-full sm:w-64">
-                           <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value as ImageStyle)} className="w-full pl-4 pr-10 py-5 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                           <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value)} className="w-full pl-4 pr-10 py-5 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                           <option value="" disabled>SELECCIONAR ESTILO...</option>
                              {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
                            </select>
                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
@@ -3725,7 +3729,13 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                                 <div className="space-y-3">
                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Estilo Visual Maestro</label>
-                                   <div className="relative"><select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value as ImageStyle)} className="w-full pl-4 pr-10 py-4 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">{visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}</select><div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div></div>
+                                   <div className="relative">
+                                     <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value)} className="w-full pl-4 pr-10 py-4 bg-slate-800 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                                     <option value="" disabled>SELECCIONAR ESTILO...</option>
+                                       {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                                     </select>
+                                     <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
+                                   </div>
                                 </div>
                                 <div className="space-y-3">
                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block ml-1">Formato Maestro</label>
@@ -3832,8 +3842,15 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                 <div className="relative w-full">
                   <select value={category} onChange={(e) => { setCategory(e.target.value as Category); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full px-8 py-5 bg-slate-900 border-2 border-slate-800 rounded-[1.5rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{categoryOptions.map(opt => <option key={opt.id} value={opt.id}>{opt.label.toUpperCase()}</option>)}</select>
                 </div>
-                <div className="flex justify-start px-2">
-                  <label className="flex items-center cursor-pointer gap-3 group">
+                <div className="flex flex-col sm:flex-row gap-4 items-center px-2">
+                  <div className="relative w-full sm:w-1/2">
+                    <select value={visualStyle} onChange={(e) => setVisualStyle(e.target.value)} className={`w-full pl-6 pr-10 py-4 bg-slate-900 border-2 border-slate-800 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-${activePersona.color} outline-none shadow-xl`}>
+                    <option value="" disabled>SELECCIONAR ESTILO...</option>
+                      {visualStyles.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                    </select>
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Palette size={16} /></div>
+                  </div>
+                  <label className="flex items-center cursor-pointer gap-3 group w-full sm:w-auto">
                     <div className="relative">
                       <input 
                         type="checkbox" 

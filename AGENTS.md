@@ -187,3 +187,8 @@ When generating or modifying the video prompts functionality:
 1. Whenever the story refers to a specific setting, location, or environment (e.g., a room, a building, a city, a landscape), you MUST assign it a fixed, highly detailed description and use EXACTLY the same description every time it appears in the prompts.
 2. Ensure architectural style, lighting, time of day, and key objects remain completely consistent across all frames taking place in that location to guarantee visual continuity.
 3. This rule applies to both exported prompts (Video Prompts and Image Prompts buttons) and internal Studio storyboard generation.
+
+# Visual Style Rules
+1. The user can select a Master Visual Style from a datalist/editbox which includes video-engine optimized styles (e.g. Cinematic, Comic Book, Horror/Terror, Anime, etc).
+2. The selected visual style MUST be explicitly passed into the prompt generation process for Storyboards, individual Images, individual Videos, and the text-exported Video and Image Prompts.
+3. The AI MUST ensure that the generated images and videos adhere to the requested visual style.
