@@ -2,9 +2,9 @@
 When generating or modifying the video prompts functionality:
 1. All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in the selected language (Spanish, English, or French). Spanish is the default.
 2. The narrator expressions must be written to be spoken by a male or female voice (depending on the selected persona).
-3. DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "\(Voz masculina en OFF\): " or "\(Voz femenina en OFF\): " prefix for the narrator expressions.
+3. DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "\(Voz masculina en OFF, en [idioma_seleccionado]\): " or "\(Voz femenina en OFF, en [idioma_seleccionado]\): " prefix for the narrator expressions.
 4. The narrator expressions must be a maximum of 22 words long.
-5. The narrator expression must be appended immediately following the visual description on the next line, WITHOUT a blank line in between. The narrator expression MUST start exactly with the prefix "\(Voz masculina en OFF\): " or "\(Voz femenina en OFF\): ". Separate each complete block (visual prompt + narrator expression) with at least one blank line.
+5. The narrator expression must be appended immediately following the visual description on the next line, WITHOUT a blank line in between. The narrator expression MUST start exactly with the prefix "\(Voz masculina en OFF, en [idioma_seleccionado]\): " or "\(Voz femenina en OFF, en [idioma_seleccionado]\): ". Separate each complete block (visual prompt + narrator expression) with at least one blank line.
 6. The user can toggle a setting ("Sin Narrador") to suppress the narrator expressions entirely. When active, DO NOT add anything to the prompt that would add audio to the video. Only visual descriptions should be generated.
 7. If the user uploads a reference image of "Erick" in the settings, this image MUST be used as an ingredient (context) during the generation of video prompts, and as a reference image (`referenceImages`) during the actual video generation process (`generateVideos`) whenever "Erick" is mentioned in the prompt.
 8. Secondary Characters Consistency: Any secondary character identified in the story MUST be assigned a highly detailed, consistent visual description (clothing, hair, specific physical traits) that is repeated across ALL frames they appear in, to guarantee visual continuity between AI-generated images/videos.
@@ -192,3 +192,6 @@ When generating or modifying the video prompts functionality:
 1. The user can select a Master Visual Style from a datalist/editbox which includes video-engine optimized styles (e.g. Cinematic, Comic Book, Horror/Terror, Anime, etc).
 2. The selected visual style MUST be explicitly passed into the prompt generation process for Storyboards, individual Images, individual Videos, and the text-exported Video and Image Prompts.
 3. The AI MUST ensure that the generated images and videos adhere to the requested visual style.
+
+# Video Prompt Narrator Labels
+1. The narrator label used in prompts MUST follow the format `(Voz [masculina|femenina] en OFF, en [idioma_seleccionado]): `, replacing the gender and language based on the active Persona's gender and the user's selected language. The language name should be explicitly listed in Spanish (e.g. español, inglés, francés).

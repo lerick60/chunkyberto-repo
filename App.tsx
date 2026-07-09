@@ -1860,6 +1860,7 @@ export const App: React.FC = () => {
   };
 
   const getLanguageName = (lang: Language) => { const map = { es: 'Spanish', en: 'English', fr: 'French', de: 'German', zh: 'Mandarin' }; return map[lang]; };
+  const getLanguageNameSpanish = (lang: Language) => { const map = { es: 'español', en: 'inglés', fr: 'francés', de: 'alemán', zh: 'mandarín' }; return map[lang] || 'español'; };
 
   const generateDefaultPrompt = useCallback((excludedTitles?: string[]) => {
     const languageText = getLanguageName(language);
@@ -2037,7 +2038,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the video generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
+      const langEs = getLanguageNameSpanish(language); const voiceLabel = activePersona.gender === 'F' ? `(Voz femenina en OFF, en ${langEs}):` : `(Voz masculina en OFF, en ${langEs}):`;
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
@@ -2111,7 +2112,7 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
+      const langEs = getLanguageNameSpanish(language); const voiceLabel = activePersona.gender === 'F' ? `(Voz femenina en OFF, en ${langEs}):` : `(Voz masculina en OFF, en ${langEs}):`;
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
@@ -2699,7 +2700,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
       
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
+      const langEs = getLanguageNameSpanish(language); const voiceLabel = activePersona.gender === 'F' ? `(Voz femenina en OFF, en ${langEs}):` : `(Voz masculina en OFF, en ${langEs}):`;
 
       const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
