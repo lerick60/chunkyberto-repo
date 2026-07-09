@@ -2037,14 +2037,14 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'video prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the video generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
@@ -2111,14 +2111,14 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'image prompt' for each frame, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
 
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} ".`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
@@ -2699,7 +2699,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
         ? `\n\nIMPORTANT CHARACTER REFERENCE: I have provided ${activeCharacters.length} reference images of the main characters. Analyze their visual appearance from the images. When writing the 'IMAGE PROMPT' for each scene, if any of these characters appear, you MUST describe their visual appearance in extreme detail (age, hair color/style, eye color, skin tone, facial hair, clothing, etc.) based on the provided images so the image generator can recreate them accurately. NEVER just use their names in the prompt, ALWAYS use their full physical description.`
         : '';
       
-      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina):' : '(Voz masculina):';
+      const voiceLabel = activePersona.gender === 'F' ? '(Voz femenina en OFF):' : '(Voz masculina en OFF):';
 
       const promptText = `Analyze the following narrative paragraph by paragraph: "${selectedTrend.chunkybertoVersion}". 
 For EACH paragraph, generate between 1 and 4 cinematic scenes, depending on the number of complete ideas in that paragraph.
@@ -2709,7 +2709,7 @@ ${CHARACTER_CONSISTENCY_RULE}
 ${LOCATION_CONSISTENCY_RULE}
 CRITICAL STYLE RULE: All generated IMAGE PROMPTs MUST explicitly include the instruction to use the "${visualStyle}" visual style.
 FORMAT FOR EACH SCENE: SCENE IDEA ||| IMAGE PROMPT ||| NARRATION TEXT.
-${suppressNarratorText ? 'The NARRATION TEXT must be empty or just say "none". Do NOT include any narrator expression or text.' : `The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "${voiceLabel} ".`}
+${suppressNarratorText ? 'The NARRATION TEXT must be empty or just say "none". Do NOT include any narrator expression or text.' : `The NARRATION TEXT must represent the specific idea being conveyed in the scene, and must start with "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`}
 LENGUAJE: ${getLanguageName(language)}.
 CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the narrative. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.`;
 
