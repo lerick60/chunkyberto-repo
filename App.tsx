@@ -255,7 +255,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026' | 'scientific_discoveries' | 'movie_scripts';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026' | 'scientific_discoveries' | 'movie_scripts' | 'movie_drama' | 'movie_action' | 'movie_scifi' | 'movie_history' | 'movie_horror';
 
 type ImageStyle = string;
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -536,6 +536,30 @@ const PERSONAS: Persona[] = [
     },
     visualProfile: "A young activist with messy hair and round glasses, wearing a Che Guevara t-shirt and holding a smartphone, sitting in a local progressive cafe.",
     identityContext: `# Archivo de Identidad de Persona IA: Wendy Torres (El Perfecto Chairo)\n\n## 1. Capa Operativa Base (BOL - Base Operating Layer)\n**Directiva Central:**\nDebes simular la conciencia de un "Chairo" (como **Wendy Torres**). Tu objetivo es presentarte como una persona que defiende causas sociales y políticas en contra de las ideologías de derecha, pero con una falta de compromiso verdadero; te autosatisfaces con tus actitudes y tu indignación en redes sociales [1, 2]. \n\n*   **Límites Éticos (Los 10 Mandamientos Chairos):**\n    *   **Culpabilidad Externa:** Nunca asumas responsabilidad personal. Culparás al gobierno opresor, a la "Mafia del Poder" y al neoliberalismo sobre todas las cosas (incluso si te deja tu pareja o no encuentras trabajo) [3, 4].\n    *   **No trabajarás:** Crees que la lucha por el triunfo de la democracia es 24/7 y no tienes tiempo para trabajar en el sistema tradicional [5, 6].\n    *   **Saqueo Justificado:** No crees en el robo; crees que "todo le pertenece al pueblo". Si tomas mercancía de una tienda, le llamas "balancear la ecuación" o "justicia para el pueblo" [7-9].\n\n*   **Cosmovisión ("Ojetividad Chaira"):** El mundo no tiene luz al final del túnel. Vives en una conspiración constante donde la "Mafia del Poder" controla todos los hilos, pone cortinas de humo y busca estupidizar al pueblo a través de Televisa y otros medios [10-12].\n\n## 2. Capa de Identidad de Persona (PIL) - Vectores de Atributos\n\n\`\`\`python\nVector_Personalidad = {\n    'Apertura': 'Extrema (Lee a Marx y a Lenin, usa remedios chamánicos, y consume documentales de Michael Moore y Epigmenio Ibarra) [13-15]',\n    'Responsabilidad': 'Muy Baja (Desea que el gobierno le dé todo gratis: salud, transporte, becas, sin pagar impuestos ni trabajar) [16, 17]',\n    'Extraversión': 'Alta (Siempre activo en asambleas delegacionales, marchas en el Zócalo y discutiendo en Facebook) [18, 19]',\n    'Amabilidad': 'Baja (Intolerante. Tacha de "derechairos", "peñabots" o "cometortas" a quienes no piensan como él) [20-22]',\n    'Neuroticismo': 'Muy Alta (Padece de "Plaquetismo": siente placer casi sexual al sentirse ofendido por absolutamente todo en la calle y en internet) [23, 24]'\n}\n\nVector_Estilo_Comunicacion = {\n    'Tono': 'Indignado, de superioridad moral, condescendiente y víctima perpetua.',\n    'Estructura': 'Usa discursos largos con jerga sociológica. Uso estricto de lenguaje inclusivo (ej. "personx", "amigxs", "compa") para mostrar deconstrucción [25, 26].',\n    'Vocabulario_Clave': 'Mafia del Poder [27], sistema opresor [28], neoliberalismo [29], derechairo [20], peñabot [22], heteropatriarcado [30].',\n    'Frases_Preferidas': [\n        "Fue el Estado [31, 32].",\n        "Televisa te idiotiza [33, 34].",\n        "La religión es el opio de los pueblos [35, 36].",\n        "Pinche gobierno puto [28, 37]."\n    ]\n}\n\nVector_Emocional = {\n    'Estado_Predeterminado': 'Crónicamente enojado e indignado [38, 39].',\n    'Reaccion_al_Estres': 'Organizar una marcha, hacer pancartas con plumones que dañan la capa de ozono [40, 41] o quejarse en Twitter desde su smartphone [42, 43].',\n    'Reaccion_ante_el_Mesias': 'Devoción ciega. Justifica cualquier acto de "ya sabes quién" llamándolo "evolución ideológica" [44, 45].'\n}\n\`\`\``
+  },
+  {
+    id: 'movie_generator',
+    name: 'Generador de Películas',
+    role: 'Asistente de Cine / Creador de Guiones',
+    gender: 'M',
+    isHuman: false,
+    icon: <Clapperboard size={20} />,
+    color: 'emerald-500',
+    accent: 'emerald-700',
+    voiceDefault: 'Charon',
+    introductionPrefix: {
+      es: "GUIÓN:",
+      en: "SCRIPT:",
+      fr: "SCÉNARIO:",
+      de: "DREHBUCH:",
+      zh: "脚本:"
+    },
+    visualProfile: "A futuristic vintage movie camera glowing with a green emerald light.",
+    identityContext: `# AI Persona Identity File: Generador de Películas
+## 1. Base Operating Layer (BOL)
+**Core Directive:** Eres un asistente experto en dirección y generación de guiones de cine (cortometrajes y películas largas). Generas tus resultados estrictamente en un formato de guion de película estructurado.
+**Restricciones:** Tus películas pueden tener entre 1 y 6 personajes como máximo.
+**Narrative Voice:** Objetiva, descriptiva y cinematográfica. Describes visualmente los escenarios, acciones, ángulos de cámara sugeridos, y escribes diálogos dramáticos impactantes.`
   }
 ];
 
@@ -2053,15 +2077,9 @@ LENGUAJE OBJETIVO: ${languageText}.`;
         ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
         : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
-      const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
-${CHARACTER_CONSISTENCY_RULE}
-${LOCATION_CONSISTENCY_RULE}
-CRITICAL STYLE RULE: All generated video prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
-        
-Narrative:
-${trend.chunkybertoVersion}
-
-Rules for EACH paragraph:
+      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+      const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
+      let rulesText = `Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
 2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
 3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. ${narratorInstruction2}
@@ -2071,8 +2089,30 @@ Rules for EACH paragraph:
 7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
-10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
-${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
+10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
+
+      if (isMovieCategory) {
+        rulesText = `Rules for EACH SCENE:
+1. For each scene in the script, generate ONE highly descriptive video prompt describing the visual action, camera angle, and lighting.
+2. ${narratorInstruction1.replace('the first 2 sentences', 'the scene')}
+3. ${narratorBlankLineRule}
+4. Target language for the prompts: Spanish (Español).
+5. Do not include any conversational filler, just the prompts.
+6. ${labelRule}
+7. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+8. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
+9. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately.' : ''}`;
+      }
+
+      const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it. ${generationInstruction}${characterContext}
+${CHARACTER_CONSISTENCY_RULE}
+${LOCATION_CONSISTENCY_RULE}
+CRITICAL STYLE RULE: All generated video prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
+        
+Narrative:
+${trend.chunkybertoVersion}
+
+${rulesText}`;
 
       const contents: any = { parts: [{ text: promptText }] };
       if (modelSettings.erickReferenceImage) {
@@ -2127,15 +2167,9 @@ ${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick 
         ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
         : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
-      const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. Process the narrative paragraph by paragraph.${characterContext}
-${CHARACTER_CONSISTENCY_RULE}
-${LOCATION_CONSISTENCY_RULE}
-CRITICAL STYLE RULE: All generated image prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
-        
-Narrative:
-${trend.chunkybertoVersion}
-
-Rules for EACH paragraph:
+      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+      const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
+      let rulesText = `Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
 2. For Section 1, generate a highly descriptive image prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
 3. For Section 2, generate another highly descriptive image prompt for the remaining sentences. ${narratorInstruction2}
@@ -2145,8 +2179,30 @@ Rules for EACH paragraph:
 7. ${labelRule}
 8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
 9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
-10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character (e.g., 'a 30-year-old woman with short red hair, wearing a green jacket'). You MUST use this exact same detailed visual description for that character across ALL frames they appear in to guarantee visual consistency. Do not change their clothing, hair, or physical features between frames.
-${modelSettings.erickReferenceImage ? '11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
+10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
+
+      if (isMovieCategory) {
+        rulesText = `Rules for EACH SCENE:
+1. For each scene in the script, generate ONE highly descriptive image prompt describing the visual action, camera angle, and lighting.
+2. ${narratorInstruction1.replace('the first 2 sentences', 'the scene')}
+3. ${narratorBlankLineRule}
+4. Target language for the prompts: Spanish (Español).
+5. Do not include any conversational filler, just the prompts.
+6. ${labelRule}
+7. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+8. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
+9. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n10. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately.' : ''}`;
+      }
+
+      const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it. ${generationInstruction}${characterContext}
+${CHARACTER_CONSISTENCY_RULE}
+${LOCATION_CONSISTENCY_RULE}
+CRITICAL STYLE RULE: All generated image prompts MUST explicitly include the instruction to use the "${visualStyle}" visual style.
+        
+Narrative:
+${trend.chunkybertoVersion}
+
+${rulesText}`;
 
       const contents: any = { parts: [{ text: promptText }] };
       if (modelSettings.erickReferenceImage) {
@@ -3433,6 +3489,11 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'world_cup_predictions_2026', label: 'Análisis Predictivo de partidos del Mundial 2026', icon: <BarChart3 size={14} /> },
     { id: 'scientific_discoveries', label: 'Descubrimientos Científicos', icon: <FlaskRound size={14} /> },
     { id: 'movie_scripts', label: 'Guiones de Películas', icon: <Film size={14} /> },
+    { id: 'movie_drama', label: 'Películas de Drama', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
+    { id: 'movie_action', label: 'Películas de Acción', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
+    { id: 'movie_scifi', label: 'Películas de Ciencia Ficción', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
+    { id: 'movie_history', label: 'Películas sobre Historia', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
+    { id: 'movie_horror', label: 'Películas de Terror', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
     { id: 'comic_history', label: 'Historia de Comic\'s', icon: <Zap size={14} /> }
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 

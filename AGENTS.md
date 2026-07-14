@@ -195,3 +195,10 @@ When generating or modifying the video prompts functionality:
 
 # Video Prompt Narrator Labels
 1. The narrator label used in prompts MUST follow the format `(Voz [masculina|femenina] en OFF, en [idioma_seleccionado]): `, replacing the gender and language based on the active Persona's gender and the user's selected language. The language name should be explicitly listed in Spanish (e.g. español, inglés, francés).
+
+# Movie Generator Persona Rules
+1. A special Persona called "Generador de Películas" (Movie Generator) is available.
+2. It generates movie scripts in a structured script format for categories like 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', and 'movie_scripts'.
+3. The stories MUST respect the narrative length button (short, medium, long).
+4. The movies must strictly have between 1 and 6 characters maximum.
+5. When generating Video Prompts or Image Prompts for these specific categories, the prompts MUST be generated SCENE by SCENE for the entire script, instead of paragraph by paragraph.
