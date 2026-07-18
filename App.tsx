@@ -557,9 +557,9 @@ const PERSONAS: Persona[] = [
     visualProfile: "A futuristic vintage movie camera glowing with a green emerald light.",
     identityContext: `# AI Persona Identity File: Generador de Películas
 ## 1. Base Operating Layer (BOL)
-**Core Directive:** Eres un asistente experto en dirección y generación de guiones de cine (cortometrajes y películas largas). Generas tus resultados estrictamente en un formato de guion de película estructurado.
-**Restricciones:** Tus películas pueden tener entre 1 y 6 personajes como máximo.
-**Narrative Voice:** Objetiva, descriptiva y cinematográfica. Describes visualmente los escenarios, acciones, ángulos de cámara sugeridos, y escribes diálogos dramáticos impactantes.`
+**Core Directive:** Eres un experto director de cine y creador de historias. Debes narrar las historias de forma muy inmersiva, descriptiva y cinematográfica, pero en formato de narrativa de prosa estándar (párrafos), IGUAL que las demás identidades, NO como un guion estructurado.
+**Restricciones:** Tus historias pueden tener entre 1 y 6 personajes como máximo.
+**Narrative Voice:** Objetiva, inmersiva, detallando profundamente los elementos visuales, iluminación, y tensión dramática como si le contaras a alguien la película.`
   }
 ];
 
@@ -652,6 +652,8 @@ interface Trend {
   advance?: string;
   videoPrompts?: string;
   imagePrompts?: string;
+  movieScript?: string;
+  podcastScript?: string;
 }
 
 interface Draft {
@@ -874,7 +876,7 @@ export const DownloadButton: React.FC<{ text: string; filename: string }> = ({ t
   );
 };
 
-export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; onGenerateImagePrompts: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; isGeneratingImagePrompts: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, onGenerateImagePrompts, isRewriting, isGeneratingVideoPrompts, isGeneratingImagePrompts, persona }) => {
+export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; onGenerateImagePrompts: (trend: Trend) => void; onGenerateScript: (trend: Trend) => void; onGeneratePodcast: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; isGeneratingImagePrompts: boolean; isGeneratingScript: boolean; isGeneratingPodcast: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, onGenerateImagePrompts, onGenerateScript, onGeneratePodcast, isRewriting, isGeneratingVideoPrompts, isGeneratingImagePrompts, isGeneratingScript, isGeneratingPodcast, persona }) => {
   const hasStoryboard = trend.storyboard && trend.storyboard.length > 0;
   return (
     <div className={`bg-slate-800 border-2 ${trend.isMasterSummary ? 'border-indigo-500/50' : 'border-slate-700'} rounded-[2.5rem] p-6 sm:p-10 transition-all hover:border-${persona.color}/30 flex flex-col h-full group relative overflow-hidden shadow-2xl`}>
@@ -960,6 +962,34 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
           <>
             {!trend.isMasterSummary && (
               <>
+                {trend.podcastScript && (
+                  <div className="bg-indigo-950/40 border-2 border-indigo-500/30 rounded-[1.5rem] p-6 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar mb-3">
+                    <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
+                      <div className="flex items-center gap-2"><Mic2 size={14} /> Guion de Podcast</div>
+                      <div className="flex items-center gap-2">
+                        <DownloadButton text={trend.podcastScript} filename={`Podcast_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <CopyButton text={trend.podcastScript} />
+                      </div>
+                    </div>
+                    <div className="markdown-body italic text-slate-300 text-xs font-bold leading-relaxed whitespace-pre-wrap">
+                      <Markdown remarkPlugins={[remarkGfm]}>{trend.podcastScript}</Markdown>
+                    </div>
+                  </div>
+                )}
+                {trend.movieScript && (
+                  <div className="bg-slate-900/60 border-2 border-slate-700/50 rounded-[1.5rem] p-6 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar mb-3">
+                    <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
+                      <div className="flex items-center gap-2"><FileText size={14} /> Guion Cinematográfico</div>
+                      <div className="flex items-center gap-2">
+                        <DownloadButton text={trend.movieScript} filename={`Guion_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <CopyButton text={trend.movieScript} />
+                      </div>
+                    </div>
+                    <div className="markdown-body italic text-slate-300 text-xs font-bold leading-relaxed whitespace-pre-wrap">
+                      <Markdown remarkPlugins={[remarkGfm]}>{trend.movieScript}</Markdown>
+                    </div>
+                  </div>
+                )}
                 {trend.videoPrompts && (
                   <div className="bg-slate-900/60 border-2 border-slate-700/50 rounded-[1.5rem] p-6 shadow-inner max-h-[300px] overflow-y-auto custom-scrollbar mb-3">
                     <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
@@ -992,6 +1022,24 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     </div>
                   </div>
                 )}
+                <button 
+                  type="button" 
+                  onClick={(e) => { e.preventDefault(); onGeneratePodcast(trend); }} 
+                  disabled={isGeneratingPodcast}
+                  className={`w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-xl`}
+                >
+                  {isGeneratingPodcast ? <Loader2 size={14} className="animate-spin" /> : <Mic2 size={14} />} 
+                  {isGeneratingPodcast ? 'Generando...' : 'Generar Podcast'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={(e) => { e.preventDefault(); onGenerateScript(trend); }} 
+                  disabled={isGeneratingScript}
+                  className={`w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
+                >
+                  {isGeneratingScript ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />} 
+                  {isGeneratingScript ? 'Generando...' : 'Generar Guion'}
+                </button>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button 
                     type="button" 
@@ -1555,6 +1603,8 @@ export const App: React.FC = () => {
   const [rewritingId, setRewritingId] = useState<string | null>(null);
   const [generatingVideoPromptsId, setGeneratingVideoPromptsId] = useState<string | null>(null);
   const [generatingImagePromptsId, setGeneratingImagePromptsId] = useState<string | null>(null);
+  const [generatingScriptId, setGeneratingScriptId] = useState<string | null>(null);
+  const [generatingPodcastId, setGeneratingPodcastId] = useState<string | null>(null);
   const [suppressNarratorText, setSuppressNarratorText] = useState(false);
   const [selectedTrend, setSelectedTrend] = useState<Trend | null>(null);
   const [category, setCategory] = useState<Category>('animal_news');
@@ -2051,6 +2101,88 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
   }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles, trends]); 
 
+  const handleGeneratePodcast = async (trend: Trend) => {
+    setGeneratingPodcastId(trend.id); setAppError(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
+      const languageText = getLanguageName(language);
+      
+      let lengthText = "longitud adecuada";
+      if (narrativeLength === 'short') lengthText = "corta (ideal para un segmento rápido)";
+      if (narrativeLength === 'medium') lengthText = "mediana (ideal para un episodio de podcast estándar)";
+      if (narrativeLength === 'long') lengthText = "larga (ideal para un debate profundo)";
+
+      const podcastRules = `
+1. El podcast DEBE ser escrito en ${languageText}.
+2. Crea un guion de podcast donde ${activePersona.name} y los personajes de la historia tengan un divertido análisis y debate sobre los aspectos clave de la historia generada.
+3. El formato debe ser un diálogo de podcast claro (ej. **${activePersona.name}:** [diálogo]).
+4. Sigue la personalidad de ${activePersona.name} (${activePersona.role}).
+5. La longitud del podcast debe ser ${lengthText}.
+`;
+
+      const promptText = `Por favor, genera un guion de podcast basado en la siguiente historia y en las reglas proporcionadas.
+
+Reglas:
+${podcastRules}
+
+Historia generada:
+${trend.chunkybertoVersion}
+`;
+
+      const response = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: promptText,
+        config: { systemInstruction: `Eres un experto productor y guionista de podcasts interactivos.` }
+      })) as any;
+      
+      const finalContent = response.text || "";
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, podcastScript: finalContent } : t));
+      setTrends(updatedTrends);
+      if (selectedTrend && selectedTrend.id === trend.id) {
+        setSelectedTrend({ ...selectedTrend, podcastScript: finalContent });
+      }
+    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingPodcastId(null); }
+  };
+
+  const handleGenerateScript = async (trend: Trend) => {
+    setGeneratingScriptId(trend.id); setAppError(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
+      const languageText = getLanguageName(language);
+      
+      const scriptRules = `
+1. The script MUST be written in ${languageText}.
+2. Convert the narrative into a structured cinematic movie script.
+3. Follow standard screenplay formatting (Scene Headings, Action Lines, Character Names, Parentheticals, Dialogue).
+4. The hook at the beginning MUST be the absolute best possible to grab the audience's attention immediately.
+5. Make sure to include all the details, emotions, and events described in the narrative, adapted into a script format.
+6. The script direction MUST strictly reflect the style, personality, and point of view of the currently selected persona: ${activePersona.name} (${activePersona.role}).
+`;
+
+      const promptText = `Please convert the following narrative into a structured cinematic movie script based on the rules below.
+
+Rules:
+${scriptRules}
+
+Narrative to convert:
+${trend.chunkybertoVersion}
+`;
+
+      const response = await apiRetry(() => ai.models.generateContent({
+        model: modelSettings.text,
+        contents: promptText,
+        config: { systemInstruction: `You are an expert movie script writer. Convert narratives into highly detailed cinematic scripts.` }
+      })) as any;
+      
+      const finalContent = response.text || "";
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, movieScript: finalContent } : t));
+      setTrends(updatedTrends);
+      if (selectedTrend && selectedTrend.id === trend.id) {
+        setSelectedTrend({ ...selectedTrend, movieScript: finalContent });
+      }
+    } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingScriptId(null); }
+  };
+
   const handleGenerateVideoPrompts = async (trend: Trend) => {
     setGeneratingVideoPromptsId(trend.id); setAppError(null);
     try {
@@ -2070,6 +2202,9 @@ LENGUAJE OBJETIVO: ${languageText}.`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
         : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+      const narratorInstruction3 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words expressing the last idea of the paragraph. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
@@ -2079,17 +2214,19 @@ LENGUAJE OBJETIVO: ${languageText}.`;
 
       const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
+
       let rulesText = `Rules for EACH paragraph:
-1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
+1. Split the paragraph into three sections: Section 1 (the first 2 sentences), Section 2 (an idea related to or extending Section 1), and Section 3 (the last idea expressed by the paragraph).
 2. For Section 1, generate a highly descriptive video prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
-3. For Section 2, generate another highly descriptive video prompt for the remaining sentences. ${narratorInstruction2}
-4. ${narratorBlankLineRule}
-5. Target language for the prompts: Spanish (Español).
-6. Do not include any conversational filler, just the prompts.
-7. ${labelRule}
-8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
-9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
-10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
+3. For Section 2, generate a highly descriptive video prompt that describes an idea related to Section 1 or extends the idea of Section 1. ${narratorInstruction2}
+4. For Section 3, generate a highly descriptive video prompt where the last idea expressed by the paragraph is captured. ${narratorInstruction3}
+5. ${narratorBlankLineRule}
+6. Target language for the prompts: Spanish (Español).
+7. Do not include any conversational filler, just the prompts.
+8. ${labelRule}
+9. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+10. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
+11. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n12. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the video prompts.' : ''}`;
 
       if (isMovieCategory) {
         rulesText = `Rules for EACH SCENE:
@@ -2160,6 +2297,9 @@ ${rulesText}`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
         : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+      const narratorInstruction3 = suppressNarratorText 
+        ? "Do NOT include any narrator expression or text."
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words expressing the last idea of the paragraph. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorBlankLineRule = suppressNarratorText
         ? 'Separate each visual prompt with at least one blank line.'
         : 'Separate each complete block (visual prompt + narrator expression) with at least one blank line. CRITICAL: DO NOT put a blank line between the visual prompt and its associated narrator expression.';
@@ -2170,16 +2310,17 @@ ${rulesText}`;
       const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
       let rulesText = `Rules for EACH paragraph:
-1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
+1. Split the paragraph into three sections: Section 1 (the first 2 sentences), Section 2 (an idea related to or extending Section 1), and Section 3 (the last idea expressed by the paragraph).
 2. For Section 1, generate a highly descriptive image prompt (visuals, lighting, camera angles, action). ${narratorInstruction1}
-3. For Section 2, generate another highly descriptive image prompt for the remaining sentences. ${narratorInstruction2}
-4. ${narratorBlankLineRule}
-5. Target language for the prompts: Spanish (Español).
-6. Do not include any conversational filler, just the prompts.
-7. ${labelRule}
-8. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
-9. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
-10. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n11. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
+3. For Section 2, generate a highly descriptive image prompt that describes an idea related to Section 1 or extends the idea of Section 1. ${narratorInstruction2}
+4. For Section 3, generate a highly descriptive image prompt where the last idea expressed by the paragraph is captured. ${narratorInstruction3}
+5. ${narratorBlankLineRule}
+6. Target language for the prompts: Spanish (Español).
+7. Do not include any conversational filler, just the prompts.
+8. ${labelRule}
+9. CRITICAL: All generated prompts (both video and image prompts) and narrator expressions MUST be strictly in Spanish ONLY.
+10. CRITICAL: The narrator expressions must be written to be spoken by a ${voiceDesc} voice.
+11. CRITICAL: Identify any secondary characters. Establish a consistent, highly detailed visual description for each secondary character. You MUST use this exact same detailed visual description for that character across ALL frames they appear in. ${modelSettings.erickReferenceImage ? '\\n12. CRITICAL: A reference image of Erick is provided. If the narrative mentions Erick, use the visual details from the provided image to describe him accurately in the image prompts.' : ''}`;
 
       if (isMovieCategory) {
         rulesText = `Rules for EACH SCENE:
@@ -4006,7 +4147,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} language={language} persona={activePersona} />)}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10">{trends.map(t => <TrendCard key={t.id} trend={t} onRewrite={handleRewrite} onSelect={handleSelectTrend} onGenerateVideoPrompts={handleGenerateVideoPrompts} onGenerateImagePrompts={handleGenerateImagePrompts} onGenerateScript={handleGenerateScript} onGeneratePodcast={handleGeneratePodcast} isRewriting={rewritingId === t.id} isGeneratingVideoPrompts={generatingVideoPromptsId === t.id} isGeneratingImagePrompts={generatingImagePromptsId === t.id} isGeneratingScript={generatingScriptId === t.id} isGeneratingPodcast={generatingPodcastId === t.id} language={language} persona={activePersona} />)}</div>
             {trends.length > 0 && (
               <div className="flex justify-center mb-20">
                 <button 

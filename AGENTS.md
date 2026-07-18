@@ -9,6 +9,9 @@ When generating or modifying the video prompts functionality:
 7. If the user uploads a reference image of "Erick" in the settings, this image MUST be used as an ingredient (context) during the generation of video prompts, and as a reference image (`referenceImages`) during the actual video generation process (`generateVideos`) whenever "Erick" is mentioned in the prompt.
 8. Secondary Characters Consistency: Any secondary character identified in the story MUST be assigned a highly detailed, consistent visual description (clothing, hair, specific physical traits) that is repeated across ALL frames they appear in, to guarantee visual continuity between AI-generated images/videos.
 
+
+9. Section Splitting: For standard categories, paragraphs must be split into three sections: Section 1 (the first 2 sentences), Section 2 (an idea related to or extending Section 1), and Section 3 (the last idea expressed by the paragraph). For movie categories, the process remains SCENE by SCENE.
+
 # Hybrid Creative Composer Rules
 1. Multi-source Inspiration: The Hybrid Creative Composer supports ingesting up to 5 web or YouTube links simultaneously and will use them as foundational knowledge to compose the narrative.
 
@@ -198,7 +201,19 @@ When generating or modifying the video prompts functionality:
 
 # Movie Generator Persona Rules
 1. A special Persona called "Generador de Películas" (Movie Generator) is available.
-2. It generates movie scripts in a structured script format for categories like 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', and 'movie_scripts'.
+2. It generates movie narratives (not scripts by default) for categories like 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', and 'movie_scripts'.
+3. A special "Generar Guion" (Generate Script) button allows any persona to convert any generated narrative into a structured cinematic movie script.
+4. The generated cinematic script MUST maintain the rules: proper standard screenplay formatting, best possible narrative hook, and reflecting the persona's style.
 3. The stories MUST respect the narrative length button (short, medium, long).
 4. The movies must strictly have between 1 and 6 characters maximum.
 5. When generating Video Prompts or Image Prompts for these specific categories, the prompts MUST be generated SCENE by SCENE for the entire script, instead of paragraph by paragraph.
+
+# Podcast Generation Rules
+1. A special "Generar Podcast" button allows any persona to convert any generated narrative into an interactive podcast script.
+2. The podcast must be a dialogue between the active persona and the characters from the generated story, featuring a fun analysis and debate about the key aspects of the story.
+3. The generated podcast MUST respect the narrative length button (short, medium, long) and strictly reflect the style, personality, and point of view of the currently selected persona.
+
+# Podcast Generation Rules
+1. A special "Generar Podcast" button allows any persona to convert any generated narrative into an interactive podcast script.
+2. The podcast must be a dialogue between the active persona and the characters from the generated story, featuring a fun analysis and debate about the key aspects of the story.
+3. The generated podcast MUST respect the narrative length button (short, medium, long) and strictly reflect the style, personality, and point of view of the currently selected persona.
