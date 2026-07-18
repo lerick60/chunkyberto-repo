@@ -654,6 +654,10 @@ interface Trend {
   imagePrompts?: string;
   movieScript?: string;
   podcastScript?: string;
+  videoPromptsDuration?: number;
+  imagePromptsDuration?: number;
+  movieScriptDuration?: number;
+  podcastScriptDuration?: number;
 }
 
 interface Draft {
@@ -876,7 +880,8 @@ export const DownloadButton: React.FC<{ text: string; filename: string }> = ({ t
   );
 };
 
-export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend) => void; onGenerateImagePrompts: (trend: Trend) => void; onGenerateScript: (trend: Trend) => void; onGeneratePodcast: (trend: Trend) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; isGeneratingImagePrompts: boolean; isGeneratingScript: boolean; isGeneratingPodcast: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, onGenerateImagePrompts, onGenerateScript, onGeneratePodcast, isRewriting, isGeneratingVideoPrompts, isGeneratingImagePrompts, isGeneratingScript, isGeneratingPodcast, persona }) => {
+export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => void; onSelect: (trend: Trend) => void; onGenerateVideoPrompts: (trend: Trend, duration: number) => void; onGenerateImagePrompts: (trend: Trend, duration: number) => void; onGenerateScript: (trend: Trend, duration: number) => void; onGeneratePodcast: (trend: Trend, duration: number) => void; isRewriting: boolean; isGeneratingVideoPrompts: boolean; isGeneratingImagePrompts: boolean; isGeneratingScript: boolean; isGeneratingPodcast: boolean; language: Language; persona: Persona; }> = ({ trend, onRewrite, onSelect, onGenerateVideoPrompts, onGenerateImagePrompts, onGenerateScript, onGeneratePodcast, isRewriting, isGeneratingVideoPrompts, isGeneratingImagePrompts, isGeneratingScript, isGeneratingPodcast, persona }) => {
+  const [duration, setDuration] = useState<number>(10);
   const hasStoryboard = trend.storyboard && trend.storyboard.length > 0;
   return (
     <div className={`bg-slate-800 border-2 ${trend.isMasterSummary ? 'border-indigo-500/50' : 'border-slate-700'} rounded-[2.5rem] p-6 sm:p-10 transition-all hover:border-${persona.color}/30 flex flex-col h-full group relative overflow-hidden shadow-2xl`}>
@@ -967,7 +972,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
                       <div className="flex items-center gap-2"><Mic2 size={14} /> Guion de Podcast</div>
                       <div className="flex items-center gap-2">
-                        <DownloadButton text={trend.podcastScript} filename={`Podcast_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <DownloadButton text={trend.podcastScript} filename={`Podcast_${trend.title.replace(/\s+/g, '_')}_${trend.podcastScriptDuration || 10}S.txt`} />
                         <CopyButton text={trend.podcastScript} />
                       </div>
                     </div>
@@ -981,7 +986,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
                       <div className="flex items-center gap-2"><FileText size={14} /> Guion Cinematográfico</div>
                       <div className="flex items-center gap-2">
-                        <DownloadButton text={trend.movieScript} filename={`Guion_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <DownloadButton text={trend.movieScript} filename={`Guion_${trend.title.replace(/\s+/g, '_')}_${trend.movieScriptDuration || 10}S.txt`} />
                         <CopyButton text={trend.movieScript} />
                       </div>
                     </div>
@@ -1022,9 +1027,24 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     </div>
                   </div>
                 )}
+                                <div className="mb-4">
+                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest block mb-2">Longitud de Diálogo / Narrador</span>
+                  <div className="flex gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
+                    {[5, 8, 10, 15].map(d => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setDuration(d); }}
+                        className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${duration === d ? 'bg-' + persona.color + ' text-slate-950 shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        {d}s
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <button 
                   type="button" 
-                  onClick={(e) => { e.preventDefault(); onGeneratePodcast(trend); }} 
+                  onClick={(e) => { e.preventDefault(); onGeneratePodcast(trend, duration); }} 
                   disabled={isGeneratingPodcast}
                   className={`w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-xl`}
                 >
@@ -1033,7 +1053,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                 </button>
                 <button 
                   type="button" 
-                  onClick={(e) => { e.preventDefault(); onGenerateScript(trend); }} 
+                  onClick={(e) => { e.preventDefault(); onGenerateScript(trend, duration); }} 
                   disabled={isGeneratingScript}
                   className={`w-full flex items-center justify-center gap-2 py-3 mb-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
                 >
@@ -1043,7 +1063,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button 
                     type="button" 
-                    onClick={(e) => { e.preventDefault(); onGenerateVideoPrompts(trend); }} 
+                    onClick={(e) => { e.preventDefault(); onGenerateVideoPrompts(trend, duration); }} 
                     disabled={isGeneratingVideoPrompts}
                     className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
                   >
@@ -1052,7 +1072,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                   </button>
                   <button 
                     type="button" 
-                    onClick={(e) => { e.preventDefault(); onGenerateImagePrompts(trend); }} 
+                    onClick={(e) => { e.preventDefault(); onGenerateImagePrompts(trend, duration); }} 
                     disabled={isGeneratingImagePrompts}
                     className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all bg-slate-700 hover:bg-slate-600 active:scale-95 text-white shadow-xl`}
                   >
@@ -2101,7 +2121,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
     } catch (err: any) { setAppError(getErrorDetails(err)); hasInitialFetchedRef.current = true; } finally { setLoadingTrends(false); isFetchingTrendsRef.current = false; }
   }, [generateDefaultPrompt, modelSettings.text, category, globalForensicToggles, trends]); 
 
-  const handleGeneratePodcast = async (trend: Trend) => {
+  const handleGeneratePodcast = async (trend: Trend, duration: number = 10) => {
     setGeneratingPodcastId(trend.id); setAppError(null);
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
@@ -2118,6 +2138,7 @@ LENGUAJE OBJETIVO: ${languageText}.`;
 3. El formato debe ser un diálogo de podcast claro (ej. **${activePersona.name}:** [diálogo]).
 4. Sigue la personalidad de ${activePersona.name} (${activePersona.role}).
 5. La longitud del podcast debe ser ${lengthText}.
+6. CRÍTICO: La longitud de cada intervención o diálogo dicho por cualquier personaje NO DEBE exceder las ${Math.floor(duration * 2.5)} palabras, para que encaje exactamente en una ventana de tiempo de ${duration} segundos en el video.
 `;
 
       const promptText = `Por favor, genera un guion de podcast basado en la siguiente historia y en las reglas proporcionadas.
@@ -2136,15 +2157,15 @@ ${trend.chunkybertoVersion}
       })) as any;
       
       const finalContent = response.text || "";
-      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, podcastScript: finalContent } : t));
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, podcastScript: finalContent, podcastScriptDuration: duration } : t));
       setTrends(updatedTrends);
       if (selectedTrend && selectedTrend.id === trend.id) {
-        setSelectedTrend({ ...selectedTrend, podcastScript: finalContent });
+        setSelectedTrend({ ...selectedTrend, podcastScript: finalContent, podcastScriptDuration: duration });
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingPodcastId(null); }
   };
 
-  const handleGenerateScript = async (trend: Trend) => {
+  const handleGenerateScript = async (trend: Trend, duration: number = 10) => {
     setGeneratingScriptId(trend.id); setAppError(null);
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
@@ -2157,6 +2178,7 @@ ${trend.chunkybertoVersion}
 4. The hook at the beginning MUST be the absolute best possible to grab the audience's attention immediately.
 5. Make sure to include all the details, emotions, and events described in the narrative, adapted into a script format.
 6. The script direction MUST strictly reflect the style, personality, and point of view of the currently selected persona: ${activePersona.name} (${activePersona.role}).
+7. CRITICAL: The length of the dialogue spoken by any character in a single continuous block MUST NOT exceed ${Math.floor(duration * 2.5)} words, so it fits exactly within a ${duration}-second scene window.
 `;
 
       const promptText = `Please convert the following narrative into a structured cinematic movie script based on the rules below.
@@ -2175,15 +2197,15 @@ ${trend.chunkybertoVersion}
       })) as any;
       
       const finalContent = response.text || "";
-      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, movieScript: finalContent } : t));
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, movieScript: finalContent, movieScriptDuration: duration } : t));
       setTrends(updatedTrends);
       if (selectedTrend && selectedTrend.id === trend.id) {
-        setSelectedTrend({ ...selectedTrend, movieScript: finalContent });
+        setSelectedTrend({ ...selectedTrend, movieScript: finalContent, movieScriptDuration: duration });
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingScriptId(null); }
   };
 
-  const handleGenerateVideoPrompts = async (trend: Trend) => {
+  const handleGenerateVideoPrompts = async (trend: Trend, duration: number = 10) => {
     setGeneratingVideoPromptsId(trend.id); setAppError(null);
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
@@ -2198,10 +2220,10 @@ ${trend.chunkybertoVersion}
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of ${Math.floor(duration * 2.5)} words as an expression of the narrator to fit in a ${duration}-second video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of ${Math.floor(duration * 2.5)} words summarizing the idea of these remaining sentences, to be narrated in the video to fit in a ${duration}-second window. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction3 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
         : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words expressing the last idea of the paragraph. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
@@ -2270,15 +2292,15 @@ ${rulesText}`;
       })) as any;
       
       const finalContent = response.text || "";
-      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, videoPrompts: finalContent } : t));
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, videoPrompts: finalContent, videoPromptsDuration: duration } : t));
       setTrends(updatedTrends);
       if (selectedTrend && selectedTrend.id === trend.id) {
-        setSelectedTrend({ ...selectedTrend, videoPrompts: finalContent });
+        setSelectedTrend({ ...selectedTrend, videoPrompts: finalContent, videoPromptsDuration: duration });
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingVideoPromptsId(null); }
   };
 
-  const handleGenerateImagePrompts = async (trend: Trend) => {
+  const handleGenerateImagePrompts = async (trend: Trend, duration: number = 10) => {
     setGeneratingImagePromptsId(trend.id); setAppError(null);
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
@@ -2293,10 +2315,10 @@ ${rulesText}`;
       const voiceDesc = activePersona.gender === 'F' ? 'female' : 'male';
       const narratorInstruction1 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words as an expression of the narrator. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of ${Math.floor(duration * 2.5)} words as an expression of the narrator to fit in a ${duration}-second video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction2 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
-        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words summarizing the idea of these remaining sentences, to be narrated in the video. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
+        : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of ${Math.floor(duration * 2.5)} words summarizing the idea of these remaining sentences, to be narrated in the video to fit in a ${duration}-second window. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
       const narratorInstruction3 = suppressNarratorText 
         ? "Do NOT include any narrator expression or text."
         : `Immediately following the visual description on the next line (WITHOUT a blank line in between), include a descriptive text of a maximum of 22 words expressing the last idea of the paragraph. This narrator expression MUST start exactly with the prefix "${voiceLabel} " (this prefix MUST always be in Spanish, regardless of the selected language).`;
@@ -2365,10 +2387,10 @@ ${rulesText}`;
       
       const finalContent = response.text;
       
-      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, imagePrompts: finalContent } : t));
+      const updatedTrends = trends.map(t => (t.id === trend.id ? { ...t, imagePrompts: finalContent, imagePromptsDuration: duration } : t));
       setTrends(updatedTrends);
       if (selectedTrend && selectedTrend.id === trend.id) {
-        setSelectedTrend({ ...selectedTrend, imagePrompts: finalContent });
+        setSelectedTrend({ ...selectedTrend, imagePrompts: finalContent, imagePromptsDuration: duration });
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setGeneratingImagePromptsId(null); }
   };
