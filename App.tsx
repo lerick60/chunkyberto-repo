@@ -1000,7 +1000,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
                       <div className="flex items-center gap-2"><Video size={14} /> Video Prompts</div>
                       <div className="flex items-center gap-2">
-                        <DownloadButton text={trend.videoPrompts} filename={`Prompts_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <DownloadButton text={trend.videoPrompts} filename={`Prompts_${trend.title.replace(/\s+/g, '_')}_${trend.videoPromptsDuration || 10}S.txt`} />
                         <CopyButton text={trend.videoPrompts} />
                       </div>
                     </div>
@@ -1016,7 +1016,7 @@ export const TrendCard: React.FC<{ trend: Trend; onRewrite: (trend: Trend) => vo
                     <div className={`flex items-center justify-between mb-3 text-${persona.color} font-black text-[10px] uppercase tracking-widest sticky top-0 bg-slate-900/80 backdrop-blur-sm py-1 z-10`}>
                       <div className="flex items-center gap-2"><ImageIcon size={14} /> Image Prompts</div>
                       <div className="flex items-center gap-2">
-                        <DownloadButton text={trend.imagePrompts} filename={`ImagePrompts_${trend.title.replace(/\s+/g, '_')}.txt`} />
+                        <DownloadButton text={trend.imagePrompts} filename={`ImagePrompts_${trend.title.replace(/\s+/g, '_')}_${trend.imagePromptsDuration || 10}S.txt`} />
                         <CopyButton text={trend.imagePrompts} />
                       </div>
                     </div>
@@ -3493,6 +3493,10 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         if (selectedTrend.analysis) rootFolder?.file("ANALISIS_LITERARIO.txt", selectedTrend.analysis);
         if (selectedTrend.interview) rootFolder?.file("ENTREVISTA_PODCAST.txt", selectedTrend.interview);
         if (selectedTrend.advance) rootFolder?.file("AVANCE_HISTORIA.txt", selectedTrend.advance);
+        if (selectedTrend.podcastScript) rootFolder?.file(`Podcast_${selectedTrend.podcastScriptDuration || 10}S.txt`, selectedTrend.podcastScript);
+        if (selectedTrend.movieScript) rootFolder?.file(`Guion_${selectedTrend.movieScriptDuration || 10}S.txt`, selectedTrend.movieScript);
+        if (selectedTrend.videoPrompts) rootFolder?.file(`VideoPrompts_${selectedTrend.videoPromptsDuration || 10}S.txt`, selectedTrend.videoPrompts);
+        if (selectedTrend.imagePrompts) rootFolder?.file(`ImagePrompts_${selectedTrend.imagePromptsDuration || 10}S.txt`, selectedTrend.imagePrompts);
         if (selectedTrend.thumbnailUrl) { rootFolder?.file("YOUTUBE_THUMBNAIL.png", selectedTrend.thumbnailUrl.split(',')[1], { base64: true }); }
         for (let i = 0; i < selectedTrend.storyboard.length; i++) {
             const frame = selectedTrend.storyboard[i]; const sceneName = `Escena_${(i + 1).toString().padStart(2, '0')}`;
