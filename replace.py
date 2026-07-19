@@ -5,7 +5,7 @@ with open("App.tsx", "r", encoding="utf-8") as f:
 
 # Replace video promptText
 video_pattern = r'const promptText = `Based on the following narrative, generate video prompts to visually explain the ideas contained in it\. Process the narrative paragraph by paragraph\.\$\{characterContext\}.*?\$\{modelSettings\.erickReferenceImage \? \'[^\']*\' : \'\'\}`;'
-video_replacement = """const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+video_replacement = """const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', 'movie_romance', 'asian_microdrama'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
       let rulesText = `Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).
@@ -46,7 +46,7 @@ code = re.sub(video_pattern, video_replacement, code, flags=re.DOTALL)
 
 # Replace image promptText
 image_pattern = r'const promptText = `Based on the following narrative, generate image prompts to visually explain the ideas contained in it\. Process the narrative paragraph by paragraph\.\$\{characterContext\}.*?\$\{modelSettings\.erickReferenceImage \? \'[^\']*\' : \'\'\}`;'
-image_replacement = """const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+image_replacement = """const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', 'movie_romance', 'asian_microdrama'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
       let rulesText = `Rules for EACH paragraph:
 1. Split the paragraph into two sections: Section 1 (the first 2 sentences) and Section 2 (the remaining sentences).

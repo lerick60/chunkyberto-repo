@@ -255,7 +255,7 @@ type Category =
   | 'ai_space_documentary' | 'ai_embedded_linux' | 'ai_embedded_wireless' | 'ai_embedded_mcu' | 'ai_modern_mcus'
   | 'exoplanetas' | 'ai_exoplanets_creation' | 'biographies' | 'products_review'
   | 'news_world' | 'news_mexico' | 'news_tijuana' | 'ai_robotics_news' | 'ai_hardware_base'
-  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026' | 'scientific_discoveries' | 'movie_scripts' | 'movie_drama' | 'movie_action' | 'movie_scifi' | 'movie_history' | 'movie_horror';
+  | 'basic_electronics' | 'electronic_circuits' | 'special_circuits_analysis' | 'forensic_electronics' | 'financial_analysis' | 'case_studies' | 'basic_finance' | 'cinema_analysis' | 'psychology_neuroscience' | 'universal_history' | 'urban_legends' | 'unsolved_mysteries' | 'alternative_history' | 'comic_history' | 'world_cup_stories' | 'world_cup_predictions_2026' | 'scientific_discoveries' | 'movie_scripts' | 'movie_drama' | 'movie_action' | 'movie_scifi' | 'movie_history' | 'movie_horror' | 'movie_romance' | 'asian_microdrama';
 
 type ImageStyle = string;
 type VideoDimension = '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
@@ -2032,12 +2032,21 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
       categoryPrompt = `Basado en la fecha actual de hoy (${todayDate}), determina y selecciona los siguientes ${storyCount} partidos próximos a jugarse en el Mundial de Soccer 2026. Realiza un análisis técnico para cada equipo participante sobre su tipo de juego y la habilidad de sus jugadores. En base a la comparación de sus fortalezas y debilidades, haz una predicción sobre qué equipo ganará el enfrentamiento. CRÍTICO: Al inicio de la historia, DEBES indicar de forma muy precisa qué equipo piensas que ganará y de cuánto será el marcador exacto. Después, desarrolla el análisis de las fortalezas y debilidades de cada equipo participante, explica tus razonamientos de por qué elegiste al ganador y justifica detalladamente el resultado final del marcador predicho. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     } else if (category === 'scientific_discoveries') {
       categoryPrompt = `Selecciona ${storyCount} descubrimientos científicos recientes o históricos fascinantes. Deberás crear un análisis y explicación para cada uno de ellos. Al empezar la historia deberás resumir brevemente el descubrimiento básico. Después, deberás desarrollar la explicación detallada de cuál es la clave o elemento central del descubrimiento. Finalmente, basado en ese descubrimiento central en cuestión, deberás hacer una predicción sobre el impacto que tendrá en alguna o algunas de sus aplicaciones esperadas. La narración DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
-    } else if (category === 'movie_scripts') {
+    } else if (['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', 'movie_romance', 'asian_microdrama'].includes(category)) {
       let lengthText = "longitud adecuada";
       if (narrativeLength === 'short') lengthText = "corta (ideal para un cortometraje o escena puntual)";
       if (narrativeLength === 'medium') lengthText = "mediana (ideal para un episodio o mediometraje)";
       if (narrativeLength === 'long') lengthText = "larga (ideal para un largometraje)";
-      categoryPrompt = `Crea ${storyCount} guiones de películas generados con IA con una ${lengthText}. Varía el género de los guiones entre horror, ficción, drama, acción y comedia. CRÍTICO: Asegúrate de que el gancho al principio sea el mejor posible para atrapar a la audiencia inmediatamente. El guion debe tener una estructura adecuada para su formato. La narración y dirección del guion DEBEN ser contadas y reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
+      
+      let genreInstruction = "Varía el género de los guiones entre horror, ficción, drama, acción y comedia.";
+      if (category === 'movie_drama') genreInstruction = "El género debe ser exclusivamente DRAMA.";
+      if (category === 'movie_action') genreInstruction = "El género debe ser exclusivamente ACCIÓN.";
+      if (category === 'movie_scifi') genreInstruction = "El género debe ser exclusivamente CIENCIA FICCIÓN.";
+      if (category === 'movie_history') genreInstruction = "El género debe ser exclusivamente HISTORIA.";
+      if (category === 'movie_horror') genreInstruction = "El género debe ser exclusivamente TERROR.";
+      if (category === 'movie_romance') genreInstruction = "El género debe ser exclusivamente AMOR Y ROMANCE.";
+      
+      categoryPrompt = `Crea ${storyCount} guiones de películas generados con IA con una ${lengthText}. ${genreInstruction} CRÍTICO: Los personajes deben ser de 1 a 6 como máximo. El formato de la historia DEBE SER ESTRICTAMENTE UN GUION DE CINE ESTRUCTURADO (con Encabezados de Escena, Acción, Nombres de Personajes y Diálogos). Asegúrate de que el gancho al principio sea el mejor posible para atrapar a la audiencia inmediatamente. El guion debe tener una estructura adecuada para su formato. La dirección del guion DEBE reflejar estrictamente el estilo particular, la personalidad y el punto de vista de ${activePersona.name}.`;
     }
 
     let exclusionPrompt = "";
@@ -2234,7 +2243,7 @@ ${trend.chunkybertoVersion}
         ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
         : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de video:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
-      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', 'movie_romance', 'asian_microdrama'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
 
       let rulesText = `Rules for EACH paragraph:
@@ -2329,7 +2338,7 @@ ${rulesText}`;
         ? `CRITICAL: DO NOT output any labels, headings, indicators, or voice prefixes such as "Párrafo 1", "Sección 1", "Prompt", "${voiceLabel} ", etc. ONLY output the descriptive visual text.`
         : `CRITICAL: DO NOT output any labels, headings, or indicators such as "Párrafo 1", "Sección 1", "Prompt de imagen:", etc. The ONLY allowed label is the "${voiceLabel} " prefix for the narrator expressions.`;
 
-      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror'].includes(category);
+      const isMovieCategory = ['movie_scripts', 'movie_drama', 'movie_action', 'movie_scifi', 'movie_history', 'movie_horror', 'movie_romance', 'asian_microdrama'].includes(category);
       const generationInstruction = isMovieCategory ? `Process the movie script SCENE by SCENE.` : `Process the narrative paragraph by paragraph.`;
       let rulesText = `Rules for EACH paragraph:
 1. Split the paragraph into three sections: Section 1 (the first 2 sentences), Section 2 (an idea related to or extending Section 1), and Section 3 (the last idea expressed by the paragraph).
@@ -3661,6 +3670,8 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
     { id: 'movie_scifi', label: 'Películas de Ciencia Ficción', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
     { id: 'movie_history', label: 'Películas sobre Historia', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
     { id: 'movie_horror', label: 'Películas de Terror', icon: <Clapperboard size={14} />, exclusive: 'movie_generator' },
+    { id: 'movie_romance', label: 'Películas de Amor y Romance', icon: <Heart size={14} /> },
+    { id: 'asian_microdrama', label: 'Microdramas Estilo Asia', icon: <Smartphone size={14} /> },
     { id: 'comic_history', label: 'Historia de Comic\'s', icon: <Zap size={14} /> }
   ].filter(opt => !opt.exclusive || (Array.isArray(opt.exclusive) ? opt.exclusive.includes(selectedPersonaId) : selectedPersonaId === opt.exclusive));
 
@@ -4063,7 +4074,16 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
             <div className="max-w-4xl mx-auto mb-16 space-y-12">
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] block ml-1">Identidad Activa</label>
-                <div className="relative group"><div className={`absolute inset-y-0 left-4 flex items-center pointer-events-none text-${activePersona.color} z-10`}>{activePersona.icon}</div><select value={selectedPersonaId} onChange={(e) => { setSelectedPersonaId(e.target.value); setTrends([]); hasInitialFetchedRef.current = false; }} className={`w-full pl-12 pr-10 py-6 bg-slate-900 border-2 border-slate-800 rounded-[2rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{PERSONAS.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()} - {p.role.toUpperCase()}</option>)}</select><div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-slate-500"><ChevronDown size={18} /></div></div>
+                <div className="relative group"><div className={`absolute inset-y-0 left-4 flex items-center pointer-events-none text-${activePersona.color} z-10`}>{activePersona.icon}</div><select value={selectedPersonaId} onChange={(e) => { 
+  const newPersonaId = e.target.value;
+  setSelectedPersonaId(newPersonaId); 
+  setTrends([]); 
+  hasInitialFetchedRef.current = false; 
+  const allowed = categoryOptions.filter(opt => !opt.exclusive || opt.exclusive === newPersonaId || (Array.isArray(opt.exclusive) && opt.exclusive.includes(newPersonaId)));
+  if (!allowed.find(a => a.id === category)) {
+    setCategory(allowed[0].id as Category);
+  }
+}} className={`w-full pl-12 pr-10 py-6 bg-slate-900 border-2 border-slate-800 rounded-[2rem] font-black uppercase text-xs tracking-[0.2em] text-white appearance-none cursor-pointer focus:border-${activePersona.color} focus:outline-none transition-all shadow-2xl`}>{PERSONAS.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()} - {p.role.toUpperCase()}</option>)}</select><div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-slate-500"><ChevronDown size={18} /></div></div>
               </div>
               {appError && <DetailedErrorConsole error={appError} activePersona={activePersona} onClose={() => setAppError(null)}  />}
               <div className="flex flex-col gap-6 items-center text-center"><h2 className="text-4xl xs:text-5xl font-black italic text-white leading-none tracking-tighter uppercase">Studio de <span className={`text-${activePersona.color}`}>{activePersona.name}.</span></h2></div>
