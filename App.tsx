@@ -283,11 +283,15 @@ interface VoiceOption {
   description: string;
 }
 
+/**
+ * MODELOS GENERATIVOS OPTIMIZADOS (DEFAULTS)
+ * Modelos base optimizados para Texto, Imagen, Video (Veo) y Voz (TTS).
+ */
 const MODELS = {
-  TEXT: 'gemini-3.5-flash',       
-  IMAGE: 'gemini-2.5-flash-image',     
-  VIDEO: 'veo-3.1-lite-generate-preview', 
-  TTS: 'gemini-3.1-flash-tts-preview'   
+  TEXT: 'gemini-3.6-flash',              // Modelo rápido de propósito general con excelente calidad narrativa
+  IMAGE: 'gemini-3.1-flash-lite-image',    // Modelo optimizado para generación rápida de imágenes de baja latencia
+  VIDEO: 'veo-3.1-lite-generate-preview', // Veo 3.1 Lite para síntesis de video de alta velocidad y consistencia
+  TTS: 'gemini-3.1-flash-tts-preview'     // Gemini TTS multi-idioma con síntesis de voz nativa en PCM/Audio
 };
 
 const AVAILABLE_VOICES: VoiceOption[] = [
@@ -578,40 +582,48 @@ interface ModelSettings {
   tier: ModelTier;
 }
 
+/**
+ * CONFIGURACIÓN OPTIMIZADA DE TIERS DE MODELOS
+ * Ajusta los modelos generativos de Texto, Imagen, Video y TTS según el nivel seleccionado:
+ * - Gratis: Gemini 3.6 Flash + Veo 3.1 Lite + Gemini TTS (Costo Cero / Pruebas Rápidas)
+ * - Económico (Bajo Costo): Gemini 3.1 Flash Lite + Veo 3.1 Lite + Gemini TTS (Alto Volumen)
+ * - Normal (Mediano): Gemini 3.6 Flash + Imagen HD + Veo 3.1 Lite + Gemini TTS (Equilibrio Producción)
+ * - Alta Calidad (Mayor Calidad): Gemini 3.1 Pro + Imagen HD + Veo 3.1 Pro (Soporte Multi-Referencia/Asset) + Gemini TTS (Máxima Fidelidad)
+ */
 const MODEL_TIERS = {
   free: {
     label: 'Gratis',
-    description: 'Modelos generativos gratis. Ideal para pruebas rápidas con Gemini Flash.',
+    description: 'Gratis: Optimizado para pruebas rápidas sin costo (Gemini 3.6 Flash, Veo 3.1 Lite y TTS Standard).',
     models: {
-      text: 'gemini-3.5-flash',
-      image: 'gemini-2.5-flash-image', 
+      text: 'gemini-3.6-flash',
+      image: 'gemini-3.1-flash-lite-image', 
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   economical: {
-    label: 'Económico',
-    description: 'Modelos generativos de bajo costo. Ideal para procesar altos volúmenes de datos con Gemini Flash Lite.',
+    label: 'Bajo Costo',
+    description: 'Bajo Costo: Procesamiento masivo de alto volumen (Gemini 3.1 Flash Lite, Veo 3.1 Lite y TTS Express).',
     models: {
       text: 'gemini-3.1-flash-lite',
-      image: 'gemini-2.5-flash-image',
+      image: 'gemini-3.1-flash-lite-image',
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   normal: {
-    label: 'Normal',
-    description: 'Equilibrio perfecto entre costo y calidad con Gemini Flash para narrativa principal.',
+    label: 'Mediano',
+    description: 'Mediano: Equilibrio óptimo entre velocidad, costo y calidad HD (Gemini 3.6 Flash, Veo 3.1 Lite y TTS HD).',
     models: {
-      text: 'gemini-3.5-flash',
-      image: 'gemini-2.5-flash-image',
+      text: 'gemini-3.6-flash',
+      image: 'gemini-3.1-flash-image',
       video: 'veo-3.1-lite-generate-preview',
       tts: 'gemini-3.1-flash-tts-preview'
     }
   },
   high_quality: {
-    label: 'Alta Calidad',
-    description: 'Modelos generativos de máxima calidad y razonamiento profundo (Gemini Pro y Veo Pro).',
+    label: 'Mayor Calidad',
+    description: 'Mayor Calidad: Máxima calidad cinematográfica y razonamiento profundo (Gemini 3.1 Pro, Veo 3.1 Pro y TTS Master Studio).',
     models: {
       text: 'gemini-3.1-pro-preview',
       image: 'gemini-3.1-flash-image',
@@ -1141,7 +1153,7 @@ export const YouTubeUploadModal: React.FC<{
       Responde estrictamente en formato JSON con las llaves: "title", "description", "tags".`;
 
       const res = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: modelSettings.text || MODELS.TEXT,
         contents: [{ parts: [{ text: prompt }] }],
         config: { responseMimeType: "application/json" }
       });
@@ -2711,7 +2723,7 @@ ${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
                   let response;
                   try {
                     response = await ai.models.generateContent({
-                        model: 'gemini-2.5-flash',
+                        model: modelSettings.text || MODELS.TEXT,
                         contents: promptContent,
                         config: {
                             tools: [{ googleSearch: {} }]
@@ -2719,7 +2731,7 @@ ${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
                     });
                   } catch (groundingErr: any) {
                     response = await ai.models.generateContent({
-                        model: 'gemini-2.5-flash',
+                        model: modelSettings.text || MODELS.TEXT,
                         contents: promptContent + "\n\nNota: Has fallado en buscar en la web, así que por favor basa tu resumen estrictamente en los metadatos provistos."
                     });
                   }

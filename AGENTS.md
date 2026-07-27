@@ -130,6 +130,11 @@ When generating or modifying the video prompts functionality:
 
 # Generative Models Rules
 1. The "Gratis" (free) mode must always include the latest free models. Currently: `veo-3.1-lite-generate-preview` for video logic and `gemini-3.1-flash-tts-preview` for TTS.
+2. Optimized Model Tiers Configuration (Video & TTS Synthesis):
+   - Gratis (Free): Text (`gemini-3.6-flash`), Image (`gemini-3.1-flash-lite-image`), Video (`veo-3.1-lite-generate-preview`), TTS (`gemini-3.1-flash-tts-preview`).
+   - Bajo Costo (Economical): Text (`gemini-3.1-flash-lite`), Image (`gemini-3.1-flash-lite-image`), Video (`veo-3.1-lite-generate-preview`), TTS (`gemini-3.1-flash-tts-preview`).
+   - Mediano (Normal): Text (`gemini-3.6-flash`), Image (`gemini-3.1-flash-image`), Video (`veo-3.1-lite-generate-preview`), TTS (`gemini-3.1-flash-tts-preview`).
+   - Mayor Calidad (Pro / High Quality): Text (`gemini-3.1-pro-preview`), Image (`gemini-3.1-flash-image`), Video (`veo-3.1-generate-preview`), TTS (`gemini-3.1-flash-tts-preview`).
 
 # Erick and Erickberto Narration Rules
 1. The narratives of "Erick Betancourt" and "Dr. Erickberto" MUST start with "Tema de hoy:" followed immediately by the title of the narration (translated dynamically if the target language is different than Spanish, e.g., "Today's topic:" in English).
