@@ -117,6 +117,7 @@ import {
   CircuitBoard,
   Microscope,
   Plug,
+  XCircle,
   Upload,
   TrendingUp,
   PiggyBank,
@@ -220,6 +221,37 @@ function decodeBase64(base64: string) {
     bytes[i] = binaryString.charCodeAt(i);
   }
   return bytes;
+}
+
+
+function pcmToWav(pcmData: Uint8Array, sampleRate: number = 24000, numChannels: number = 1): Blob {
+  const dataLen = pcmData.length;
+  const buffer = new ArrayBuffer(44 + dataLen);
+  const view = new DataView(buffer);
+  
+  const writeString = (view: DataView, offset: number, string: string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+  
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLen, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * numChannels * 2, true);
+  view.setUint16(32, numChannels * 2, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLen, true);
+  
+  new Uint8Array(buffer, 44).set(pcmData);
+  
+  return new Blob([buffer], { type: 'audio/wav' });
 }
 
 async function decodeAudioData(
@@ -1153,7 +1185,7 @@ export const YouTubeUploadModal: React.FC<{
       Responde estrictamente en formato JSON con las llaves: "title", "description", "tags".`;
 
       const res = await ai.models.generateContent({
-        model: modelSettings.text || MODELS.TEXT,
+        model: MODELS.TEXT,
         contents: [{ parts: [{ text: prompt }] }],
         config: { responseMimeType: "application/json" }
       });
@@ -1657,7 +1689,11 @@ export const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('chunky_language') as Language) || 'es');
   const [selectedPersonaId, setSelectedPersonaId] = useState<string>(() => localStorage.getItem('chunky_persona') || PERSONAS[0].id);
   const [producingImages, setProducingImages] = useState(false);
+  const [storyboardProgress, setStoryboardProgress] = useState(0);
   const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
+  const [isGeneratingVoiceOver, setIsGeneratingVoiceOver] = useState(false);
+  const [voiceOverProgress, setVoiceOverProgress] = useState(0);
+  const abortTTS = useRef(false);
   const [videoDim, setVideoDim] = useState<VideoDimension>('16:9');
   const [visualStyle, setVisualStyle] = useState<ImageStyle>('Cinematic');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -2723,7 +2759,7 @@ ${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
                   let response;
                   try {
                     response = await ai.models.generateContent({
-                        model: modelSettings.text || MODELS.TEXT,
+                        model: MODELS.TEXT,
                         contents: promptContent,
                         config: {
                             tools: [{ googleSearch: {} }]
@@ -2731,7 +2767,7 @@ ${isErickOrErickberto ? `${introPrefix} [Título]` : introPrefix}
                     });
                   } catch (groundingErr: any) {
                     response = await ai.models.generateContent({
-                        model: modelSettings.text || MODELS.TEXT,
+                        model: MODELS.TEXT,
                         contents: promptContent + "\n\nNota: Has fallado en buscar en la web, así que por favor basa tu resumen estrictamente en los metadatos provistos."
                     });
                   }
@@ -2865,6 +2901,65 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
     }
   };
 
+  
+  const handleDownloadMasterVoiceOver = async () => {
+    if (!selectedTrend) return;
+    const text = selectedTrend.chunkybertoVersion || selectedTrend.originalSummary;
+    if (!text) return;
+    
+    setIsGeneratingVoiceOver(true);
+    setVoiceOverProgress(0);
+    abortTTS.current = false;
+    try {
+        const paragraphs = text.split('\n').filter(p => p.trim().length > 0);
+        const pcmChunks: Uint8Array[] = [];
+        
+        for (let i = 0; i < paragraphs.length; i++) {
+            if (abortTTS.current) {
+                console.log('Voice over generation cancelled by user.');
+                return;
+            }
+            
+            setVoiceOverProgress(Math.round((i / paragraphs.length) * 100));
+            const res = await handlePlayTTS(paragraphs[i], false);
+            
+            if (res) {
+                const arrayBuffer = await res.blob.arrayBuffer();
+                pcmChunks.push(new Uint8Array(arrayBuffer));
+            }
+            
+            // Wait slightly between requests
+            await new Promise(r => setTimeout(r, 500));
+        }
+        
+        if (abortTTS.current) return;
+        
+        setVoiceOverProgress(100);
+        
+        // Combine all chunks
+        const totalLength = pcmChunks.reduce((acc, chunk) => acc + chunk.length, 0);
+        const combinedRawData = new Uint8Array(totalLength);
+        let offset = 0;
+        for (const chunk of pcmChunks) {
+            combinedRawData.set(chunk, offset);
+            offset += chunk.length;
+        }
+        
+        const wavBlob = pcmToWav(combinedRawData, 24000, 1);
+        const url = URL.createObjectURL(wavBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${selectedTrend.title.substring(0,20).replace(/[^a-z0-9]/gi, '_')}_VozEnOff.wav`;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch(err: any) {
+        if (!abortTTS.current) setAppError(getErrorDetails(err));
+    } finally {
+        setIsGeneratingVoiceOver(false);
+        setVoiceOverProgress(0);
+    }
+  };
+
   const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<{ buffer: AudioBuffer, blob: Blob } | null> => {
     if (!text || text.trim().length === 0) return null;
     
@@ -2979,6 +3074,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         frames.push({ id: `frame-${i}-${Date.now()}`, imageUrl: '', prompt: rawPrompt, originalIdea: rawIdea, narrationText: rawNarration, isGeneratingImage: true, dimension: videoDim, style: visualStyle });
       }
       setSelectedTrend(prev => (prev ? { ...prev, storyboard: [...frames] } : null));
+      setStoryboardProgress(0);
       for (let i = 0; i < frames.length; i++) {
         try {
           const res = await apiRetry(() => ai.models.generateContent({ model: modelSettings.image, contents: { parts: [{ text: `Style: ${visualStyle}. ${frames[i].prompt}.` }] }, config: { imageConfig: { aspectRatio: videoDim } } }), 3, 5000, 45000) as any;
@@ -2988,6 +3084,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         } catch (imgErr) { frames[i].hasError = true; frames[i].isGeneratingImage = false; }
         const updatedFrames = [...frames];
         setSelectedTrend(prev => (prev ? { ...prev, storyboard: updatedFrames } : null));
+        setStoryboardProgress(Math.round(((i + 1) / frames.length) * 100));
         await new Promise(r => setTimeout(r, 4000)); // Increased to 4s to avoid rate limits
       }
     } catch (err: any) { setAppError(getErrorDetails(err)); } finally { setProducingImages(false); }
@@ -3928,8 +4025,61 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                           )}
                           <p className="text-base text-slate-100 font-bold leading-relaxed whitespace-pre-wrap italic">"{selectedTrend.chunkybertoVersion || "Borrador original: " + selectedTrend.originalSummary}"</p>
                        </div>
-                      <button onClick={() => handlePlayTTS(selectedTrend.chunkybertoVersion || selectedTrend.originalSummary)} className={`w-full py-6 rounded-[2rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Volume2 size={24} /> ESCUCHAR COMPLETO</button>
-                      <button onClick={handleSaveDraft} className={`w-full py-6 mt-4 rounded-[2rem] bg-indigo-600/20 text-indigo-400 border-2 border-indigo-500/30 hover:border-indigo-500/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}><Archive size={24} /> GUARDAR BORRADOR</button>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="relative">
+                          <select value={modelSettings.voiceName} onChange={(e) => setModelSettings({...modelSettings, voiceName: e.target.value})} className="w-full pl-4 pr-10 py-4 bg-slate-900 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                            {AVAILABLE_VOICES.map(v => <option key={v.id} value={v.id}>{v.name.toUpperCase()} - {v.gender.toUpperCase()} ({v.accent.toUpperCase()})</option>)}
+                          </select>
+                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Mic2 size={16} /></div>
+                        </div>
+                        <div className="relative">
+                          <select value={modelSettings.ttsStyle} onChange={(e) => setModelSettings({...modelSettings, ttsStyle: e.target.value as TtsStyle})} className="w-full pl-4 pr-10 py-4 bg-slate-900 border-2 border-slate-700 rounded-2xl font-black uppercase text-[10px] tracking-widest text-white appearance-none cursor-pointer focus:border-indigo-500 outline-none">
+                            {NARRATION_STYLES.map(s => <option key={s.id} value={s.id}>{s.label.toUpperCase()}</option>)}
+                          </select>
+                          <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-500"><Radio size={16} /></div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                        <button onClick={() => handlePlayTTS(selectedTrend.chunkybertoVersion || selectedTrend.originalSummary)} className={`flex-1 py-6 rounded-[2rem] bg-slate-900 text-${activePersona.color} border-2 border-slate-800 hover:border-${activePersona.color}/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}>
+                          <Volume2 size={24} /> ESCUCHAR
+                        </button>
+                        <button onClick={() => {
+                          if (isGeneratingVoiceOver) {
+                            abortTTS.current = true;
+                            setIsGeneratingVoiceOver(false);
+                          } else {
+                            handleDownloadMasterVoiceOver();
+                          }
+                        }} className={`flex-1 py-6 rounded-[2rem] ${isGeneratingVoiceOver ? 'bg-red-900/50 text-red-400 border-red-500/30 hover:bg-red-900/80' : 'bg-indigo-600 text-white border-indigo-500/30 hover:border-indigo-500/50'} border-2 font-black text-sm uppercase flex flex-col items-center justify-center gap-2 transition-all active:scale-95 shadow-2xl`}>
+                          <div className="flex items-center gap-3">
+                            {isGeneratingVoiceOver ? <XCircle size={24} /> : <Download size={24} />}
+                            {isGeneratingVoiceOver ? 'CANCELAR' : 'DESCARGAR VOZ'}
+                          </div>
+                          {isGeneratingVoiceOver && (
+                            <div className="w-3/4 max-w-[200px] h-1.5 bg-red-950/50 rounded-full overflow-hidden mt-1">
+                              <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${voiceOverProgress}%` }}></div>
+                            </div>
+                          )}
+                        </button>
+                      </div>
+                      <button onClick={handleSaveDraft} className={`w-full py-6 rounded-[2rem] bg-indigo-600/20 text-indigo-400 border-2 border-indigo-500/30 hover:border-indigo-500/50 font-black text-sm uppercase flex items-center justify-center gap-3 transition-all active:scale-95 shadow-2xl`}>
+                        <Archive size={24} /> GUARDAR BORRADOR
+                      </button>
+                      
+                      {isGeneratingVoiceOver && (
+                        <div className="mt-8 p-6 rounded-[2rem] bg-slate-900/80 border-2 border-slate-700 shadow-xl">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                              <Loader2 size={14} className="animate-spin" />
+                              SINTETIZANDO VOZ...
+                            </span>
+                            <span className="text-[10px] font-black text-white">{voiceOverProgress}%</span>
+                          </div>
+                          <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700 shadow-inner">
+                            <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" style={{ width: `${voiceOverProgress}%` }}></div>
+                          </div>
+                        </div>
+                      )}
                       <div className="mt-8 border-t border-slate-700/50 pt-8">{renderForensicToolkit()}</div>
                    </div>
                 </div>
@@ -4011,7 +4161,16 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                                 </div>
                              </div>
                           </div>
-                          <div className="lg:w-1/3 flex justify-center"><button onClick={startStoryboardProduction} disabled={producingImages} className={`bg-${activePersona.color} text-slate-950 px-12 py-12 rounded-full font-black uppercase italic text-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 text-center flex flex-col items-center gap-4`}><div className="w-16 h-16 bg-slate-950/20 rounded-full flex items-center justify-center">{producingImages ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}</div>{producingImages ? 'PROCESANDO...' : 'SINTETIZAR TODO'}</button></div>
+                          <div className="lg:w-1/3 flex justify-center"><button onClick={startStoryboardProduction} disabled={producingImages} className={`bg-${activePersona.color} text-slate-950 px-12 py-12 rounded-full font-black uppercase italic text-2xl shadow-2xl active:scale-95 transition-all disabled:opacity-50 text-center flex flex-col items-center gap-4`}><div className="w-16 h-16 bg-slate-950/20 rounded-full flex items-center justify-center">{producingImages ? <Loader2 size={32} className="animate-spin" /> : <Sparkles size={32} />}</div>
+{producingImages ? (
+  <div className="flex flex-col items-center w-full gap-2 mt-2">
+    <span>PROCESANDO... {storyboardProgress}%</span>
+    <div className="w-full h-2 bg-slate-950/20 rounded-full overflow-hidden">
+      <div className="h-full bg-slate-950/50 transition-all duration-300" style={{ width: `${storyboardProgress}%` }}></div>
+    </div>
+  </div>
+) : 'SINTETIZAR TODO'}
+</button></div>
                         </div>
                      </div>
                    ) : (
