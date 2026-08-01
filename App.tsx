@@ -2962,13 +2962,14 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 
   const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<{ buffer: AudioBuffer, blob: Blob } | null> => {
     if (!text || text.trim().length === 0) return null;
+    const cleanText = text.replace(/^\(Voz.*?\):\s*/i, '').trim();
     
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
       const selectedStyle = NARRATION_STYLES.find(s => s.id === modelSettings.ttsStyle);
       const styleLabel = selectedStyle?.label || "Standard";
       
-      const prompt = `Read this text with a ${styleLabel} tone: ${text}`;
+      const prompt = `Read this text with a ${styleLabel} tone: ${cleanText}`;
       
       const res = await apiRetry(() => ai.models.generateContent({
         model: modelSettings.tts,
@@ -3402,7 +3403,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         let speechDuration = audioBuffer ? audioBuffer.duration : segmentDuration;
         
         if (frame.narrationText) {
-            const text = frame.narrationText.replace(/^\(Voz (masculina|femenina)\):\s*/i, '').trim();
+            const text = frame.narrationText.replace(/^\(Voz.*?\):\s*/i, '').trim();
             const fontSize = isPortrait ? 28 : 36;
             canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
             const words = text.split(/\s+/).filter(w => w.length > 0);
