@@ -2962,7 +2962,7 @@ ${(activePersona.id === 'chunkyberto' || activePersona.id === 'luna') ? STORY_GU
 
   const handlePlayTTS = async (text: string, playOutLoud: boolean = true): Promise<{ buffer: AudioBuffer, blob: Blob } | null> => {
     if (!text || text.trim().length === 0) return null;
-    const cleanText = text.replace(/^\(Voz.*?\):\s*/i, '').trim();
+    const cleanText = text.trim().replace(/^\(Voz.*?\):\s*/i, '').trim();
     
     try {
       const ai = new GoogleGenAI({ apiKey: getSafeApiKey() });
@@ -3403,7 +3403,7 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
         let speechDuration = audioBuffer ? audioBuffer.duration : segmentDuration;
         
         if (frame.narrationText) {
-            const text = frame.narrationText.replace(/^\(Voz.*?\):\s*/i, '').trim();
+            const text = frame.narrationText.trim().replace(/^\(Voz.*?\):\s*/i, '').trim();
             const fontSize = isPortrait ? 28 : 36;
             canvasCtx.font = `900 ${fontSize}px Inter, sans-serif`;
             const words = text.split(/\s+/).filter(w => w.length > 0);
@@ -3523,14 +3523,21 @@ CRITICAL SECONDARY CHARACTERS RULE: Identify any secondary characters in the nar
                 const visibleWordsCount = Math.min(totalWords, Math.max(0, currentWordTarget));
 
                 let activePage: SubtitlePage | null = null;
-                for (const page of pages) {
-                   // Cada página se muestra mientras las palabras visibles estén en su rango
-                   if (visibleWordsCount >= page.totalWordsBefore && 
-                       visibleWordsCount < page.totalWordsBefore + page.totalWordsInPage) {
-                       activePage = page;
-                       break;
-                   }
-                }
+                for (let pIdx = 0; pIdx < pages.length; pIdx++) {
+                       const page = pages[pIdx];
+                       if (pIdx === pages.length - 1) {
+                           if (visibleWordsCount >= page.totalWordsBefore) {
+                               activePage = page;
+                               break;
+                           }
+                       } else {
+                           if (visibleWordsCount >= page.totalWordsBefore && 
+                               visibleWordsCount <= page.totalWordsBefore + page.totalWordsInPage) {
+                               activePage = page;
+                               break;
+                           }
+                       }
+                    }
                 
                 // REGLA: Desaparecer cuando se llena el 2do renglón (fin de página) 
                 // Si la última palabra de la página ya fue "leída", ocultamos hasta que empiece la siguiente o el siguiente audio.
